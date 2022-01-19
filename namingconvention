@@ -1,0 +1,11 @@
+database=prefix_rep_data.npz
+
+prefix=amons or qm7,
+rep=CM, SLATM, aCM, SOAP, FCHL.
+
+
+structure: mol_prefix_labels, mol_prefix_ncharges, mol_prefix_rep
+
+mol=vitc, vitd, qm9,
+prefix=amons or database 
+rep=CMs, reps # combine these two?
