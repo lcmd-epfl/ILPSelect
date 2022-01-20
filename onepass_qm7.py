@@ -2,13 +2,14 @@ import numpy as np
 import timeit
 import gurobipy as gp
 from gurobipy import GRB
+import pandas as pd
 
 def addvariables(Z):
     upperbounds=[]
     I=[]
     J=[]
     for M in database_indices:
-        CM=data[""+prefix+"_ncharges"][M]
+        CM=data["database_ncharges"][M]
         m=len(CM)
         I=I+[(i,j,M,G) for G in range(maxduplicates) for i in range(m) for j in range(n) if CM[i] == CT[j]] # if condition excludes j; i always takes all m values
         J=J+[(M,G) for G in range(maxduplicates)]
@@ -23,7 +24,7 @@ def addconstraints(Z,x,I,y):
     Z.addConstrs(x.sum('*',j,'*', '*') == 1 for j in range(n))
     
     for M in database_indices:
-        CM=data[""+prefix+"_ncharges"][M]
+        CM=data["database_ncharges"][M]
         m=len(CM)
         # each i of each group is used at most once
         Z.addConstrs(x.sum(i,'*',M,G) <= 1 for i in range(m) for G in range(maxduplicates))
@@ -45,7 +46,7 @@ def setobjective(Z,x,I,y):
                 expr += T[k,l]**2
         for M in database_indices:
             key=key+1
-            Mol=data[""+prefix+"_CMs"][M]
+            Mol=data["database_CMs"][M]
             m=len(Mol)
             for G in range(maxduplicates):
                 for (i,k) in [v[:2] for v in I if v[2:]==(M,G)]:
@@ -55,17 +56,21 @@ def setobjective(Z,x,I,y):
             print(key, "  /  ", size_database)
         expr=expr-n*penaltyconst
 
-    else: #SLATM case
+    else: # vector representations
         expr=gp.LinExpr()
         T=targetdata["target_reps"][target_index]
         for M in database_indices:
             key=key+1
-            Mol=data[""+prefix+"_reps"][M]
+            Mol=data["database_reps"][M]
             m=len(Mol)
             for G in range(maxduplicates):
                 for (i,j) in [v[:2] for v in I if v[2:]==(M,G)]:
                     C=np.linalg.norm(Mol[i]-T[j])**2
-                    expr += C*x[i,j,M,G]
+                    #C=boundednorm(Mol[i]-T[j],5*penaltyconst) # need to experiment a bit more on that
+                    if C==-1:
+                        Z.addConstr(x[i,j,M,G]==0)
+                    else:
+                        expr += C*x[i,j,M,G]
                 expr += y[M,G]*m*penaltyconst
             print(key, "  /  ", size_database)
         expr=expr-n*penaltyconst
@@ -74,8 +79,18 @@ def setobjective(Z,x,I,y):
     print("Objective function set.")
     return 0
 
-# prints mappings of positions (indices+1) of each molecule to positions inside target
+# computes L2 norm squared of v. If it exceeds k, return -1.
+def boundednorm(v,k):
+    norm=0
+    for e in v:
+        norm=norm+e**2
+        if norm>k:
+            return -1
+    return norm
+
+# Solution processing, output in "output_repname.csv".
 def print_sols(Z, x, I, y):
+    d={"SolN":[], "Fragments":[], "Excess":[], "ObjValNoPen":[], "ObjValWithPen":[], "Assignments":[]}
     SolCount=Z.SolCount
     print("Target has size", n)
     print("Using representation", repname)
@@ -83,25 +98,46 @@ def print_sols(Z, x, I, y):
         print()
         print("--------------------------------")
         Z.setParam("SolutionNumber",solnb)
-        print("Solution number", solnb+1, ", objective value with size penalty", (Z.PoolObjVal))
+        print("Processing solution number", solnb+1, "  /  ", SolCount)
         
+        fragments=[]
+        penatly=-n*penaltyconst
+        assignments=[]
+        excess=[]
         for M in database_indices:
+            charges=np.array(data["database_ncharges"][M])
+            m=len(charges)
+            label=data["database_labels"][M]
             groups=[]
             for G in range(maxduplicates):
                 if np.rint(y[M,G].Xn) == 1:
                     groups.append(G)
+                    fragments.append(label)
+                    penalty=penatly + m*penaltyconst
 
             amount_picked=len(groups)
             for k in range(amount_picked):
                 G=groups[k]
-                m=len(data[""+prefix+"_ncharges"][M])
-                label=data[""+prefix+"_labels"][M]
-                if k==0:
-                    print("Molecule", label, "has been picked", amount_picked, "time(s) ( size", m, ", used", sum([x[v].Xn for v in I if v[2]==M]), ")")
-                print(k+1, end=": ")
+                used_indices=[]
+                maps=[]
                 for (i,j) in [v[:2] for v in I if v[2:]==(M,G) and np.rint(x[v].Xn)==1]:
-                    print(i+1, "->", j+1, end=", ")
-                print()
+                    used_indices.append(i)
+                    maps.append((i+1,j+1))
+                assignments.append(maps)
+                unused_indices=np.delete(range(m),used_indices)
+                excess.append(charges[unused_indices].tolist())
+                    
+        d["Excess"].append(excess)
+        d["Fragments"].append(fragments)
+        d["SolN"].append(solnb+1)
+        d["ObjValNoPen"].append(Z.PoolObjVal-penatly)
+        d["ObjValWithPen"].append(Z.PoolObjVal)
+        d["Assignments"].append(assignments)
+    df=pd.DataFrame(d)
+    print(df)
+    print("Saving to output_"+repname+".csv.")
+    df.to_csv("output_"+repname+".csv")
+    return 0
 
 def main():
     # construction of the model
@@ -144,15 +180,14 @@ def main():
 # modifiable global settings
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=2 # number of possible copies of each molecule of the database
-timelimit=172800# in seconds (not counting setup)
-numbersolutions=100 # size of solution pool
-representation=2 # 0 for Coulomb Matrix (CM), 1 for SLATM, 2 for aCM, 3 for SOAP, 4 for FCHL
+timelimit=100# in seconds (not counting setup)
+numbersolutions=5 # size of solution pool
+representation=1 # 0 for Coulomb Matrix (CM), 1 for SLATM, 2 for aCM, 3 for SOAP, 4 for FCHL
 penaltyconst=[1,1,10000,1,1][representation] # constant in front of size penalty
-prefix="database" # "amons" or "database"
 
 # global constants
 repname=["CM", "SLATM", "aCM", "SOAP", "FCHL"][representation]
-dataname="representations/"+prefix+"_"+repname+".npz"
+dataname="representations/database_"+repname+".npz"
 
 data=np.load(dataname, allow_pickle=True)
 
@@ -162,8 +197,8 @@ CT=targetdata['target_ncharges'][target_index]
 n=len(CT)
 targetname=["qm9", "vitc", "vitd"][target_index]
 
-#size_database=100
-size_database=len(data[prefix+"_labels"]) # set this to a fixed number if the setup is too slow in case of qm7 database
+size_database=len(data["database_labels"]) # set this to a fixed number to take only first part of database
+size_database=80
 database_indices=range(size_database) 
 
 main()
