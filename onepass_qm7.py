@@ -66,7 +66,7 @@ def setobjective(Z,x,I,y):
             for G in range(maxduplicates):
                 for (i,j) in [v[:2] for v in I if v[2:]==(M,G)]:
                     C=np.linalg.norm(Mol[i]-T[j])**2
-                    #C=boundednorm(Mol[i]-T[j],5*penaltyconst) # need to experiment a bit more on that
+                    #C=boundednorm(Mol[i]-T[j],2*penaltyconst) # need to experiment a bit more on that
                     if C==-1:
                         Z.addConstr(x[i,j,M,G]==0)
                     else:
@@ -100,39 +100,41 @@ def print_sols(Z, x, I, y):
         Z.setParam("SolutionNumber",solnb)
         print("Processing solution number", solnb+1, "  /  ", SolCount)
         
-        fragments=[]
-        penatly=-n*penaltyconst
+        fragments=set()
+        A=np.zeros((n,size_database,maxduplicates)) # A[j,M,G]
+        for (i,j,M,G) in [v for v in I if np.rint(x[v].Xn)==1]:
+            fragments.add((M,G))
+            A[j,M,G]=i+1
+        
+        penalty=-n*penaltyconst
+        amount_fragments=len(fragments)
         assignments=[]
         excess=[]
-        for M in database_indices:
-            charges=np.array(data["database_ncharges"][M])
-            m=len(charges)
-            label=data["database_labels"][M]
-            groups=[]
-            for G in range(maxduplicates):
-                if np.rint(y[M,G].Xn) == 1:
-                    groups.append(G)
-                    fragments.append(label)
-                    penalty=penatly + m*penaltyconst
-
-            amount_picked=len(groups)
-            for k in range(amount_picked):
-                G=groups[k]
-                used_indices=[]
-                maps=[]
-                for (i,j) in [v[:2] for v in I if v[2:]==(M,G) and np.rint(x[v].Xn)==1]:
-                    used_indices.append(i)
+        fragmentlabels=[]
+        k=0
+        for (M,G) in fragments:
+            used_indices=[]
+            maps=[]
+            m=len(data["database_ncharges"][M])
+            penalty=penalty + m*penaltyconst
+            fragmentlabels.append(data["database_labels"][M])
+            for j in range(n):
+                i=int(A[j,M,G]-1)
+                if i>=0:
                     maps.append((i+1,j+1))
-                assignments.append(maps)
-                unused_indices=np.delete(range(m),used_indices)
-                excess.append(charges[unused_indices].tolist())
-                    
+                    used_indices.append(i)
+            assignments.append(maps)
+            charges=np.array(data["database_ncharges"][M])
+            excess.append(charges[np.delete(range(m),used_indices)].tolist())
+            k=k+1
         d["Excess"].append(excess)
-        d["Fragments"].append(fragments)
+        d["Fragments"].append(fragmentlabels)
         d["SolN"].append(solnb+1)
-        d["ObjValNoPen"].append(Z.PoolObjVal-penatly)
+        d["ObjValNoPen"].append(Z.PoolObjVal-penalty)
         d["ObjValWithPen"].append(Z.PoolObjVal)
         d["Assignments"].append(assignments)
+             
+    print(d)
     df=pd.DataFrame(d)
     print(df)
     print("Saving to output_"+repname+".csv.")
@@ -152,12 +154,15 @@ def main():
     
     # model parameters
     # PoolSearchMode 1/2 forces to fill the solution pool. 2 finds the best solutions.
-    # Set to 1 because of duplicating solutions which differ by 1e-9 and are seen as different.
     Z.setParam("PoolSearchMode", 1) 
     # these prevent non integral values although some solutions are still duplicating -- to fix?
-    Z.setParam("IntFeasTol", 1e-9)
+    #Z.setParam("IntFeasTol", 1e-9)
     Z.setParam("IntegralityFocus", 1)
-
+    Z.setParam("Method",2) # barrier method tends to keep integrality, reducing duplicate solutions. Method 1 is also possible for dual simplex.
+    Z.setParam("NumericFocus",3) # computer should pay more attention to numerical errors at the cost of running time.
+    Z.setParam("Quad",1) # should be redundant with Numeric Focus
+    Z.setParam("MarkowitzTol",0.99) # should be redundant with Numeric Focus
+    
     Z.setParam("TimeLimit", timelimit) 
     Z.setParam("PoolSolutions", numbersolutions)
     
@@ -180,9 +185,9 @@ def main():
 # modifiable global settings
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=2 # number of possible copies of each molecule of the database
-timelimit=100# in seconds (not counting setup)
-numbersolutions=5 # size of solution pool
-representation=1 # 0 for Coulomb Matrix (CM), 1 for SLATM, 2 for aCM, 3 for SOAP, 4 for FCHL
+timelimit=3600# in seconds (not counting setup)
+numbersolutions=50 # size of solution pool
+representation=2 # 0 for Coulomb Matrix (CM), 1 for SLATM, 2 for aCM, 3 for SOAP, 4 for FCHL
 penaltyconst=[1,1,10000,1,1][representation] # constant in front of size penalty
 
 # global constants
@@ -198,7 +203,7 @@ n=len(CT)
 targetname=["qm9", "vitc", "vitd"][target_index]
 
 size_database=len(data["database_labels"]) # set this to a fixed number to take only first part of database
-size_database=80
+size_database=100
 database_indices=range(size_database) 
 
 main()
