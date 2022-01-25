@@ -66,11 +66,13 @@ def setobjective(Z,x,I,y):
             for G in range(maxduplicates):
                 for (i,j) in [v[:2] for v in I if v[2:]==(M,G)]:
                     C=np.linalg.norm(Mol[i]-T[j])**2
-                    #C=boundednorm(Mol[i]-T[j],2*penaltyconst) # need to experiment a bit more on that
-                    if C==-1:
-                        Z.addConstr(x[i,j,M,G]==0)
-                    else:
-                        expr += C*x[i,j,M,G]
+                    C=round(C,3) # only leave 3 decimals to hopefully prevent precision errors
+                    # need to experiment a bit more on that.
+                    #C=boundednorm(Mol[i]-T[j],2*penaltyconst)
+                    #if C==-1:
+                    #    Z.addConstr(x[i,j,M,G]==0)
+                    #else:
+                    expr += C*x[i,j,M,G]
                 expr += y[M,G]*m*penaltyconst
             print(key, "  /  ", size_database)
         expr=expr-n*penaltyconst
@@ -158,7 +160,7 @@ def main():
     # these prevent non integral values although some solutions are still duplicating -- to fix?
     #Z.setParam("IntFeasTol", 1e-9)
     Z.setParam("IntegralityFocus", 1)
-    Z.setParam("Method",2) # barrier method tends to keep integrality, reducing duplicate solutions. Method 1 is also possible for dual simplex.
+    Z.setParam("Method",1) # dual simplex method tends to keep integrality, reducing duplicate solutions. Method 0 is also possible for primal simplex.
     Z.setParam("NumericFocus",3) # computer should pay more attention to numerical errors at the cost of running time.
     Z.setParam("Quad",1) # should be redundant with Numeric Focus
     Z.setParam("MarkowitzTol",0.99) # should be redundant with Numeric Focus
