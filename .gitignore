@@ -2,6 +2,7 @@ representations/database_slatm.npz
 representations/amons_SOAP_data.npz
 representations/amons_SLATM_data.npz
 representations/database_SOAP.npz
+representations/database_SLATM.npz
 representations/database_aCM.npz
 representations/database_FCHL.npz
 .ipynb_checkpoints/

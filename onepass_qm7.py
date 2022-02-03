@@ -66,13 +66,8 @@ def setobjective(Z,x,I,y):
             m=len(Mol)
             for G in range(maxduplicates):
                 for (i,j) in [v[:2] for v in I if v[2:]==(M,G)]:
-                    C=np.linalg.norm(Mol[i]-T[j])**2
-                    C=round(C,3) # only leave 3 decimals to hopefully prevent precision errors
-                    # need to experiment a bit more on that.
-                    #C=boundednorm(Mol[i]-T[j],2*penaltyconst)
-                    #if C==-1:
-                    #    Z.addConstr(x[i,j,M,G]==0)
-                    #else:
+                    C=objscale*np.linalg.norm(Mol[i]-T[j])**2
+                    C=int(C) # remove decimals after scaling
                     expr += C*x[i,j,M,G]
                 expr += y[M,G]*m*penaltyconst
             print(key, "  /  ", size_database)
@@ -165,7 +160,7 @@ def main():
     Z.setParam("NumericFocus",3) # computer should pay more attention to numerical errors at the cost of running time.
     Z.setParam("Quad",1) # should be redundant with Numeric Focus
     Z.setParam("MarkowitzTol",0.99) # should be redundant with Numeric Focus
-    
+ 
     Z.setParam("TimeLimit", timelimit) 
     Z.setParam("PoolSolutions", numbersolutions)
     
@@ -185,16 +180,14 @@ def main():
     print_sols(Z,x,I,y)
     return 0
 
-rep_arg = int(sys.argv[1])
-print('taking', rep_arg, 'as argument for representation') 
-
 # modifiable global settings
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=2 # number of possible copies of each molecule of the database
 timelimit=3600# in seconds (not counting setup)
 numbersolutions=50 # size of solution pool
-representation=rep_arg # 0 for Coulomb Matrix (CM), 1 for SLATM, 2 for aCM, 3 for SOAP, 4 for FCHL
-penaltyconst=[1,1,10000,1,1][representation] # constant in front of size penalty
+representation=1 # 0 for Coulomb Matrix (CM), 1 for SLATM, 2 for aCM, 3 for SOAP, 4 for FCHL
+penaltyconst=1e4 # constant in front of size penalty -- based off of order of coefficients
+objscale=[1e4,1e4,1,1e4,1e4][representation] # objective scaling to reach coefficients of order 1e4. The decimals of the coefficients are then cut off.
 
 # global constants
 repname=["CM", "SLATM", "aCM", "SOAP", "FCHL"][representation]
@@ -209,6 +202,7 @@ n=len(CT)
 targetname=["qm9", "vitc", "vitd"][target_index]
 
 size_database=len(data["database_labels"]) # set this to a fixed number to take only first part of database
+size_database=80
 database_indices=range(size_database) 
 
 main()
