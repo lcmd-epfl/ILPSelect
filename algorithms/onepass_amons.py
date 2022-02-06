@@ -8,7 +8,7 @@ def addvariables(Z):
     I=[]
     J=[]
     for M in database_indices:
-        CM=data[targetname+"_"+prefix+"_ncharges"][M]
+        CM=data[targetname+"_"+"amons_ncharges"][M]
         m=len(CM)
         I=I+[(i,j,M,G) for G in range(maxduplicates) for i in range(m) for j in range(n) if CM[i] == CT[j]] # if condition excludes j; i always takes all m values
         J=J+[(M,G) for G in range(maxduplicates)]
@@ -23,7 +23,7 @@ def addconstraints(Z,x,I,y):
     Z.addConstrs(x.sum('*',j,'*', '*') == 1 for j in range(n))
     
     for M in database_indices:
-        CM=data[targetname+"_"+prefix+"_ncharges"][M]
+        CM=data[targetname+"_"+"amons_ncharges"][M]
         m=len(CM)
         # each i of each group is used at most once
         Z.addConstrs(x.sum(i,'*',M,G) <= 1 for i in range(m) for G in range(maxduplicates))
@@ -45,7 +45,7 @@ def setobjective(Z,x,I,y):
                 expr += T[k,l]**2
         for M in database_indices:
             key=key+1
-            Mol=data[targetname+"_"+prefix+"_CMs"][M]
+            Mol=data[targetname+"_"+"amons_CMs"][M]
             m=len(Mol)
             for G in range(maxduplicates):
                 for (i,k) in [v[:2] for v in I if v[2:]==(M,G)]:
@@ -60,7 +60,7 @@ def setobjective(Z,x,I,y):
         T=targetdata["target_reps"][target_index]
         for M in database_indices:
             key=key+1
-            Mol=data[targetname+"_"+prefix+"_reps"][M]
+            Mol=data[targetname+"_amons_reps"][M]
             m=len(Mol)
             for G in range(maxduplicates):
                 for (i,j) in [v[:2] for v in I if v[2:]==(M,G)]:
@@ -94,8 +94,8 @@ def print_sols(Z, x, I, y):
             amount_picked=len(groups)
             for k in range(amount_picked):
                 G=groups[k]
-                m=len(data[targetname+"_"+prefix+"_ncharges"][M])
-                label=data[targetname+"_"+prefix+"_labels"][M]
+                m=len(data[targetname+"_amons_ncharges"][M])
+                label=data[targetname+"_amons_labels"][M]
                 if k==0:
                     print("Molecule", label, "has been picked", amount_picked, "time(s) ( size", m, ", used", sum([x[v].Xn for v in I if v[2]==M]), ")")
                 print(k+1, end=": ")
@@ -146,23 +146,22 @@ target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=2 # number of possible copies of each molecule of the database
 timelimit=360 # in seconds (not counting setup)
 numbersolutions=5 # size of solution pool
-representation=2 # 0 for Coulomb Matrix (CM), 1 for SLATM, 2 for aCM, 3 for SOAP, 4 for FCHL
+representation=4 # 0 for Coulomb Matrix (CM), 1 for SLATM, 2 for aCM, 3 for SOAP, 4 for FCHL
 penaltyconst=[1,1,10000,1,1][representation] # constant in front of size penalty
-prefix="amons" # "amons" or "database"
 
 # global constants
 repname=["CM", "SLATM", "aCM", "SOAP", "FCHL"][representation]
-dataname=prefix+"_"+repname+"_data.npz"
+dataname="../representations/amons_"+repname+"_data.npz"
 
 data=np.load(dataname, allow_pickle=True)
 
-targetdataname="target_"+repname+"_data.npz"
+targetdataname="../representations/target_"+repname+"_data.npz"
 targetdata=np.load(targetdataname, allow_pickle=True)
 CT=targetdata['target_ncharges'][target_index]
 n=len(CT)
 
 targetname=["qm9", "vitc", "vitd"][target_index]
-size_database=len(data[targetname+"_"+prefix+"_labels"]) # set this to a fixed number if the setup is too slow in case of qm7 database
+size_database=len(data[targetname+"_amons_labels"]) # set this to a fixed number if the setup is too slow in case of qm7 database
 database_indices=range(size_database) 
 
 main()

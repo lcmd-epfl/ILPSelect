@@ -191,18 +191,18 @@ objscale=[1e4,1e4,1,1e4,1e4][representation] # objective scaling to reach coeffi
 
 # global constants
 repname=["CM", "SLATM", "aCM", "SOAP", "FCHL"][representation]
-dataname="representations/database_"+repname+".npz"
+dataname="../representations/database_"+repname+".npz"
 
 data=np.load(dataname, allow_pickle=True)
 
-targetdataname="representations/target_"+repname+"_data.npz"
+targetdataname="../representations/target_"+repname+"_data.npz"
 targetdata=np.load(targetdataname, allow_pickle=True)
 CT=targetdata['target_ncharges'][target_index]
 n=len(CT)
 targetname=["qm9", "vitc", "vitd"][target_index]
 
 size_database=len(data["database_labels"]) # set this to a fixed number to take only first part of database
-size_database=80
+#size_database=80
 database_indices=range(size_database) 
 
 main()
