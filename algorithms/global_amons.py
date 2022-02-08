@@ -28,20 +28,22 @@ def addconstraints(Z,x):
 def setobjective(Z,x):
     print("Constructing objective function... ")
     expr=gp.QuadExpr() # L2 squared distance from target rep to sum of chosen molecule reps
+    penalty=gp.LinExpr()
     T=targetdata["target_reps"][target_index]
-    L=len(T) # constant size of vector representation
-    
+
+    penalty+=len(targetdata["target_ncharges"][target_index]) # number of atoms in target
     expr+=np.linalg.norm(T)**2
     for M in database_indices:
         for G in range(maxduplicates):
             CM=data[targetname+"_amons_reps"][M]
-            expr=expr-2*T.T@CM * x[M,G]
+            expr+=-2*T.T@CM * x[M,G]
+            penalty -= len(data[targetname+"_amons_ncharges"][M])*x[M,G] # number of atoms in M
             for MM in database_indices: 
                 for GG in range(maxduplicates):
                     CMM=data[targetname+"_amons_reps"][MM]
                     expr+=CM.T@CMM *x[M,G]*x[MM,GG]
 
-    Z.setObjective(expr, GRB.MINIMIZE)
+    Z.setObjective(expr-penaltyconst*penalty, GRB.MINIMIZE)
     print("Objective function set.")
     return 0
 
@@ -108,11 +110,12 @@ def main():
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=2 # number of possible copies of each molecule of the database
 timelimit=3600# in seconds (not counting setup)
-numbersolutions=10 # size of solution pool
-representation=1 # 0 for SLATM, 1 for FCHL
+numbersolutions=5 # size of solution pool
+representation=0 # 0 for SLATM, 1 for FCHL
 
 # global constants
 repname=["SLATM", "FCHL"][representation]
+penaltyconst=[10,1][representation]
 
 dataname="../representations/amons_"+repname+"_global_data.npz"
 data=np.load(dataname, allow_pickle=True)
@@ -123,6 +126,5 @@ targetdata=np.load(targetdataname, allow_pickle=True)
 targetname=["qm9", "vitc", "vitd"][target_index]
 
 size_database=len(data[targetname+"_amons_labels"]) # set this to a fixed number to take only first part of database
-#size_database=80
 database_indices=range(size_database) 
 main()
