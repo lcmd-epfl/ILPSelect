@@ -1,0 +1,773 @@
+Set parameter Username
+Academic license - for non-commercial use only - expires 2022-06-20
+Variables added.
+Constructing objective function... 
+Objective function set.
+Model setup:  0.6123245088383555 s
+Set parameter PoolSearchMode to value 1
+Set parameter IntFeasTol to value 1e-09
+Set parameter IntegralityFocus to value 1
+Set parameter Method to value 1
+Set parameter NumericFocus to value 3
+Set parameter Quad to value 1
+Set parameter MarkowitzTol to value 0.99
+Set parameter TimeLimit to value 3600
+Set parameter PoolSolutions to value 100
+------------
+Optimization
+------------
+Gurobi Optimizer version 9.5.0 build v9.5.0rc5 (linux64)
+Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
+Optimize a model with 1 rows, 32 columns and 32 nonzeros
+Model fingerprint: 0xef69c584
+Model has 516 quadratic objective terms
+Variable types: 0 continuous, 32 integer (32 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 7e+00]
+  Objective range  [4e+02, 3e+03]
+  QObjective range [1e+02, 5e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [9e+00, 9e+00]
+Found heuristic solution: objective 277939.80872
+Presolve time: 0.00s
+Presolved: 1 rows, 32 columns, 32 nonzeros
+Presolved model has 516 quadratic objective terms
+Variable types: 0 continuous, 32 integer (32 binary)
+Found heuristic solution: objective 338.2249000
+
+Root relaxation: objective 2.485942e+01, 20 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   24.85942    0    5  338.22490   24.85942  92.7%     -    0s
+H    0     0                     127.6781374   24.85942  80.5%     -    0s
+H    0     0                      83.0124600   24.85942  70.1%     -    0s
+     0     2   24.85942    0    5   83.01246   24.85942  70.1%     -    0s
+H    3     8                      31.6497119   27.75581  12.3%   2.3    0s
+H    4     8                      29.6250162   27.75581  6.31%   3.8    0s
+
+Optimal solution found at node 335 - now completing solution pool...
+
+    Nodes    |    Current Node    |      Pool Obj. Bounds     |     Work
+             |                    |   Worst                   |
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+   335   314          -   28       835.49773   29.62502  96.5%   1.0    0s
+
+Cutting planes:
+  Cover: 9
+
+Explored 4036 nodes (5165 simplex iterations) in 0.07 seconds (0.05 work units)
+Thread count was 8 (of 8 available processors)
+
+Solution count 100: 29.625 29.625 29.625 ... 57.4903
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 2.962501619552e+01, best bound 2.962501619552e+01, gap 0.0000%
+------------
+
+Optimization runtime:  0.06893610954284668 s
+Using representation SLATM
+
+--------------------------------
+Sol no 0
+Objective value 29.625016195516082
+frag_03_c00001
+frag_15_c00001
+
+--------------------------------
+Sol no 1
+Objective value 29.625016195516082
+frag_03_c00001
+frag_15_c00001
+
+--------------------------------
+Sol no 2
+Objective value 29.625016195516082
+frag_03_c00001
+frag_15_c00001
+
+--------------------------------
+Sol no 3
+Objective value 29.62501619551631
+frag_03_c00001
+frag_15_c00001
+
+--------------------------------
+Sol no 4
+Objective value 29.62501619551631
+frag_08_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 5
+Objective value 31.64971186970456
+frag_08_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 6
+Objective value 31.64971186970456
+frag_08_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 7
+Objective value 31.64971186970456
+frag_08_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 8
+Objective value 31.64971186970456
+frag_06_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 9
+Objective value 36.116076687892246
+frag_06_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 10
+Objective value 36.116076687892246
+frag_06_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 11
+Objective value 36.11607668789247
+frag_06_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 12
+Objective value 36.11607668789247
+frag_03_c00001
+frag_04_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 13
+Objective value 39.68455617779546
+frag_03_c00001
+frag_04_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 14
+Objective value 39.68455617779546
+frag_03_c00001
+frag_04_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 15
+Objective value 39.68455617779546
+frag_03_c00001
+frag_04_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 16
+Objective value 39.68455617779546
+frag_03_c00001
+frag_04_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 17
+Objective value 39.684556177795685
+frag_03_c00001
+frag_04_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 18
+Objective value 39.684556177795685
+frag_03_c00001
+frag_04_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 19
+Objective value 39.684556177795685
+frag_03_c00001
+frag_04_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 20
+Objective value 39.684556177795685
+frag_04_c00001
+frag_06_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 21
+Objective value 42.33278690887778
+frag_04_c00001
+frag_06_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 22
+Objective value 42.33278690887778
+frag_04_c00001
+frag_06_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 23
+Objective value 42.33278690887778
+frag_04_c00001
+frag_06_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 24
+Objective value 42.33278690887778
+frag_04_c00001
+frag_06_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 25
+Objective value 42.332786908878006
+frag_04_c00001
+frag_06_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 26
+Objective value 42.332786908878006
+frag_04_c00001
+frag_06_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 27
+Objective value 42.33278690887869
+frag_04_c00001
+frag_06_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 28
+Objective value 42.33278690887869
+frag_04_c00001
+frag_06_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 29
+Objective value 46.59551551393997
+frag_04_c00001
+frag_06_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 30
+Objective value 46.59551551393997
+frag_04_c00001
+frag_06_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 31
+Objective value 46.5955155139402
+frag_04_c00001
+frag_06_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 32
+Objective value 46.5955155139402
+frag_04_c00001
+frag_06_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 33
+Objective value 46.5955155139402
+frag_04_c00001
+frag_06_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 34
+Objective value 46.5955155139402
+frag_04_c00001
+frag_06_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 35
+Objective value 46.5955155139402
+frag_04_c00001
+frag_06_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 36
+Objective value 46.5955155139402
+frag_01_c00001
+frag_03_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 37
+Objective value 46.98547525957406
+frag_01_c00001
+frag_03_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 38
+Objective value 46.98547525957406
+frag_01_c00001
+frag_03_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 39
+Objective value 46.98547525957406
+frag_01_c00001
+frag_03_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 40
+Objective value 46.98547525957406
+frag_01_c00001
+frag_03_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 41
+Objective value 46.98547525957406
+frag_01_c00001
+frag_03_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 42
+Objective value 46.98547525957429
+frag_01_c00001
+frag_03_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 43
+Objective value 46.98547525957429
+frag_01_c00001
+frag_03_c00001
+frag_14_c00001
+
+--------------------------------
+Sol no 44
+Objective value 46.98547525957429
+frag_10_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 45
+Objective value 48.57978626695626
+frag_10_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 46
+Objective value 48.57978626695626
+frag_10_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 47
+Objective value 48.57978626695626
+frag_10_c00001
+frag_11_c00001
+
+--------------------------------
+Sol no 48
+Objective value 48.57978626695626
+frag_01_c00001
+frag_08_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 49
+Objective value 48.76210016118284
+frag_01_c00001
+frag_08_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 50
+Objective value 48.76210016118284
+frag_01_c00001
+frag_08_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 51
+Objective value 48.76210016118284
+frag_01_c00001
+frag_08_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 52
+Objective value 48.76210016118284
+frag_01_c00001
+frag_08_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 53
+Objective value 48.76210016118284
+frag_01_c00001
+frag_08_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 54
+Objective value 48.76210016118284
+frag_01_c00001
+frag_08_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 55
+Objective value 48.76210016118284
+frag_01_c00001
+frag_08_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 56
+Objective value 48.76210016118284
+frag_01_c00001
+frag_08_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 57
+Objective value 48.88186467528749
+frag_01_c00001
+frag_08_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 58
+Objective value 48.88186467528749
+frag_03_c00001
+frag_04_c00001
+frag_04_c00001
+frag_06_c00001
+
+--------------------------------
+Sol no 59
+Objective value 51.2794788436895
+frag_03_c00001
+frag_04_c00001
+frag_04_c00001
+frag_06_c00001
+
+--------------------------------
+Sol no 60
+Objective value 51.2794788436895
+frag_03_c00001
+frag_04_c00001
+frag_04_c00001
+frag_06_c00001
+
+--------------------------------
+Sol no 61
+Objective value 51.27947884368996
+frag_03_c00001
+frag_04_c00001
+frag_04_c00001
+frag_06_c00001
+
+--------------------------------
+Sol no 62
+Objective value 51.27947884368996
+frag_03_c00001
+frag_05_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 63
+Objective value 53.83287661947156
+frag_03_c00001
+frag_05_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 64
+Objective value 53.83287661947156
+frag_03_c00001
+frag_05_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 65
+Objective value 53.83287661947156
+frag_03_c00001
+frag_05_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 66
+Objective value 53.83287661947156
+frag_03_c00001
+frag_05_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 67
+Objective value 53.83287661947179
+frag_03_c00001
+frag_05_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 68
+Objective value 53.83287661947179
+frag_03_c00001
+frag_05_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 69
+Objective value 53.832876619472245
+frag_03_c00001
+frag_05_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 70
+Objective value 53.832876619472245
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 71
+Objective value 53.885198302858726
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 72
+Objective value 53.885198302858726
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 73
+Objective value 53.885198302858726
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 74
+Objective value 53.885198302858726
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 75
+Objective value 53.885198302858726
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 76
+Objective value 53.885198302858726
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 77
+Objective value 53.885198302858726
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 78
+Objective value 53.885198302858726
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 79
+Objective value 53.88519830285895
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 80
+Objective value 53.88519830285895
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 81
+Objective value 53.88519830285918
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 82
+Objective value 53.88519830285918
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 83
+Objective value 53.88519830285918
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 84
+Objective value 53.88519830285918
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 85
+Objective value 53.88519830285918
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_08_c00001
+
+--------------------------------
+Sol no 86
+Objective value 53.88519830285918
+frag_01_c00001
+frag_04_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 87
+Objective value 56.700845149961424
+frag_01_c00001
+frag_04_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 88
+Objective value 56.700845149961424
+frag_01_c00001
+frag_04_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 89
+Objective value 56.700845149961424
+frag_01_c00001
+frag_04_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 90
+Objective value 56.700845149961424
+frag_01_c00001
+frag_04_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 91
+Objective value 56.70084514996165
+frag_01_c00001
+frag_04_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 92
+Objective value 56.70084514996165
+frag_01_c00001
+frag_04_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 93
+Objective value 56.70084514996165
+frag_01_c00001
+frag_04_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 94
+Objective value 56.70084514996165
+frag_05_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 95
+Objective value 56.963945612629686
+frag_05_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 96
+Objective value 56.963945612629686
+frag_05_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 97
+Objective value 56.963945612629914
+frag_05_c00001
+frag_13_c00001
+
+--------------------------------
+Sol no 98
+Objective value 56.963945612629914
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_10_c00001
+
+--------------------------------
+Sol no 99
+Objective value 57.49034618460655
+frag_01_c00001
+frag_03_c00001
+frag_04_c00001
+frag_10_c00001

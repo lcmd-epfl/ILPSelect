@@ -108,7 +108,7 @@ def main():
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=2 # number of possible copies of each molecule of the database
 timelimit=3600# in seconds (not counting setup)
-numbersolutions=5 # size of solution pool
+numbersolutions=10 # size of solution pool
 representation=1 # 0 for SLATM, 1 for FCHL
 
 # global constants
