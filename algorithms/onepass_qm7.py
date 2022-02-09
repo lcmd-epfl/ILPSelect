@@ -38,7 +38,6 @@ def addconstraints(Z,x,I,y):
 # objective value should then be square rooted in the end (doesn't change optimality)
 def setobjective(Z,x,I,y):
     print("Constructing objective function... ")
-    key=0
     if(representation==0): # Coulomb case
         expr=gp.QuadExpr()
         T=targetdata['target_CMs'][target_index]
@@ -46,7 +45,6 @@ def setobjective(Z,x,I,y):
             for l in range(n):
                 expr += T[k,l]**2
         for M in database_indices:
-            key=key+1
             Mol=data["database_CMs"][M]
             m=len(Mol)
             for G in range(maxduplicates):
@@ -54,14 +52,13 @@ def setobjective(Z,x,I,y):
                     for (j,l) in [v[:2] for v in I if v[2:]==(M,G)]:
                         expr += (Mol[i,j]**2 - 2*T[k,l]*Mol[i,j])*x[i,k,M,G]*x[j,l,M,G]
                 expr += y[M,G]*m*penaltyconst 
-            print(key, "  /  ", size_database)
+            print(M, "  /  ", size_database)
         expr=expr-n*penaltyconst
 
     else: # vector representations
         expr=gp.LinExpr()
         T=targetdata["target_reps"][target_index]
         for M in database_indices:
-            key=key+1
             Mol=data["database_reps"][M]
             m=len(Mol)
             for G in range(maxduplicates):
@@ -70,7 +67,7 @@ def setobjective(Z,x,I,y):
                     C=int(C) # remove decimals after scaling
                     expr += C*x[i,j,M,G]
                 expr += y[M,G]*m*penaltyconst
-            print(key, "  /  ", size_database)
+            print(M, "  /  ", size_database)
         expr=expr-n*penaltyconst
 
     Z.setObjective(expr, GRB.MINIMIZE)
@@ -201,8 +198,7 @@ CT=targetdata['target_ncharges'][target_index]
 n=len(CT)
 targetname=["qm9", "vitc", "vitd"][target_index]
 
-size_database=len(data["database_labels"]) # set this to a fixed number to take only first part of database
-#size_database=80
+size_database=80#len(data["database_labels"]) # set this to a fixed number to take only first part of database
 database_indices=range(size_database) 
 
 main()
