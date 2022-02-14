@@ -69,7 +69,7 @@ def print_sols(Z, x):
                     penalty=penalty-len(data["database_ncharges"][M])
         d["SolN"].append(solnb+1)
         d["Fragments"].append(fragments)
-        d["ObjValNoPen"].append(Z.PoolObjVal-penalty)
+        d["ObjValNoPen"].append(Z.PoolObjVal-penalty*penaltyconst)
         d["ObjValWithPen"].append(Z.PoolObjVal)
         
     df=pd.DataFrame(d)
@@ -123,12 +123,12 @@ def main():
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=2 # number of possible copies of each molecule of the database
 timelimit=3600# in seconds (not counting setup)
-numbersolutions=100 # size of solution pool
-representation=3 # 0 for SPAHM, 1 for CM, 2 for FCHL, 3 for SLATM
+numbersolutions=5 # size of solution pool
+representation=2 # 0 for SPAHM, 1 for CM, 2 for FCHL, 3 for SLATM
 
 # global constants
 repname=["SPAHM", "CM", "FCHL", "SLATM"][representation]
-penaltyconst=[1e4,1,1,1][representation]
+penaltyconst=[1e4,1,1,10][representation]
 
 dataname="../representations/database_"+repname+"_global.npz"
 data=np.load(dataname, allow_pickle=True)
@@ -138,6 +138,6 @@ targetdata=np.load(targetdataname, allow_pickle=True)
 
 targetname=["qm9", "vitc", "vitd"][target_index]
 
-size_database=20#len(data["database_labels"]) # set this to a fixed number to take only first part of database
+size_database=len(data["database_labels"]) # set this to a fixed number to take only first part of database
 database_indices=range(size_database) 
 main()
