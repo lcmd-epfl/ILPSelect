@@ -21,7 +21,6 @@ def addconstraints(Z,x):
         for G in range(maxduplicates):
             expr+=m*x[M,G]
     Z.addConstr(expr >= n)
-    #Z.addConstr(expr <= 1.5*n)
     return 0
 
 # objective value should then be square rooted in the end (doesn't change optimality)
@@ -40,6 +39,7 @@ def setobjective(Z,x):
             expr+=-2*T.T@CM * x[M,G]
             penalty -= len(data["database_ncharges"][M])*x[M,G] # number of atoms in M
             for MM in database_indices: 
+                print(MM, "  /  ", size_database)
                 for GG in range(maxduplicates):
                     CMM=data["database_reps"][MM]
                     expr+=CM.T@CMM *x[M,G]*x[MM,GG]
@@ -50,6 +50,7 @@ def setobjective(Z,x):
 
 # Solution processing, saved in "output_repname.csv".
 def print_sols(Z, x):
+    d={"SolN":[], "Fragments":[], "ObjValNoPen":[], "ObjValWithPen":[]}
     SolCount=Z.SolCount
     print("Using representation", repname)
     for solnb in range(SolCount):
@@ -58,12 +59,23 @@ def print_sols(Z, x):
         print("Sol no", solnb)
         print("Objective value", Z.PoolObjVal)
         Z.setParam("SolutionNumber",solnb)
+        fragments=[]
+        penalty=len(targetdata["target_ncharges"][target_index]) # number of atoms in target
         for M in database_indices:
             for G in range(maxduplicates):
                 if (np.rint(x[M,G].Xn)==1):
                     print(data["database_labels"][M])
-
+                    fragments.append(data["database_labels"][M])
+                    penalty=penalty-len(data["database_ncharges"][M])
+        d["SolN"].append(solnb+1)
+        d["Fragments"].append(fragments)
+        d["ObjValNoPen"].append(Z.PoolObjVal-penalty*penaltyconst)
+        d["ObjValWithPen"].append(Z.PoolObjVal)
         
+    df=pd.DataFrame(d)
+    print(df)
+    print("Saving to output_"+repname+"_global.csv")
+    df.to_csv("output_"+repname+"_global.csv")
     return 0
 
 def main():
@@ -112,11 +124,11 @@ target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=2 # number of possible copies of each molecule of the database
 timelimit=3600# in seconds (not counting setup)
 numbersolutions=5 # size of solution pool
-representation=0 # 0 for SPAHM, 1 for CM
+representation=2 # 0 for SPAHM, 1 for CM, 2 for FCHL, 3 for SLATM
 
 # global constants
-repname=["SPAHM", "CM"][representation]
-penaltyconst=[1e4,1][representation]
+repname=["SPAHM", "CM", "FCHL", "SLATM"][representation]
+penaltyconst=[1e4,1,1,10][representation]
 
 dataname="../representations/database_"+repname+"_global.npz"
 data=np.load(dataname, allow_pickle=True)
@@ -126,6 +138,6 @@ targetdata=np.load(targetdataname, allow_pickle=True)
 
 targetname=["qm9", "vitc", "vitd"][target_index]
 
-size_database=80#len(data["database_labels"]) # set this to a fixed number to take only first part of database
+size_database=len(data["database_labels"]) # set this to a fixed number to take only first part of database
 database_indices=range(size_database) 
 main()
