@@ -1,0 +1,130 @@
+Set parameter TokenServer to value "scitassrv7.epfl.ch"
+Variables added.
+Constraints added.
+Constructing objective function... 
+1   /   16
+2   /   16
+3   /   16
+4   /   16
+5   /   16
+6   /   16
+7   /   16
+8   /   16
+9   /   16
+10   /   16
+11   /   16
+12   /   16
+13   /   16
+14   /   16
+15   /   16
+16   /   16
+Objective function set.
+Model setup:  0.1806371659040451 s
+Set parameter PoolSearchMode to value 1
+Set parameter IntFeasTol to value 1e-09
+Set parameter IntegralityFocus to value 1
+Set parameter TimeLimit to value 2880
+Set parameter PoolSolutions to value 1000
+------------
+Optimization
+------------
+Gurobi Optimizer version 9.5.0 build v9.5.0rc5 (linux64)
+Thread count: 24 physical cores, 24 logical processors, using up to 24 threads
+Optimize a model with 595 rows, 456 columns and 2152 nonzeros
+Model fingerprint: 0x5498aab1
+Variable types: 0 continuous, 456 integer (456 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 3e+04]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Found heuristic solution: objective 60795.885152
+Presolve removed 456 rows and 2 columns
+Presolve time: 0.01s
+Presolved: 139 rows, 454 columns, 976 nonzeros
+Variable types: 0 continuous, 454 integer (454 binary)
+Found heuristic solution: objective 21261.679505
+Found heuristic solution: objective 14240.913386
+
+Root relaxation: objective 1.423741e+04, 24 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 14237.4134    0    7 14240.9134 14237.4134  0.02%     -    0s
+     0     0 14237.4134    0    9 14240.9134 14237.4134  0.02%     -    0s
+     0     0          -    0      14240.9134 14240.9134  0.00%     -    0s
+
+Optimal solution found at node 0 - now completing solution pool...
+
+    Nodes    |    Current Node    |      Pool Obj. Bounds     |     Work
+             |                    |   Worst                   |
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0          -    0               - 14240.9134      -     -    0s
+     0     0          -    0               - 14240.9134      -     -    0s
+     0     2          -    0               - 14240.9134      -     -    0s
+ 64370 32235          -  122               - 14242.9134      -   0.1    5s
+ 124850 40963          -  128               - 14242.9134      -   0.2   10s
+ 185445 49456          -  126               - 14242.9134      -   0.2   15s
+ 252371 59878     cutoff  126               - 14242.9134      -   0.2   20s
+ 305485 63449          -  132               - 14243.9134      -   0.2   25s
+ 365529 70535          -  132               - 14243.9134      -   0.2   30s
+ 424895 79653          -  129               - 14244.9134      -   0.2   35s
+ 485037 87458     cutoff  131               - 14244.9134      -   0.2   40s
+ 544521 96068          -  126               - 14244.9134      -   0.2   45s
+ 604468 105404          -  122               - 14244.9134      -   0.2   50s
+ 664503 113140          -  125               - 14244.9134      -   0.2   55s
+ 731451 123526          -  132               - 14244.9134      -   0.2   60s
+ 784705 131533          -  125               - 14244.9134      -   0.2   65s
+ 844835 140717          -  121               - 14244.9134      -   0.2   70s
+ 904590 148768          -  124               - 14244.9134      -   0.2   75s
+ 964488 155589          -  128               - 14245.9134      -   0.2   80s
+ 1023843 164115          -  131               - 14245.9134      -   0.2   85s
+ 1090427 171959          -  128               - 14245.9134      -   0.2   90s
+ 1149764 180435          -  127               - 14245.9134      -   0.2   95s
+ 1209812 187565          -  129               - 14245.9134      -   0.2  100s
+ 1263041 193439     cutoff  130               - 14245.9134      -   0.2  105s
+ 1322873 200717          -  130               - 14246.9134      -   0.2  110s
+ 1389590 208871     cutoff  131               - 14246.9134      -   0.2  115s
+ 1442582 216603     cutoff  132               - 14246.9134      -   0.2  120s
+ 1502375 225560          -  131               - 14246.9134      -   0.2  125s
+ 1562397 234252          -  123               - 14246.9134      -   0.2  130s
+ 1621774 244081          -  132               - 14246.9134      -   0.2  135s
+ 1681868 251012          -  129               - 14246.9134      -   0.2  140s
+ 1741129 258564          -  129               - 14246.9134      -   0.2  145s
+ 1800615 265645          -  128               - 14246.9134      -   0.2  150s
+ 1867140 273556          -  125               - 14246.9134      -   0.2  155s
+ 1926702 281523          -  124               - 14246.9134      -   0.2  160s
+ 1986310 288335     cutoff  131               - 14246.9134      -   0.2  165s
+ 2052401 296304     cutoff  128               - 14246.9134      -   0.2  170s
+ 2111697 304811     cutoff  130               - 14246.9134      -   0.2  175s
+ 2171131 314650          -  127               - 14246.9134      -   0.2  180s
+ 2230669 322382     cutoff  129               - 14247.9134      -   0.2  185s
+ 2290320 327313     cutoff  129               - 14247.9134      -   0.2  190s
+ 2349943 332909     cutoff  130               - 14247.9134      -   0.2  195s
+ 2402795 339333          -  127               - 14247.9134      -   0.2  200s
+ 2468928 347490          -  130               - 14247.9134      -   0.2  205s
+ 2529014 354549     cutoff  128               - 14247.9134      -   0.2  210s
+ 2582348 360627     cutoff  132               - 14247.9134      -   0.2  215s
+ 2648507 369286          -  123               - 14247.9134      -   0.2  220s
+ 2708362 376164          -  129               - 14247.9134      -   0.2  225s
+ 2767956 383142          -  129               - 14247.9134      -   0.2  230s
+ 2827622 390739     cutoff  128               - 14247.9134      -   0.2  235s
+ 2887111 398081          -  127               - 14247.9134      -   0.2  240s
+ 2946859 405548          -  125               - 14247.9134      -   0.2  245s
+ 3006297 412321     cutoff  132               - 14247.9134      -   0.2  250s
+ 3066051 419106          -  127               - 14247.9134      -   0.2  255s
+ 3125126 426597     cutoff  131               - 14248.9134      -   0.2  260s
+ 3178056 432676          -  128               - 14248.9134      -   0.2  265s
+ 3238271 439345          -  134               - 14248.9134      -   0.2  270s
+ 3298104 445464     cutoff  129               - 14248.9134      -   0.2  275s
+ 3357592 453137     cutoff  137               - 14248.9134      -   0.2  280s
+ 3416422 461068          -  123               - 14248.9134      -   0.2  285s
+ 3476100 467729     cutoff  131               - 14248.9134      -   0.2  290s
+ 3536052 473627          -  132               - 14248.9134      -   0.2  295s
+ 3595448 479576          -  131               - 14248.9134      -   0.2  300s
+ 3654394 485473          -  128               - 14248.9134      -   0.2  305s
+ 3707604 489889     cutoff  128               - 14248.9134      -   0.2  310s
+ 3766883 496601          -  127               - 14248.9134      -   0.2  315s
+ 3826550 502176     cutoff  128               - 14248.9134      -   0.2  320s

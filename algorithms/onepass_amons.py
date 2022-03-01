@@ -2,6 +2,7 @@ import numpy as np
 import timeit
 import gurobipy as gp
 from gurobipy import GRB
+import pandas as pd
 
 def addvariables(Z):
     upperbounds=[]
@@ -101,16 +102,16 @@ def print_sols(Z, x, I, y):
         for (M,G) in fragments:
             used_indices=[]
             maps=[]
-            m=len(data["database_ncharges"][M])
+            m=len(data[targetname+"_amons_ncharges"][M])
             penalty=penalty + m*penaltyconst
-            fragmentlabels.append(data["database_labels"][M])
+            fragmentlabels.append(data[targetname+"_amons_labels"][M])
             for j in range(n):
                 i=int(A[j,M,G]-1)
                 if i>=0:
                     maps.append((i+1,j+1))
                     used_indices.append(i)
             assignments.append(maps)
-            charges=np.array(data["database_ncharges"][M])
+            charges=np.array(data[targetname+"_amons_ncharges"][M])
             excess.append(charges[np.delete(range(m),used_indices)].tolist())
             k=k+1
         d["Excess"].append(excess)
@@ -169,7 +170,7 @@ def main():
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=2 # number of possible copies of each molecule of the database
 timelimit=360 # in seconds (not counting setup)
-numbersolutions=1000 # size of solution pool
+numbersolutions=100 # size of solution pool
 representation=4 # 0 for Coulomb Matrix (CM), 1 for SLATM, 2 for aCM, 3 for SOAP, 4 for FCHL
 penaltyconst=[1,1,10000,1,1][representation] # constant in front of size penalty
 
