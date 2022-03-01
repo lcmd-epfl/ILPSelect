@@ -68,7 +68,7 @@ def print_sols(Z, x):
                     penalty=penalty-len(data[targetname+"_amons_ncharges"][M])
         d["SolN"].append(solnb+1)
         d["Fragments"].append(fragments)
-        d["ObjValNoPen"].append(Z.PoolObjVal-penalty*penaltyconst)
+        d["ObjValNoPen"].append(Z.PoolObjVal+penalty*penaltyconst)
         d["ObjValWithPen"].append(Z.PoolObjVal)
 
     df=pd.DataFrame(d)
@@ -91,7 +91,7 @@ def main():
     
     # model parameters
     # PoolSearchMode 1/2 forces to fill the solution pool. 2 finds the best solutions.
-    Z.setParam("PoolSearchMode", 1) 
+    Z.setParam("PoolSearchMode", 2) 
     # these prevent non integral values although some solutions are still duplicating -- to fix?
     Z.setParam("IntFeasTol", 1e-9)
     Z.setParam("IntegralityFocus", 1)
