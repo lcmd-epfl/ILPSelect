@@ -77,6 +77,7 @@ def print_sols(Z, x):
     df.to_csv("output_"+repname+"_global.csv")
     return 0
 
+
 def main():
     # construction of the model
     start=timeit.default_timer() 
