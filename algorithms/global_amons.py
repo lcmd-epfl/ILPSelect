@@ -58,9 +58,8 @@ def print_sols(Z, x):
         print("Sol no", solnb)
         print("Objective value", Z.PoolObjVal)
         d["ObjValWithPen"].append(Z.PoolObjVal)
-
-        # not sure I understand this obj value here
-#        d["ObjValNoPen"].append(Z.PoolObjVal + penaltyconst*penalty) 
+        # nb of atoms in the target
+        penalty = len(targetdata['target_ncharges'][target_index])
         Z.setParam("SolutionNumber",solnb)
 
         fragmentlabels = []
@@ -69,9 +68,10 @@ def print_sols(Z, x):
                 if (np.rint(x[M,G].Xn)==1):
                     fragment = data[targetname+"_amons_labels"][M]
                     fragmentlabels.append(fragment)
-                    print('fragment', fragment)
+                    penalty=penalty - len(data[targetname+"_amons_ncharges"][M])
 
         d["Fragments"].append(fragmentlabels)
+        d["ObjValNoPen"].append(Z.PoolObjVal - penalty*penaltyconst)
 
     print(d)
     df = pd.DataFrame(d)
