@@ -49,7 +49,7 @@ def setobjective(Z,x):
 
 # Solution processing, saved in "output_repname.csv".
 def print_sols(Z, x):
-    d={"Fragments":[], "ObjValNoPen":[], "ObjValWithPen":[]}
+    d={"SolN":[], "Fragments":[], "ObjValNoPen":[], "ObjValWithPen":[]}
     SolCount=Z.SolCount
     print("Using representation", repname)
     for solnb in range(SolCount):
@@ -57,26 +57,24 @@ def print_sols(Z, x):
         print("--------------------------------")
         print("Sol no", solnb)
         print("Objective value", Z.PoolObjVal)
-        d["ObjValWithPen"].append(Z.PoolObjVal)
-
-        # not sure I understand this obj value here
-#        d["ObjValNoPen"].append(Z.PoolObjVal + penaltyconst*penalty) 
         Z.setParam("SolutionNumber",solnb)
-
-        fragmentlabels = []
+        fragments=[]
+        penalty=len(targetdata["target_ncharges"][target_index]) # number of atoms in target
         for M in database_indices:
             for G in range(maxduplicates):
                 if (np.rint(x[M,G].Xn)==1):
-                    fragment = data[targetname+"_amons_labels"][M]
-                    fragmentlabels.append(fragment)
-                    print('fragment', fragment)
+                    print(data[targetname+"_amons_labels"][M])
+                    fragments.append(data[targetname+"_amons_labels"][M])
+                    penalty=penalty-len(data[targetname+"_amons_ncharges"][M])
+        d["SolN"].append(solnb+1)
+        d["Fragments"].append(fragments)
+        d["ObjValNoPen"].append(Z.PoolObjVal-penalty*penaltyconst)
+        d["ObjValWithPen"].append(Z.PoolObjVal)
 
-        d["Fragments"].append(fragmentlabels)
-
-    print(d)
-    df = pd.DataFrame(d)
-    print("Saving to output_global_"+repname+".csv")
-    df.to_csv("output_global_"+repname+".csv")
+    df=pd.DataFrame(d)
+    print(df)
+    print("Saving to output_"+repname+"_global.csv")
+    df.to_csv("output_"+repname+"_global.csv")
     return 0
 
 def main():
@@ -125,7 +123,7 @@ target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=2 # number of possible copies of each molecule of the database
 timelimit=3600# in seconds (not counting setup)
 numbersolutions=5 # size of solution pool
-representation=3 # 0 for SLATM, 1 for FCHL, 2 for SPAHM, 3 for CM
+representation=0 # 0 for SLATM, 1 for FCHL, 2 for SPAHM, 3 for CM
 
 # global constants
 # TODO global SOAP
