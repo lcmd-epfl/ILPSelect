@@ -44,7 +44,7 @@ def setobjective(Z,x):
                     CMM=data["database_reps"][MM]
                     expr+=CM.T@CMM *x[M,G]*x[MM,GG]
 
-    Z.setObjective(expr-penaltyconst*penalty, GRB.MINIMIZE)
+    Z.setObjective(expr+penaltyconst*penalty, GRB.MINIMIZE)
     print("Objective function set.")
     return 0
 
@@ -91,7 +91,7 @@ def main():
     
     # model parameters
     # PoolSearchMode 1/2 forces to fill the solution pool. 2 finds the best solutions.
-    Z.setParam("PoolSearchMode", 1) 
+    Z.setParam("PoolSearchMode", 2) 
     # these prevent non integral values although some solutions are still duplicating -- to fix?
     Z.setParam("IntFeasTol", 1e-9)
     Z.setParam("IntegralityFocus", 1)
