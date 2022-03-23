@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/home/vangerwe/molekuehl-new/algorithms/global_amons.py", line 132, in <module>
+    repname=["SLATM", "FCHL", "SPAHM", "CM"][representation]
+IndexError: list index out of range

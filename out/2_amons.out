@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/home/vangerwe/molekuehl-new/algorithms/global_amons.py", line 136, in <module>
+    data=np.load(dataname, allow_pickle=True)
+  File "/software/anaconda/2019.3/python-3.7/lib/python3.7/site-packages/numpy/lib/npyio.py", line 415, in load
+    fid = open(os_fspath(file), "rb")
+FileNotFoundError: [Errno 2] No such file or directory: '../representations/amons_SPAHM_global_data.npz'
