@@ -142,7 +142,7 @@ def main():
     # model parameters
     # PoolSearchMode 1/2 forces to fill the solution pool. 2 finds the best solutions.
     # Set to 1 because of duplicating solutions which differ by 1e-9 and are seen as different.
-    Z.setParam("PoolSearchMode", 1) 
+    Z.setParam("PoolSearchMode", 2) 
     # these prevent non integral values although some solutions are still duplicating -- to fix?
     Z.setParam("IntFeasTol", 1e-9)
     Z.setParam("IntegralityFocus", 1)
