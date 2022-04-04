@@ -121,15 +121,14 @@ def main():
 
 # modifiable global settings
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
-maxduplicates=2 # number of possible copies of each molecule of the database
-timelimit=3600# in seconds (not counting setup)
+maxduplicates=1 # number of possible copies of each molecule of the database
+timelimit=43200# in seconds (not counting setup)
 numbersolutions=1000 # size of solution pool
-representation=int(sys.argv[1]) # 0 for SLATM, 1 for FCHL, 2 for SPAHM, 3 for CM
+representation=int(sys.argv[1]) # 0 for SLATM, 1 for FCHL, 2 for SOAP, 3 for CM
 
 # global constants
-# TODO global SOAP
-repname=["SLATM", "FCHL", "SPAHM", "CM"][representation]
-penaltyconst=[10,1,1e3,1e4][representation]
+repname=["SLATM", "FCHL", "SOAP", "CM"][representation]
+penaltyconst=[10,5,1,1e4][representation]
 
 dataname="../representations/amons_"+repname+"_global_data.npz"
 data=np.load(dataname, allow_pickle=True)
