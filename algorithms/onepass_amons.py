@@ -3,6 +3,7 @@ import timeit
 import gurobipy as gp
 from gurobipy import GRB
 import pandas as pd
+import sys
 
 def addvariables(Z):
     upperbounds=[]
@@ -168,14 +169,14 @@ def main():
 
 # modifiable global settings
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
-maxduplicates=2 # number of possible copies of each molecule of the database
-timelimit=360 # in seconds (not counting setup)
-numbersolutions=100 # size of solution pool
-representation=4 # 0 for Coulomb Matrix (CM), 1 for SLATM, 2 for aCM, 3 for SOAP, 4 for FCHL
-penaltyconst=[1,1,10000,1,1][representation] # constant in front of size penalty
+maxduplicates=1 # number of possible copies of each molecule of the database
+timelimit=43200 # in seconds (not counting setup)
+numbersolutions=1000 # size of solution pool
+representation=int(sys.argv[1]) 
+penaltyconst=[100, 100, 100, 1, 1, 0.01, 1e4][representation] # constant in front of size penalty
 
 # global constants
-repname=["CM", "SLATM", "aCM", "SOAP", "FCHL"][representation]
+repname=["CM", "SLATM_2", "SLATM_3.5", "SLATM", "FCHL", "FCHL_4.8", "SOAP", "aCM"][representation]
 dataname="../representations/amons_"+repname+"_data.npz"
 
 data=np.load(dataname, allow_pickle=True)
