@@ -20,8 +20,7 @@ def addconstraints(Z,x,y):
     expr=gp.LinExpr() # number of atoms in picked molecules
     for M in database_indices:
         m=len(data[targetname+"_amons_ncharges"][M]) # size of molecule M
-        for G in range(maxduplicates):
-            expr+=m*x[M,G]
+        expr+=m*x.sum(M,'*')
     Z.addConstr(expr >= n)
 
     # constraints on y: 
@@ -30,7 +29,7 @@ def addconstraints(Z,x,y):
     for M in database_indices:
         Mcharges=np.array(data[targetname+"_amons_ncharges"][M])
         for i in range(len(penalties)):
-            penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x[M,0]
+            penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x.sum(M,'*')
     # need temporary variables to equate the penalty expression because otherwise gp.abs_ is confused and lost ;(
     temp=Z.addVars(len(penalties), vtype='I')
     Z.addConstrs(temp[i]==penalties[i] for i in range(len(penalties)))
@@ -44,9 +43,10 @@ def setobjective(Z,x,y):
     penalty=gp.LinExpr() # positive penalty added equal to sum over the atom types of max(0, number atoms in target - number of atoms in fragments)
     # this does not penalize picking an atom type that is not present in target -- but actually it implicitly does if we also penalize the size as before.
     T=targetdata["target_reps"][target_index]
-    
+   
+    # penalty is excess number of atom (difference fragments - targe - target) + distances to fulfilling target atom types (y)
     penalty+=y.sum() 
-    #penalty+=len(targetdata["target_ncharges"][target_index]) # number of atoms in target
+    penalty-=len(targetdata["target_ncharges"][target_index]) # number of atoms in target
     expr+=np.linalg.norm(T)**2
     for M in database_indices:
         print(M, "  /  ", size_database)
@@ -54,7 +54,7 @@ def setobjective(Z,x,y):
             CM=data[targetname+"_amons_reps"][M]
             expr+=-2*T.T@CM * x[M,G]
             
-            #penalty -= len(data[targetname+"_amons_ncharges"][M])*x[M,G] # number of atoms in M
+            penalty += len(data[targetname+"_amons_ncharges"][M])*x[M,G] # number of atoms in M
             for MM in database_indices: 
                 #print(MM, "  /  ", size_database)
                 for GG in range(maxduplicates):
@@ -77,8 +77,7 @@ def print_sols(Z, x, y):
         print("Sol no", solnb)
         print("Objective value", Z.PoolObjVal)
         fragments=[]
-        #penalty=len(targetdata["target_ncharges"][target_index]) # number of atoms in target
-        penalty=0
+        penalty=-len(targetdata["target_ncharges"][target_index]) # number of atoms in target
         for i in range(len(np.unique(targetdata["target_ncharges"][target_index]))):
             penalty+=y[i].Xn
         
@@ -87,7 +86,7 @@ def print_sols(Z, x, y):
                 if (np.rint(x[M,G].Xn)==1):
                     print(data[targetname+"_amons_labels"][M])
                     fragments.append(data[targetname+"_amons_labels"][M])
-                    #penalty=penalty-len(data[targetname+"_amons_ncharges"][M])
+                    penalty+=len(data[targetname+"_amons_ncharges"][M])
         
         d["SolN"].append(solnb+1)
         d["Fragments"].append(fragments)
@@ -146,7 +145,7 @@ target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200# in seconds (not counting setup)
 numbersolutions=1000 # size of solution pool
-representation=3#int(sys.argv[1]) # 0 for SLATM, 1 for FCHL, 2 for SOAP, 3 for CM
+representation=2#int(sys.argv[1]) # 0 for SLATM, 1 for FCHL, 2 for SOAP, 3 for CM
 
 # global constants
 repname=["SLATM", "FCHL", "SOAP", "CM"][representation]
