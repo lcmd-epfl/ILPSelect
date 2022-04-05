@@ -6,4 +6,5 @@ representations/database_SLATM.npz
 representations/database_aCM.npz
 representations/database_FCHL.npz
 representations/database_SLATM_global.npz
+representations/*SLATM*.npz
 .ipynb_checkpoints/
