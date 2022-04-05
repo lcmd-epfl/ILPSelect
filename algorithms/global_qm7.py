@@ -19,17 +19,18 @@ def addconstraints(Z,x,y):
     n=len(Tcharges) # size of target
     expr=gp.LinExpr() # number of atoms in picked molecules
     for M in database_indices:
-        m=len(data[targetname+"_amons_ncharges"][M]) # size of molecule M
-        expr+=m*x.sum(M,'*')
+        m=len(data["database_ncharges"][M]) # size of molecule M
+        for G in range(maxduplicates):
+            expr+=m*x[M,G]
     Z.addConstr(expr >= n)
 
     # constraints on y: 
     uniqueTcharges=np.unique(Tcharges, return_counts=True)
     penalties=[gp.LinExpr()+s for s in uniqueTcharges[1]]
     for M in database_indices:
-        Mcharges=np.array(data[targetname+"_amons_ncharges"][M])
+        Mcharges=np.array(data["database_ncharges"][M])
         for i in range(len(penalties)):
-            penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x.sum(M,'*')
+            penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x[M,0]
     # need temporary variables to equate the penalty expression because otherwise gp.abs_ is confused and lost ;(
     temp=Z.addVars(len(penalties), vtype='I')
     Z.addConstrs(temp[i]==penalties[i] for i in range(len(penalties)))
@@ -43,22 +44,21 @@ def setobjective(Z,x,y):
     penalty=gp.LinExpr() # positive penalty added equal to sum over the atom types of max(0, number atoms in target - number of atoms in fragments)
     # this does not penalize picking an atom type that is not present in target -- but actually it implicitly does if we also penalize the size as before.
     T=targetdata["target_reps"][target_index]
-   
-    # penalty is excess number of atom (difference fragments - targe - target) + distances to fulfilling target atom types (y)
+    
     penalty+=y.sum() 
-    penalty-=len(targetdata["target_ncharges"][target_index]) # number of atoms in target
+    #penalty+=len(targetdata["target_ncharges"][target_index]) # number of atoms in target
     expr+=np.linalg.norm(T)**2
     for M in database_indices:
         print(M, "  /  ", size_database)
         for G in range(maxduplicates):
-            CM=data[targetname+"_amons_reps"][M]
+            CM=data["database_reps"][M]
             expr+=-2*T.T@CM * x[M,G]
             
-            penalty += len(data[targetname+"_amons_ncharges"][M])*x[M,G] # number of atoms in M
+            #penalty -= len(data["database_ncharges"][M])*x[M,G] # number of atoms in M
             for MM in database_indices: 
                 #print(MM, "  /  ", size_database)
                 for GG in range(maxduplicates):
-                    CMM=data[targetname+"_amons_reps"][MM]
+                    CMM=data["database_reps"][MM]
                     expr+=CM.T@CMM *x[M,G]*x[MM,GG]
 
     Z.setObjective(expr+penaltyconst*penalty, GRB.MINIMIZE)
@@ -77,16 +77,17 @@ def print_sols(Z, x, y):
         print("Sol no", solnb)
         print("Objective value", Z.PoolObjVal)
         fragments=[]
-        penalty=-len(targetdata["target_ncharges"][target_index]) # number of atoms in target
+        #penalty=len(targetdata["target_ncharges"][target_index]) # number of atoms in target
+        penalty=0
         for i in range(len(np.unique(targetdata["target_ncharges"][target_index]))):
             penalty+=y[i].Xn
         
         for M in database_indices:
             for G in range(maxduplicates):
                 if (np.rint(x[M,G].Xn)==1):
-                    print(data[targetname+"_amons_labels"][M])
-                    fragments.append(data[targetname+"_amons_labels"][M])
-                    penalty+=len(data[targetname+"_amons_ncharges"][M])
+                    print(data["database_labels"][M])
+                    fragments.append(data["database_labels"][M])
+                    #penalty=penalty-len(data["database_ncharges"][M])
         
         d["SolN"].append(solnb+1)
         d["Fragments"].append(fragments)
@@ -125,7 +126,7 @@ def main():
     Z.setParam("PoolSolutions", numbersolutions)
     
     # optimization
-    print("------------")
+    print("---------e4---")
     print("Optimization")
     print("------------")
     Z.optimize()
@@ -142,16 +143,16 @@ def main():
 
 # modifiable global settings
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
-maxduplicates=1 # number of possible copies of each molecule of the database
-timelimit=43200# in seconds (not counting setup)
-numbersolutions=1000 # size of solution pool
-representation=2#int(sys.argv[1]) # 0 for SLATM, 1 for FCHL, 2 for SOAP, 3 for CM
+maxduplicates=2 # number of possible copies of each molecule of the database
+timelimit=3600# in seconds (not counting setup)
+numbersolutions=5 # size of solution pool
+representation=1 # 0 for SPAHM, 1 for CM, 2 for FCHL, 3 for SLATM
 
 # global constants
-repname=["SLATM_2", "SLATM_3.5", "SLATM", "FCHL", "FCHL_4.8", "SOAP", "CM"][representation]
-penaltyconst=[100, 100, 100, 1, 1, 0.01, 1e4][representation]
+repname=["SPAHM", "CM", "FCHL", "SLATM"][representation]
+penaltyconst=[1e4,1e3,1,10][representation]
 
-dataname="../representations/amons_"+repname+"_global_data.npz"
+dataname="../representations/database_"+repname+"_global.npz"
 data=np.load(dataname, allow_pickle=True)
 
 targetdataname="../representations/target_"+repname+"_global_data.npz"
@@ -159,6 +160,6 @@ targetdata=np.load(targetdataname, allow_pickle=True)
 
 targetname=["qm9", "vitc", "vitd"][target_index]
 
-size_database=len(data[targetname+"_amons_labels"]) # set this to a fixed number to take only first part of database
+size_database=30#len(data["database_labels"]) # set this to a fixed number to take only first part of database
 database_indices=range(size_database) 
 main()
