@@ -173,10 +173,10 @@ maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200 # in seconds (not counting setup)
 numbersolutions=1000 # size of solution pool
 representation=int(sys.argv[1]) 
-penaltyconst=[100, 100, 100, 1, 1, 0.01, 1e4][representation] # constant in front of size penalty
+penaltyconst=[1, 100, 100, 100, 100, 1, 1, 1, 1, 0.01, 1e4][representation] # constant in front of size penalty
 
 # global constants
-repname=["CM", "SLATM_2", "SLATM_3.5", "SLATM", "FCHL", "FCHL_4.8", "SOAP", "aCM"][representation]
+repname=["CM", "SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL_2", "FCHL_3.5", "FCHL_4.8", "FCHL", "SOAP", "aCM"][representation]
 dataname="../representations/amons_"+repname+"_data.npz"
 
 data=np.load(dataname, allow_pickle=True)

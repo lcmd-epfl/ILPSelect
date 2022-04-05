@@ -148,8 +148,8 @@ numbersolutions=1000 # size of solution pool
 representation=int(sys.argv[1])
 
 # global constants
-repname=["SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL", "FCHL_4.8", "SOAP", "CM"][representation]
-penaltyconst=[100, 100, 100, 100, 1, 1, 0.01, 1e4][representation]
+repname=["SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL_2", "FCHL_3.5", "FCHL_4.8", "FCHL", "SOAP", "CM"][representation]
+penaltyconst=[100, 100, 100, 100, 1, 1, 1, 1, 0.01, 1e4][representation]
 
 dataname="../representations/amons_"+repname+"_global_data.npz"
 data=np.load(dataname, allow_pickle=True)
