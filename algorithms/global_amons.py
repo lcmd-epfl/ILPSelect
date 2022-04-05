@@ -145,11 +145,11 @@ target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200# in seconds (not counting setup)
 numbersolutions=1000 # size of solution pool
-representation=2#int(sys.argv[1]) # 0 for SLATM, 1 for FCHL, 2 for SOAP, 3 for CM
+representation=int(sys.argv[1])
 
 # global constants
-repname=["SLATM_2", "SLATM_3.5", "SLATM", "FCHL", "FCHL_4.8", "SOAP", "CM"][representation]
-penaltyconst=[100, 100, 100, 1, 1, 0.01, 1e4][representation]
+repname=["SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL", "FCHL_4.8", "SOAP", "CM"][representation]
+penaltyconst=[100, 100, 100, 100, 1, 1, 0.01, 1e4][representation]
 
 dataname="../representations/amons_"+repname+"_global_data.npz"
 data=np.load(dataname, allow_pickle=True)
