@@ -170,9 +170,9 @@ def main():
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200 # in seconds (not counting setup)
-numbersolutions=5 # size of solution pool
-representation=2#int(sys.argv[1]) 
-penaltyconst=[1e3, 3, 3, 100, 100, 1, 1, 1, 1, 0.01, 1e4][representation] # constant in front of size penalty
+numbersolutions=20 # size of solution pool
+representation=int(sys.argv[1]) 
+penaltyconst=[1e3, 10, 3, 100, 100, 1, 1, 1, 1, 0.01, 1e4][representation] # constant in front of size penalty
 
 # global constants
 repname=["CM", "SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL_2", "FCHL_3.5", "FCHL_4.8", "FCHL", "SOAP", "aCM"][representation]
