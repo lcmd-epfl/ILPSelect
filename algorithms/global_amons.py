@@ -9,11 +9,10 @@ import sys
 def addvariables(Z):
     I=[(M,G) for M in database_indices for G in range(maxduplicates)] # indices of variable x
     x=Z.addVars(I, vtype=GRB.BINARY)
-    y=Z.addVars(len(np.unique(targetdata["target_ncharges"][target_index])), vtype='I') # variable for each atom type in target
     print("Variables added.")
-    return x,y
+    return x
 
-def addconstraints(Z,x,y):
+def addconstraints(Z,x):
     # constraints on x: sum of picked sizes bigger than size of target
     Tcharges = targetdata["target_ncharges"][target_index]
     n=len(Tcharges) # size of target
@@ -22,36 +21,21 @@ def addconstraints(Z,x,y):
         m=len(data[targetname+"_amons_ncharges"][M]) # size of molecule M
         expr+=m*x.sum(M,'*')
     Z.addConstr(expr >= n)
-
-    # constraints on y: 
-    uniqueTcharges=np.unique(Tcharges, return_counts=True)
-    penalties=[gp.LinExpr()+s for s in uniqueTcharges[1]]
-    for M in database_indices:
-        Mcharges=np.array(data[targetname+"_amons_ncharges"][M])
-        for i in range(len(penalties)):
-            penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x.sum(M,'*')
-    # need temporary variables to equate the penalty expression because otherwise gp.abs_ is confused and lost ;(
-    temp=Z.addVars(len(penalties), vtype='I')
-    Z.addConstrs(temp[i]==penalties[i] for i in range(len(penalties)))
-    Z.addConstrs(y[i]==gp.abs_(temp[i]) for i in range(len(penalties)))
     return 0
 
 # objective value is L2 square distance between target and sum of fragments plus some positive penalty
-def setobjective(Z,x,y):
+def setobjective(Z,x):
     print("Constructing objective function... ")
     expr=gp.QuadExpr() # L2 squared distance from target rep to sum of chosen molecule reps
-#    penalty=gp.LinExpr()
     # this does not penalize picking an atom type that is not present in target -- but actually it implicitly does if we also penalize the size as before.
     T=targetdata["target_reps"][target_index]
    
- #   penalty+=y.sum()
     expr+=np.linalg.norm(T)**2
     for M in database_indices:
         print(M, "  /  ", size_database)
         for G in range(maxduplicates):
             CM=data[targetname+"_amons_reps"][M]
             expr+=-2*T.T@CM * x[M,G]
-            
             for MM in database_indices: 
                 #print(MM, "  /  ", size_database)
                 for GG in range(maxduplicates):
@@ -63,7 +47,7 @@ def setobjective(Z,x,y):
     return 0
 
 # Solution processing, saved in "output_repname.csv".
-def print_sols(Z, x, y):
+def print_sols(Z, x):
     d={"SolN":[], "Fragments":[], "ObjVal":[]}
     SolCount=Z.SolCount
     print("Using representation", repname)
@@ -84,7 +68,6 @@ def print_sols(Z, x, y):
         d["SolN"].append(solnb+1)
         d["Fragments"].append(fragments)
         d["ObjVal"].append(Z.PoolObjVal)
-        
     df=pd.DataFrame(d)
     print(df)
     print("Saving to output_"+repname+"_no_pen_global.csv")
@@ -96,9 +79,9 @@ def main():
     start=timeit.default_timer() 
     Z = gp.Model()
     Z.setParam('OutputFlag',1)
-    x,y=addvariables(Z)
-    addconstraints(Z,x,y)
-    setobjective(Z,x,y)
+    x=addvariables(Z)
+    addconstraints(Z,x)
+    setobjective(Z,x)
     stop=timeit.default_timer()
     print("Model setup: ", stop-start, "s")
     
@@ -129,7 +112,7 @@ def main():
         print("Model was proven to be infeasible.")
         return 1
     
-    print_sols(Z,x,y)
+    print_sols(Z,x)
     return 0
 
 # modifiable global settings

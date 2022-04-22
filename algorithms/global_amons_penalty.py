@@ -9,6 +9,8 @@ import sys
 def addvariables(Z):
     I=[(M,G) for M in database_indices for G in range(maxduplicates)] # indices of variable x
     x=Z.addVars(I, vtype=GRB.BINARY)
+    for (M,G) in I:
+        x[M,G].start = GRB.UNDEFINED
     y=Z.addVars(len(np.unique(targetdata["target_ncharges"][target_index])), vtype='I') # variable for each atom type in target
     print("Variables added.")
     return x,y
@@ -29,11 +31,14 @@ def addconstraints(Z,x,y):
     for M in database_indices:
         Mcharges=np.array(data[targetname+"_amons_ncharges"][M])
         for i in range(len(penalties)):
-            penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x.sum(M,'*')
-    # need temporary variables to equate the penalty expression because otherwise gp.abs_ is confused and lost ;(
+            penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x.sum(M,'*i')
+    print(uniqueTcharges[1]-[np.count_nonzero(Mcharges==uniqueTcharges[0][i]) for i in range(len(penalties))])
     temp=Z.addVars(len(penalties), vtype='I')
     Z.addConstrs(temp[i]==penalties[i] for i in range(len(penalties)))
     Z.addConstrs(y[i]==gp.abs_(temp[i]) for i in range(len(penalties)))
+    for i in range(len(penalties)):
+        temp[i].start=GRB.UNDEFINED
+        y[i].start=GRB.UNDEFINED
     return 0
 
 # objective value is L2 square distance between target and sum of fragments plus some positive penalty
@@ -144,13 +149,12 @@ def main():
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200# in seconds (not counting setup)
-numbersolutions=10 # size of solution pool
+numbersolutions=50 # size of solution pool
 representation=int(sys.argv[1])
 
 # global constants
 repname=["SLATM", "FCHL", "SOAP", "CM"][representation]
 penaltyconst=1e6
-
 dataname="../representations/amons_"+repname+"_global_data.npz"
 data=np.load(dataname, allow_pickle=True)
 
