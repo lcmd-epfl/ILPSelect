@@ -40,11 +40,13 @@ def addconstraints(Z,x,y):
 def setobjective(Z,x,y):
     print("Constructing objective function... ")
     expr=gp.QuadExpr() # L2 squared distance from target rep to sum of chosen molecule reps
-#    penalty=gp.LinExpr()
+    penalty=gp.LinExpr() # positive penalty added equal to sum over the atom types of max(0, number atoms in target - number of atoms in fragments)
     # this does not penalize picking an atom type that is not present in target -- but actually it implicitly does if we also penalize the size as before.
     T=targetdata["target_reps"][target_index]
    
- #   penalty+=y.sum()
+    # penalty is excess number of atom (difference fragments - targe - target) + distances to fulfilling target atom types (y)
+    penalty+=y.sum() 
+    penalty-=len(targetdata["target_ncharges"][target_index]) # number of atoms in target
     expr+=np.linalg.norm(T)**2
     for M in database_indices:
         print(M, "  /  ", size_database)
@@ -52,19 +54,20 @@ def setobjective(Z,x,y):
             CM=data[targetname+"_amons_reps"][M]
             expr+=-2*T.T@CM * x[M,G]
             
+            penalty += len(data[targetname+"_amons_ncharges"][M])*x[M,G] # number of atoms in M
             for MM in database_indices: 
                 #print(MM, "  /  ", size_database)
                 for GG in range(maxduplicates):
                     CMM=data[targetname+"_amons_reps"][MM]
                     expr+=CM.T@CMM *x[M,G]*x[MM,GG]
 
-    Z.setObjective(expr, GRB.MINIMIZE)
+    Z.setObjective(expr+penaltyconst*penalty, GRB.MINIMIZE)
     print("Objective function set.")
     return 0
 
 # Solution processing, saved in "output_repname.csv".
 def print_sols(Z, x, y):
-    d={"SolN":[], "Fragments":[], "ObjVal":[]}
+    d={"SolN":[], "Fragments":[], "ObjValNoPen":[], "ObjValWithPen":[]}
     SolCount=Z.SolCount
     print("Using representation", repname)
     for solnb in range(SolCount):
@@ -74,21 +77,26 @@ def print_sols(Z, x, y):
         print("Sol no", solnb)
         print("Objective value", Z.PoolObjVal)
         fragments=[]
+        penalty=-len(targetdata["target_ncharges"][target_index]) # number of atoms in target
+        for i in range(len(np.unique(targetdata["target_ncharges"][target_index]))):
+            penalty+=y[i].Xn
         
         for M in database_indices:
             for G in range(maxduplicates):
                 if (np.rint(x[M,G].Xn)==1):
                     print(data[targetname+"_amons_labels"][M])
                     fragments.append(data[targetname+"_amons_labels"][M])
+                    penalty+=len(data[targetname+"_amons_ncharges"][M])
         
         d["SolN"].append(solnb+1)
         d["Fragments"].append(fragments)
-        d["ObjVal"].append(Z.PoolObjVal)
+        d["ObjValWithPen"].append(Z.PoolObjVal)
+        d["ObjValNoPen"].append(Z.PoolObjVal-penalty*penaltyconst)
         
     df=pd.DataFrame(d)
     print(df)
-    print("Saving to output_"+repname+"_no_pen_global.csv")
-    df.to_csv("output_"+repname+"_no_pen_global.csv")
+    print("Saving to output_"+repname+"_pen_global.csv")
+    df.to_csv("output_"+repname+"_pen_global.csv")
     return 0
 
 def main():
@@ -140,7 +148,8 @@ numbersolutions=10 # size of solution pool
 representation=int(sys.argv[1])
 
 # global constants
-repname=["SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL_2", "FCHL_3.5", "FCHL_4.8", "FCHL", "SOAP", "CM"][representation]
+repname=["SLATM", "FCHL", "SOAP", "CM"][representation]
+penaltyconst=1e6
 
 dataname="../representations/amons_"+repname+"_global_data.npz"
 data=np.load(dataname, allow_pickle=True)

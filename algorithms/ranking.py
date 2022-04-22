@@ -7,7 +7,7 @@ import sys
 representation=int(sys.argv[1])
 prefix="_global" # "_global" or empty string "" for local
 target=0 # connectivity data only for target 0  
-repname=["CM", "SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL_2", "FCHL_3.5", "FCHL_4.8", "FCHL", "SOAP", "aCM"][representation]
+repname=["CM", "SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL_2", "FCHL_3.5", "FCHL_4.8", "FCHL", "SOAP"][representation]
 print("representation", repname)
 targetname=["qm9", "vitc", "vitd"][target]
 
