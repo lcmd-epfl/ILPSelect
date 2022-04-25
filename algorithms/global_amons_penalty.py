@@ -31,8 +31,7 @@ def addconstraints(Z,x,y):
     for M in database_indices:
         Mcharges=np.array(data[targetname+"_amons_ncharges"][M])
         for i in range(len(penalties)):
-            penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x.sum(M,'*i')
-    print(uniqueTcharges[1]-[np.count_nonzero(Mcharges==uniqueTcharges[0][i]) for i in range(len(penalties))])
+            penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x.sum(M,'*')
     temp=Z.addVars(len(penalties), vtype='I')
     Z.addConstrs(temp[i]==penalties[i] for i in range(len(penalties)))
     Z.addConstrs(y[i]==gp.abs_(temp[i]) for i in range(len(penalties)))
