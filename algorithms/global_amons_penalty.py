@@ -32,12 +32,16 @@ def addconstraints(Z,x,y):
         Mcharges=np.array(data[targetname+"_amons_ncharges"][M])
         for i in range(len(penalties)):
             penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x.sum(M,'*')
+    """
     temp=Z.addVars(len(penalties), vtype='I')
     Z.addConstrs(temp[i]==penalties[i] for i in range(len(penalties)))
     Z.addConstrs(y[i]==gp.abs_(temp[i]) for i in range(len(penalties)))
     for i in range(len(penalties)):
         temp[i].start=GRB.UNDEFINED
         y[i].start=GRB.UNDEFINED
+    """
+    Z.addConstrs(y[i]>=penalties[i] for i in range(len(penalties)))
+    Z.addConstrs(y[i]>=-penalties[i] for i in range(len(penalties)))
     return 0
 
 # objective value is L2 square distance between target and sum of fragments plus some positive penalty
@@ -136,7 +140,7 @@ def main():
     print("------------")
     print()
     print("Optimization runtime: ", Z.RunTime, "s")
-    
+    Z.write("aaa.lp")   
     if(Z.status == 3):
         print("Model was proven to be infeasible.")
         return 1
