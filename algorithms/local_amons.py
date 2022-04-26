@@ -100,7 +100,10 @@ def print_sols(Z, x, I, y):
         d["Assignments"].append(assignments)
              
     df=pd.DataFrame(d)
+    df["Fragments"]=df["Fragments"].apply(lambda x:str(x))
     df=df.drop_duplicates(subset='Fragments')
+    df=df.reset_index(drop=True)
+    print(df)
     print("Saving to output_"+repname+"_no_pen_local.csv.")
     df.to_csv("output_"+repname+"_no_pen_local.csv")
     return 0
@@ -147,7 +150,7 @@ def main():
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200 # in seconds (not counting setup)
-numbersolutions=50 # size of solution pool
+numbersolutions=150 # size of solution pool
 representation=int(sys.argv[1]) 
 
 # global constants
