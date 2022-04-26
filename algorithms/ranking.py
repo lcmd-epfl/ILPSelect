@@ -12,7 +12,7 @@ env=0 # 0 for local, 1 for global
 
 prefix=["", "_global"][env] 
 target=0 # connectivity data only for target 0  
-repname=["CM", "SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL_2", "FCHL_3.5", "FCHL_4.8", "FCHL", "SOAP"][representation]
+repname=["CM", "SLATM", "FCHL", "SOAP"][representation]
 print("Representation", repname)
 targetname=["qm9", "vitc", "vitd"][target]
 
@@ -111,5 +111,9 @@ for i in range(size_database):
 
 print("Number of unconnected solutions:", noncon_count)
 print("Sum of penalties of solutions (type excess+atom excess):", sum_typeexcess+sum_atomexcess)
+
 print("Ratio # with penalty / size of pool:", penalty_count/size_database)
 print("Ratio # not connected / size of pool:", noncon_count/size_database)
+
+print("Ranking is number of unconnected solutions/total number of solutions")
+print("Rank", noncon_count/size_database)
