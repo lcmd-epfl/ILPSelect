@@ -39,36 +39,18 @@ def addconstraints(Z,x,I,y):
 def setobjective(Z,x,I,y):
     print("Constructing objective function... ")
     key=0
-    if(representation==0): # Coulomb case
-        expr=gp.QuadExpr()
-        T=targetdata['target_CMs'][target_index]
-        for k in range(n):
-            for l in range(n):
-                expr += T[k,l]**2
-        for M in database_indices:
-            key=key+1
-            Mol=data[targetname+"_"+"amons_CMs"][M]
-            m=len(Mol)
-            for G in range(maxduplicates):
-                for (i,k) in [v[:2] for v in I if v[2:]==(M,G)]:
-                    for (j,l) in [v[:2] for v in I if v[2:]==(M,G)]:
-                        expr += (Mol[i,j]**2 - 2*T[k,l]*Mol[i,j])*x[i,k,M,G]*x[j,l,M,G]
-            print(key, "  /  ", size_database)
-        expr=expr
-
-    else: #SLATM case
-        expr=gp.LinExpr()
-        T=targetdata["target_reps"][target_index]
-        for M in database_indices:
-            key=key+1
-            Mol=data[targetname+"_amons_reps"][M]
-            m=len(Mol)
-            for G in range(maxduplicates):
-                for (i,j) in [v[:2] for v in I if v[2:]==(M,G)]:
-                    C=np.linalg.norm(Mol[i]-T[j])**2
-                    expr += C*x[i,j,M,G]
-            print(key, "  /  ", size_database)
-        expr=expr
+    expr=gp.LinExpr()
+    T=targetdata["target_reps"][target_index]
+    for M in database_indices:
+        key=key+1
+        Mol=data[targetname+"_amons_reps"][M]
+        m=len(Mol)
+        for G in range(maxduplicates):
+            for (i,j) in [v[:2] for v in I if v[2:]==(M,G)]:
+                C=np.linalg.norm(Mol[i]-T[j])**2
+                expr += C*x[i,j,M,G]
+        print(key, "  /  ", size_database)
+    expr=expr
 
     Z.setObjective(expr, GRB.MINIMIZE)
     print("Objective function set.")
@@ -118,7 +100,7 @@ def print_sols(Z, x, I, y):
         d["Assignments"].append(assignments)
              
     df=pd.DataFrame(d)
-    print(df)
+    df=df.drop_duplicates(subset='Fragments')
     print("Saving to output_"+repname+"_no_pen_local.csv.")
     df.to_csv("output_"+repname+"_no_pen_local.csv")
     return 0
@@ -165,11 +147,11 @@ def main():
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200 # in seconds (not counting setup)
-numbersolutions=100 # size of solution pool
+numbersolutions=50 # size of solution pool
 representation=int(sys.argv[1]) 
 
 # global constants
-repname=["CM", "SLATM", "FCHL", "SOAP", "aCM"][representation]
+repname=["SLATM", "FCHL", "SOAP", "aCM"][representation]
 dataname="../representations/amons_"+repname+"_data.npz"
 
 data=np.load(dataname, allow_pickle=True)

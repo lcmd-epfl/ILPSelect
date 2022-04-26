@@ -104,7 +104,7 @@ def print_sols(Z, x, I, y):
         d["Assignments"].append(assignments)
              
     df=pd.DataFrame(d)
-    print(df)
+    df = df.drop_duplicates(subset='Fragments')
     print("Saving to output_"+repname+"_pen_local.csv.")
     df.to_csv("output_"+repname+"_pen_local.csv")
     return 0
