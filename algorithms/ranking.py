@@ -5,13 +5,19 @@ import gurobipy as gp
 import sys
 
 representation=int(sys.argv[1])
-prefix="_global" # "_global" or empty string "" for local
+penalty=0 # 0 for no_pen, 1 for pen
+env=0 # 0 for local, 1 for global
+
+###############
+
+prefix=["", "_global"][env] 
 target=0 # connectivity data only for target 0  
 repname=["CM", "SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL_2", "FCHL_3.5", "FCHL_4.8", "FCHL", "SOAP"][representation]
-print("representation", repname)
+print("Representation", repname)
 targetname=["qm9", "vitc", "vitd"][target]
 
-d=pd.read_csv("../out/output_"+repname+prefix+".csv")
+filename="../out/output_"+repname+"_"+["no_pen","pen"][penalty]+"_"+["local","global"][env]+".csv"
+d=pd.read_csv(filename)
 data=np.load("../representations/amons_"+repname+prefix+"_data.npz", allow_pickle=True)
 targetdata=np.load("../representations/target_"+repname+prefix+"_data.npz", allow_pickle=True)
 CT=targetdata['target_ncharges'][target]
@@ -28,7 +34,10 @@ n=len(targetcharges)
 
 sum_sizes_solutions=0
 sum_typeexcess=0
+penalty_count=0
 for i in range(size_database):
+    temp1=sum_sizes_solutions
+    temp2=sum_typeexcess
     frags=ast.literal_eval(d.loc[i]["Fragments"])
     frag_indices=[]
     totalcharges=[]
@@ -44,6 +53,9 @@ for i in range(size_database):
         t=types[0][k]
         sum_typeexcess+=np.abs(types[1][k] - np.sum(totalcharges==t))
     #print(sum_typeexcess)
+    if(sum_typeexcess != temp2 or sum_sizes_solutions-temp1 != n):
+        penalty_count+=1
+    
 
 print("Type excess: ", sum_typeexcess)
 sum_atomexcess=sum_sizes_solutions - size_database*n
@@ -97,6 +109,7 @@ for i in range(size_database):
         noncon_count+=1
         print("Solution number", i, "with fragments", frags, "is not connected.")
 
-print("Number of unconnected solutions: ", noncon_count)
-print("Ranking is Type + Atom excess + 10*(number of unconnected solutions):")
-print("Rank", sum_typeexcess+sum_atomexcess + 10*noncon_count)
+print("Number of unconnected solutions:", noncon_count)
+print("Sum of penalties of solutions (type excess+atom excess):", sum_typeexcess+sum_atomexcess)
+print("Ratio # with penalty / size of pool:", penalty_count/size_database)
+print("Ratio # not connected / size of pool:", noncon_count/size_database)

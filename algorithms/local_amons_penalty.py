@@ -108,8 +108,8 @@ def print_sols(Z, x, I, y):
     df=df.drop_duplicates(subset='Fragments')
     df=df.reset_index(drop=True)
     print(df)
-    print("Saving to output_"+repname+"_pen_local.csv.")
-    df.to_csv("output_"+repname+"_pen_local.csv")
+    print("Saving to ../out/output_"+repname+"_pen_local.csv.")
+    df.to_csv("../out/output_"+repname+"_pen_local.csv")
     return 0
 
 def main():

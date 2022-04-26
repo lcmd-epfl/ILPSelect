@@ -103,8 +103,8 @@ def print_sols(Z, x, y):
         
     df=pd.DataFrame(d)
     print(df)
-    print("Saving to output_"+repname+"_pen_global.csv")
-    df.to_csv("output_"+repname+"_pen_global.csv")
+    print("Saving to ../out/output_"+repname+"_pen_global.csv")
+    df.to_csv("../out/output_"+repname+"_pen_global.csv")
     return 0
 
 def main():
