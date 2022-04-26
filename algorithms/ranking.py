@@ -7,7 +7,7 @@ import sys
 representation=int(sys.argv[1])
 prefix="_global" # "_global" or empty string "" for local
 target=0 # connectivity data only for target 0  
-repname=["CM", "SLATM_2", "SLATM_3.5", "SLATM", "SLATM_8", "FCHL_2", "FCHL_3.5", "FCHL_4.8", "FCHL", "SOAP"][representation]
+repname=["CM", "SLATM", "FCHL", "SOAP"][representation]
 print("representation", repname)
 targetname=["qm9", "vitc", "vitd"][target]
 
@@ -97,6 +97,5 @@ for i in range(size_database):
         noncon_count+=1
         print("Solution number", i, "with fragments", frags, "is not connected.")
 
-print("Number of unconnected solutions: ", noncon_count)
-print("Ranking is Type + Atom excess + 10*(number of unconnected solutions):")
-print("Rank", sum_typeexcess+sum_atomexcess + 10*noncon_count)
+print("Ranking is number of unconnected solutions/total number of solutions")
+print("Rank", noncon_count/size_database)
