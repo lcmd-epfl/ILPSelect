@@ -6,14 +6,13 @@ import sys
 
 representation=int(sys.argv[1])
 penalty=0 # 0 for no_pen, 1 for pen
-env=0 # 0 for local, 1 for global
+env=1 # 0 for local, 1 for global
 
 ###############
 
 prefix=["", "_global"][env] 
 target=0 # connectivity data only for target 0  
 repname=["CM", "SLATM", "FCHL", "SOAP"][representation]
-print("Representation", repname)
 targetname=["qm9", "vitc", "vitd"][target]
 
 filename="../out/output_"+repname+"_"+["no_pen","pen"][penalty]+"_"+["local","global"][env]+".csv"
@@ -24,6 +23,7 @@ CT=targetdata['target_ncharges'][target]
 size_database=len(d)
 
 print("Reading solutions of representation", repname)
+print("From file", filename)
 print("Size of solution pool:", size_database)
 
 targetcharges=targetdata["target_ncharges"][target]
@@ -34,7 +34,7 @@ n=len(targetcharges)
 
 sum_sizes_solutions=0
 sum_typeexcess=0
-penalty_count=0
+penalties=np.zeros(size_database)
 for i in range(size_database):
     temp1=sum_sizes_solutions
     temp2=sum_typeexcess
@@ -53,9 +53,7 @@ for i in range(size_database):
         t=types[0][k]
         sum_typeexcess+=np.abs(types[1][k] - np.sum(totalcharges==t))
     #print(sum_typeexcess)
-    if(sum_typeexcess != temp2 or sum_sizes_solutions-temp1 != n):
-        penalty_count+=1
-    
+    penalties[i]=sum_typeexcess-temp2 + sum_sizes_solutions-temp1-n
 
 print("Type excess: ", sum_typeexcess)
 sum_atomexcess=sum_sizes_solutions - size_database*n
@@ -99,6 +97,7 @@ def connectivity(frag_indices):
     return Z.status!=2
 
 noncon_count=0 # number of solutions which do not verifiy connectivity (cannot split target in connected components of fragments)
+isnotconnected=np.zeros(size_database)
 for i in range(size_database):
     frags=ast.literal_eval(d.loc[i]["Fragments"])
     frag_indices=[]
@@ -107,13 +106,18 @@ for i in range(size_database):
         frag_indices.append(index)
     if(connectivity(frag_indices)):
         noncon_count+=1
+        isnotconnected[i]=1
         print("Solution number", i, "with fragments", frags, "is not connected.")
+
 
 print("Number of unconnected solutions:", noncon_count)
 print("Sum of penalties of solutions (type excess+atom excess):", sum_typeexcess+sum_atomexcess)
 
-print("Ratio # with penalty / size of pool:", penalty_count/size_database)
+print("Ratio # with penalty / size of pool:", np.sum(penalties!=0)/size_database)
 print("Ratio # not connected / size of pool:", noncon_count/size_database)
 
 print("Ranking is number of unconnected solutions/total number of solutions")
 print("Rank", noncon_count/size_database)
+
+entry=['ObjVal','ObjValNoPen'][penalty]
+print("Computing the sum of (Penalty + NotConnected)/ObjValNoPen:", np.sum((penalties+isnotconnected)/d[entry]))
