@@ -168,4 +168,8 @@ targetname=["qm9", "vitc", "vitd"][target_index]
 
 size_database=len(data[targetname+"_amons_labels"]) # set this to a fixed number to take only first part of database
 database_indices=range(size_database) 
+
+if repname=="FCHL":
+    database_indices=range(1,size_database)
+
 main()
