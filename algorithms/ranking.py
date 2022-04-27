@@ -5,8 +5,8 @@ import gurobipy as gp
 import sys
 
 representation=int(sys.argv[1])
-penalty=0 # 0 for no_pen, 1 for pen
-env=0 # 0 for local, 1 for global
+penalty=1 # 0 for no_pen, 1 for pen
+env=1 # 0 for local, 1 for global
 
 ###############
 
@@ -112,8 +112,6 @@ for i in range(size_database):
 print("Number of unconnected solutions:", noncon_count)
 print("Sum of penalties of solutions (type excess+atom excess):", sum_typeexcess+sum_atomexcess)
 
+print("SCORES")
 print("Ratio # with penalty / size of pool:", penalty_count/size_database)
 print("Ratio # not connected / size of pool:", noncon_count/size_database)
-
-print("Ranking is number of unconnected solutions/total number of solutions")
-print("Rank", noncon_count/size_database)

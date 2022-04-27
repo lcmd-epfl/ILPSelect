@@ -70,8 +70,8 @@ def print_sols(Z, x):
         d["ObjVal"].append(Z.PoolObjVal)
     df=pd.DataFrame(d)
     print(df)
-    print("Saving to ../out/output_"+repname+"_no_pen_global.csv")
-    df.to_csv("../out/output_"+repname+"_no_pen_global.csv")
+    print("Saving to output_"+repname+"_no_pen_global.csv")
+    df.to_csv("output_"+repname+"_no_pen_global.csv")
     return 0
 
 def main():
@@ -119,7 +119,7 @@ def main():
 target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
 maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200# in seconds (not counting setup)
-numbersolutions=50 # size of solution pool
+numbersolutions=15 # size of solution pool
 representation=int(sys.argv[1])
 
 # global constants
@@ -134,5 +134,6 @@ targetdata=np.load(targetdataname, allow_pickle=True)
 targetname=["qm9", "vitc", "vitd"][target_index]
 
 size_database=len(data[targetname+"_amons_labels"]) # set this to a fixed number to take only first part of database
-database_indices=range(size_database) 
+#database_indices=range(size_database) 
+database_indices = [1, 3, 15]
 main()
