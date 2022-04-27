@@ -134,6 +134,10 @@ targetdata=np.load(targetdataname, allow_pickle=True)
 targetname=["qm9", "vitc", "vitd"][target_index]
 
 size_database=len(data[targetname+"_amons_labels"]) # set this to a fixed number to take only first part of database
-#database_indices=range(size_database) 
-database_indices = [1, 3, 15]
+
+if repname=="FCHL":
+    database_indices=range(1,size_database)
+else:
+    database_indices=range(size_database)
+
 main()
