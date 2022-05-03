@@ -39,18 +39,36 @@ def addconstraints(Z,x,I,y):
 def setobjective(Z,x,I,y):
     print("Constructing objective function... ")
     key=0
-    expr=gp.LinExpr()
-    T=targetdata["target_reps"][target_index]
-    for M in database_indices:
-        key=key+1
-        Mol=data[targetname+"_amons_reps"][M]
-        m=len(Mol)
-        for G in range(maxduplicates):
-            for (i,j) in [v[:2] for v in I if v[2:]==(M,G)]:
-                C=np.linalg.norm(Mol[i]-T[j])**2
-                expr += C*x[i,j,M,G]
-        print(key, "  /  ", size_database)
-    expr=expr
+    if(representation==0): # Coulomb case
+        expr=gp.QuadExpr()
+        T=targetdata['target_CMs'][target_index]
+        for k in range(n):
+            for l in range(n):
+                expr += T[k,l]**2
+        # is this correct for no penalty?
+        for M in database_indices:
+            key=key+1
+            Mol=data[targetname+"_"+"amons_CMs"][M]
+            m=len(Mol)
+            for G in range(maxduplicates):
+                for (i,k) in [v[:2] for v in I if v[2:]==(M,G)]:
+                    for (j,l) in [v[:2] for v in I if v[2:]==(M,G)]:
+                        expr += (Mol[i,j]**2 - 2*T[k,l]*Mol[i,j])*x[i,k,M,G]*x[j,l,M,G]
+            print(key, "  /  ", size_database)
+        expr=expr
+    else: # others
+        expr=gp.LinExpr()
+        T=targetdata["target_reps"][target_index]
+        for M in database_indices:
+            key=key+1
+            Mol=data[targetname+"_amons_reps"][M]
+            m=len(Mol)
+            for G in range(maxduplicates):
+                for (i,j) in [v[:2] for v in I if v[2:]==(M,G)]:
+                    C=np.linalg.norm(Mol[i]-T[j])**2
+                    expr += C*x[i,j,M,G]
+            print(key, "  /  ", size_database)
+        expr=expr
 
     Z.setObjective(expr, GRB.MINIMIZE)
     print("Objective function set.")
@@ -154,7 +172,7 @@ numbersolutions=150 # size of solution pool
 representation=int(sys.argv[1]) 
 
 # global constants
-repname=["SLATM", "FCHL", "SOAP", "aCM"][representation]
+repname=["CM", "SLATM", "FCHL", "SOAP", "aCM"][representation]
 dataname="../representations/amons_"+repname+"_data.npz"
 
 data=np.load(dataname, allow_pickle=True)
