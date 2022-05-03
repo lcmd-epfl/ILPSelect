@@ -68,7 +68,7 @@ def setobjective(Z,x,I,y):
                     C=np.linalg.norm(Mol[i]-T[j])**2
                     expr += C*x[i,j,M,G]
             print(key, "  /  ", size_database)
-        expr=expr
+        expr=expr-n*penaltyconst
 
     Z.setObjective(expr, GRB.MINIMIZE)
     print("Objective function set.")
