@@ -67,6 +67,7 @@ def setobjective(Z,x,I,y):
                 for (i,j) in [v[:2] for v in I if v[2:]==(M,G)]:
                     C=np.linalg.norm(Mol[i]-T[j])**2
                     expr += C*x[i,j,M,G]
+                expr += y[M,G]*m*penaltyconst 
             print(key, "  /  ", size_database)
         expr=expr-n*penaltyconst
 
@@ -84,8 +85,7 @@ def print_sols(Z, x, I, y):
         print()
         print("--------------------------------")
         Z.setParam("SolutionNumber",solnb)
-        print("Processing solution number", solnb+1, "  /  ", SolCount)
-        
+        print("Processing solution number", solnb+1, "  /  ", SolCount) 
         fragments=set()
         A=np.zeros((n,size_database,maxduplicates)) # A[j,M,G]
         for (i,j,M,G) in [v for v in I if np.rint(x[v].Xn)==1]:
