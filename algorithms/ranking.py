@@ -13,7 +13,7 @@ env=1 # 0 for local, 1 for global
 prefix=["", "_global"][env] 
 target=0 # connectivity data only for target 0  
 repname=["CM", "SLATM", "FCHL", "SOAP"][representation]
-targetname=["qm9", "vitc", "vitd"][target]
+targetname=["qm9"][target]
 
 filename="../out/output_"+repname+"_"+["no_pen","pen"][penalty]+"_"+["local","global"][env]+".csv"
 d=pd.read_csv(filename)
@@ -110,11 +110,6 @@ for i in range(size_database):
         print("Solution number", i, "with fragments", frags, "is not connected.")
 
 
-print("Number of unconnected solutions:", noncon_count)
-print("Sum of penalties of solutions (type excess+atom excess):", sum_typeexcess+sum_atomexcess)
-
 print("Ratio # with penalty / size of pool:", np.sum(penalties!=0)/size_database)
 print("Ratio # not connected / size of pool:", noncon_count/size_database)
 
-entry=['ObjVal','ObjValNoPen'][penalty]
-print("Computing the sum of (Penalty + NotConnected)/ObjValNoPen:", np.sum((penalties+isnotconnected)/d[entry]))
