@@ -11,7 +11,7 @@ def addvariables(Z):
     x=Z.addVars(I, vtype=GRB.BINARY)
     for (M,G) in I:
         x[M,G].start = GRB.UNDEFINED
-    y=Z.addVars(len(np.unique(targetdata["target_ncharges"][target_index])), vtype='I') # variable for each atom type in target
+    y=Z.addVars(len(np.unique(targetdata["target_ncharges"][target_index])), vtype='C') # variable for each atom type in target
     print("Variables added.")
     return x,y
 
@@ -32,14 +32,6 @@ def addconstraints(Z,x,y):
         Mcharges=np.array(data[targetname+"_amons_ncharges"][M])
         for i in range(len(penalties)):
             penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x.sum(M,'*')
-    """
-    temp=Z.addVars(len(penalties), vtype='I')
-    Z.addConstrs(temp[i]==penalties[i] for i in range(len(penalties)))
-    Z.addConstrs(y[i]==gp.abs_(temp[i]) for i in range(len(penalties)))
-    for i in range(len(penalties)):
-        temp[i].start=GRB.UNDEFINED
-        y[i].start=GRB.UNDEFINED
-    """
     Z.addConstrs(y[i]>=penalties[i] for i in range(len(penalties)))
     Z.addConstrs(y[i]>=-penalties[i] for i in range(len(penalties)))
     return 0
@@ -128,6 +120,7 @@ def main():
     Z.setParam("NumericFocus",3) # computer should pay more attention to numerical errors at the cost of running time.
     Z.setParam("Quad",1) # should be redundant with Numeric Focus
     Z.setParam("MarkowitzTol",0.99) # should be redundant with Numeric Focus
+    Z.setParam("PreQLinearize", 1)
  
     Z.setParam("TimeLimit", timelimit) 
     Z.setParam("PoolSolutions", numbersolutions)
