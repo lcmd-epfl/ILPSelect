@@ -141,6 +141,7 @@ def main():
     # these prevent non integral values although some solutions are still duplicating -- to fix?
     Z.setParam("IntFeasTol", 1e-9)
     Z.setParam("IntegralityFocus", 1)
+    Z.setParam("PreQLinearize",1)
 
     Z.setParam("TimeLimit", timelimit) 
     Z.setParam("PoolSolutions", numbersolutions)

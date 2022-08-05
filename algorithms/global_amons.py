@@ -95,6 +95,7 @@ def main():
     Z.setParam("NumericFocus",3) # computer should pay more attention to numerical errors at the cost of running time.
     Z.setParam("Quad",1) # should be redundant with Numeric Focus
     Z.setParam("MarkowitzTol",0.99) # should be redundant with Numeric Focus
+    Z.setParam("PreQLinearize", 1)
  
     Z.setParam("TimeLimit", timelimit) 
     Z.setParam("PoolSolutions", numbersolutions)
