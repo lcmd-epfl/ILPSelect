@@ -5,14 +5,14 @@ import gurobipy as gp
 import sys
 
 representation=int(sys.argv[1])
-penalty=0 # 0 for no_pen, 1 for pen
-env=1 # 0 for local, 1 for global
+penalty=1 # 0 for no_pen, 1 for pen
+env=1 # 1 for local, 1 for global
 
 ###############
 
 prefix=["", "_global"][env] 
 target=0 # connectivity data only for target 0  
-repname=["CM", "SLATM", "FCHL", "SOAP"][representation]
+repname=["CM", "aCM", "SLATM", "FCHL", "SOAP"][representation]
 targetname=["qm9"][target]
 
 filename="../out/output_"+repname+"_"+["no_pen","pen"][penalty]+"_"+["local","global"][env]+".csv"
