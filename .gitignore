@@ -7,4 +7,6 @@ representations/database_aCM.npz
 representations/database_FCHL.npz
 representations/database_SLATM_global.npz
 representations/*SLATM*.npz
+representations/*SOAP*.npz
+representations/qm7_aCM_data.npz
 .ipynb_checkpoints/

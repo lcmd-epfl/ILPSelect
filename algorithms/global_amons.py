@@ -117,7 +117,7 @@ def main():
     return 0
 
 # modifiable global settings
-target_index=1 # 0 for qm9 or 1 for penicillin
+target_index=0 # 0 for qm9 or 1 for penicillin
 maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200# in seconds (not counting setup)
 numbersolutions=15 # size of solution pool
