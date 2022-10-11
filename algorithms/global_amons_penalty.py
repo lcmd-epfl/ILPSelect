@@ -95,8 +95,8 @@ def print_sols(Z, x, y):
         
     df=pd.DataFrame(d)
     print(df)
-    print("Saving to ../out/output_"+repname+"_penicillin_pen_global.csv")
-    df.to_csv("../out/output_"+repname+"_penicillin_pen_global.csv")
+    print("Saving to ../out/output_"+repname+"_penicillin_100_global.csv")
+    df.to_csv("../out/output_"+repname+"_penicillin_100_global.csv")
     return 0
 
 def main():
@@ -144,7 +144,7 @@ def main():
 target_index=1 # 0 or 1 for qm9 or penicillin
 maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200# in seconds (not counting setup)
-numbersolutions=15 # size of solution pool
+numbersolutions=100 # size of solution pool
 representation=int(sys.argv[1])
 
 # global constants

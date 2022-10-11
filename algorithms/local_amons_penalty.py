@@ -169,10 +169,10 @@ def main():
     return 0
 
 # modifiable global settings
-target_index=0 # 0, 1, or 2 for qm9, vitc, or vitd.
+target_index=1 # 0, 1, for qm9, penicillin
 maxduplicates=1 # number of possible copies of each molecule of the database
 timelimit=43200 # in seconds (not counting setup)
-numbersolutions=150 # size of solution pool
+numbersolutions=50 # size of solution pool
 representation=int(sys.argv[1]) 
 penaltyconst=1e6
 
@@ -187,7 +187,7 @@ targetdata=np.load(targetdataname, allow_pickle=True)
 CT=targetdata['target_ncharges'][target_index]
 n=len(CT)
 
-targetname=["qm9", "vitc", "vitd"][target_index]
+targetname=["qm9", "penicillin"][target_index]
 size_database=len(data[targetname+"_amons_labels"]) # set this to a fixed number if the setup is too slow in case of qm7 database
 database_indices=range(size_database) 
 
