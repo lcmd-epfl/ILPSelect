@@ -21,7 +21,7 @@ class model:
     Parameters of setup
     
     scope: string
-        defines shape of representations; takes value "local_matrix", "local_vector", or "matrix_vector".
+        defines shape of representations; takes value "local_matrix", "local_vector", or "global_vector".
     penalty_constant: int or float, optional (default=1e6)
         sets penalty constant in objective value.
     duplicates: int, optional (default=1)
@@ -59,21 +59,35 @@ class model:
 
     ################### functions to call below ##################
     def __init__(self, path_to_database, path_to_target, scope):
+        assert scope == "local_vector" or scope == "local_matrix" or scope == "global_vector", "Scope takes values local_matrix, local_vector, and global_vector only."
         self.database=np.load(path_to_database, allow_pickle=True)
 
         self.target=np.load(path_to_target, allow_pickle=True)
 
         self.size_database=len(self.database["labels"])
+        #self.database_indices=range(20) # change this to only take parts of the database
         self.database_indices=range(self.size_database) # change this to only take parts of the database
         self.scope=scope
     
-    def setup(self, penalty_constant, duplicates=1):
+    def setup(self, penalty_constant=1e6, duplicates=1):
         # construction of the model
         self.duplicates=duplicates
         self.penalty_constant=penalty_constant
+
         start=timeit.default_timer() 
+
         self.Z = gp.Model()
+        # model parameters
         self.Z.setParam('OutputFlag',1)
+        # these prevent non integral values although some solutions are still duplicating -- to fix?
+        self.Z.setParam("IntFeasTol", 1e-9)
+        self.Z.setParam("IntegralityFocus", 1)
+        self.Z.setParam("Method",1) # dual simplex method tends to keep integrality, reducing duplicate solutions. Method 0 is also possible for primal simplex.
+        self.Z.setParam("NumericFocus",3) # computer should pay more attention to numerical errors at the cost of running time.
+        self.Z.setParam("Quad",1) # should be redundant with Numeric Focus
+        self.Z.setParam("MarkowitzTol",0.99) # should be redundant with Numeric Focus
+        self.Z.setParam("PreQLinearize", 1) # linearizes objective value from quadratic expression
+
         self.x,self.y=self.addvariables(self.Z)
         self.addconstraints(self.Z,self.x,self.y)
         self.setobjective(self.Z,self.x,self.y)
@@ -81,9 +95,9 @@ class model:
         print("Model setup: ", stop-start, "s")
         return 0
 
-    def optimize(self, number_of_solutions=15, timelimit=43200, poolsearchmode=2):
+    def optimize(self, number_of_solutions=15, timelimit=43200, PoolSearchMode=2):
         # optimization
-        self.Z.setParam("PoolSearchMode", poolsearchmode)
+        self.Z.setParam("PoolSearchMode", PoolSearchMode)
         self.Z.setParam("TimeLimit", timelimit) 
         self.Z.setParam("PoolSolutions", number_of_solutions)
 
@@ -107,6 +121,7 @@ class model:
     ############## tool functions below used by callable functions above ####################
 
     def addvariables(self,Z):
+        print("Adding variables...")
         if(self.scope=="local_matrix" or self.scope=="local_vector"):
             Tcharges = self.target["ncharges"]
             n=len(Tcharges) # size of target
@@ -127,13 +142,11 @@ class model:
             for (M,G) in I:
                 x[M,G].start = GRB.UNDEFINED
             y=Z.addVars(len(np.unique(self.target["ncharges"])), vtype='C') # variable for each atom type in target
-        else:
-            print("Scope takes values local_matrix, local_vector, and global_vector only.")
-            return 1
         print("Variables added.")
         return x,y
 
     def addconstraints(self,Z,x,y):
+        print("Adding constraints...")
         if(self.scope=="local_matrix" or self.scope=="local_vector"):
             n=len(self.target['ncharges']) # size of target
             # bijection into [n]
@@ -167,11 +180,12 @@ class model:
                     penalties[i]-=np.count_nonzero(Mcharges==uniqueTcharges[0][i])*x.sum(M,'*')
             Z.addConstrs(y[i]>=penalties[i] for i in range(len(penalties)))
             Z.addConstrs(y[i]>=-penalties[i] for i in range(len(penalties)))
-        return 0 
+            print("Constraints added...")
+            return 0 
 
     # objective value is L2 square distance between target and sum of fragments plus some positive penalty
     def setobjective(self,Z,x,y):
-        print("Constructing objective function in "+self.scope+" case...")
+        print("Constructing objective function...")
         if(self.scope=="local_matrix"): # Coulomb case
             expr=gp.QuadExpr()
             T=self.target['rep']
@@ -229,16 +243,13 @@ class model:
 
             expr=expr+self.penalty_constant*penalty
         
-        else:
-            print("Scope takes values local_matrix, local_vector, and global_vector only.")
-            return 1
-        
         Z.setObjective(expr, GRB.MINIMIZE)
         print("Objective function set.")
         return 0
 
     # Solution processing, saved in "output_repname.csv".
     def print_sols(self,Z, x, y,output_name):
+        print("Saving to "+output_name+"...")
         if(self.scope=="local_matrix" or self.scope=="local_vector"):
             d={"SolN":[], "Fragments":[], "Excess":[], "ObjValNoPen":[], "ObjValWithPen":[], "Assignments":[]}
             n=len(self.target['ncharges']) # size of target
@@ -312,14 +323,11 @@ class model:
                 d["ObjValWithPen"].append(Z.PoolObjVal)
                 d["ObjValNoPen"].append(Z.PoolObjVal-penalty*self.penalty_constant)
                 df=pd.DataFrame(d)
-                
-        else:
-            print("Scope takes values local_matrix, local_vector, and global_vector only.")
-            return 1
-        
-        print(df)
-        print("Saving to "+output_name)
+
+        self.d=d 
+        #print(df)
         df.to_csv(output_name)
+        print("Saved.")
         return 0
 
     """

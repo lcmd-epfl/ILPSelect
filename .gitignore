@@ -10,3 +10,4 @@ representations/*SLATM*.npz
 representations/*SOAP*.npz
 representations/qm7_aCM_data.npz
 .ipynb_checkpoints/
+algorithms/__pycache__/
