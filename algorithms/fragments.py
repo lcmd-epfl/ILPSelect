@@ -1,6 +1,7 @@
 import numpy as np 
 from numpy import linalg
 import timeit
+import time
 import gurobipy as gp
 from gurobipy import GRB
 import pandas as pd
@@ -65,7 +66,6 @@ class model:
         self.target=np.load(path_to_target, allow_pickle=True)
 
         self.size_database=len(self.database["labels"])
-        #self.database_indices=range(20) # change this to only take parts of the database
         self.database_indices=range(self.size_database) # change this to only take parts of the database
         self.scope=scope
     
@@ -228,18 +228,22 @@ class model:
             penalty+=y.sum() 
             penalty-=len(self.target["ncharges"]) # number of atoms in target
             expr+=np.linalg.norm(T)**2
+            selfproducts=self.database['reps']@self.database['reps'].T
+            targetproducts=self.database['reps']@self.target['rep']
             for M in self.database_indices:
                 print(M, "  /  ", self.size_database)
                 for G in range(self.duplicates):
-                    CM=self.database["reps"][M]
-                    expr+=-2*T.T@CM * x[M,G]
-                    
+                    #CM=self.database["reps"][M]
+                    t=time.time()
+                    #expr+=-2*T.T@CM * x[M,G]
+                    expr+=-2*targetproducts[M] * x[M,G]
                     penalty += len(self.database["ncharges"][M])*x[M,G] # number of atoms in M
-                    for MM in self.database_indices: 
-                    #print(MM, "  /  ", size_database)
+                    for MM in range(M): 
                         for GG in range(self.duplicates):
-                            CMM=self.database["reps"][MM]
-                            expr+=CM.T@CMM *x[M,G]*x[MM,GG]
+                            #CMM=self.database["reps"][MM]
+                            #expr+=CM.T@CMM *x[M,G]*x[MM,GG]
+                            expr+=2*selfproducts[M,MM] *x[M,G]*x[MM,GG] # times two because of M and MM switch
+                    print(time.time()-t)
 
             expr=expr+self.penalty_constant*penalty
         
