@@ -66,6 +66,7 @@ class model:
         self.target=np.load(path_to_target, allow_pickle=True)
 
         self.size_database=len(self.database["labels"])
+        #self.size_database=20
         self.database_indices=range(self.size_database) # change this to only take parts of the database
         self.scope=scope
     
@@ -233,15 +234,11 @@ class model:
             for M in self.database_indices:
                 print(M, "  /  ", self.size_database)
                 for G in range(self.duplicates):
-                    #CM=self.database["reps"][M]
                     t=time.time()
-                    #expr+=-2*T.T@CM * x[M,G]
-                    expr+=-2*targetproducts[M] * x[M,G]
+                    expr+=(selfproducts[M,M]-2*targetproducts[M]) * x[M,G]
                     penalty += len(self.database["ncharges"][M])*x[M,G] # number of atoms in M
                     for MM in range(M): 
                         for GG in range(self.duplicates):
-                            #CMM=self.database["reps"][MM]
-                            #expr+=CM.T@CMM *x[M,G]*x[MM,GG]
                             expr+=2*selfproducts[M,MM] *x[M,G]*x[MM,GG] # times two because of M and MM switch
                     print(time.time()-t)
 
