@@ -66,8 +66,8 @@ class model:
         self.target=np.load(path_to_target, allow_pickle=True)
 
         self.size_database=len(self.database["labels"])
-        #self.database_indices=range(self.size_database) # change this to only take parts of the database
-        self.database_indices=range(50) # change this to only take parts of the database
+        self.database_indices=range(self.size_database) # change this to only take parts of the database
+        #self.database_indices=range(100) # change this to only take parts of the database
         self.scope=scope
         self.verbose=verbose
     
@@ -232,14 +232,12 @@ class model:
             selfproducts=self.database['reps']@self.database['reps'].T
             targetproducts=self.database['reps']@self.target['rep']
             for M in self.database_indices:
-                print(M, "  /  ", self.size_database)
+                if self.verbose : print(M, "  /  ", self.size_database)
                 for G in range(self.duplicates):
-                    expr+=-2*targetproducts[M] * x[M,G]
+                    expr+=(selfproducts[M,M]-2*targetproducts[M]) * x[M,G]
                     penalty += len(self.database["ncharges"][M])*x[M,G] # number of atoms in M
                     for MM in range(M): 
                         for GG in range(self.duplicates):
-                            #CMM=self.database["reps"][MM]
-                            #expr+=CM.T@CMM *x[M,G]*x[MM,GG]
                             expr+=2*selfproducts[M,MM] *x[M,G]*x[MM,GG] # times two because of M and MM switch
 
             expr=expr+self.penalty_constant*penalty
