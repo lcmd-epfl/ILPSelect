@@ -59,15 +59,17 @@ class model:
     """
 
     ################### functions to call below ##################
-    def __init__(self, path_to_database, path_to_target, scope):
+    def __init__(self, path_to_database, path_to_target, scope, verbose=0):
         assert scope == "local_vector" or scope == "local_matrix" or scope == "global_vector", "Scope takes values local_matrix, local_vector, and global_vector only."
         self.database=np.load(path_to_database, allow_pickle=True)
 
         self.target=np.load(path_to_target, allow_pickle=True)
 
         self.size_database=len(self.database["labels"])
-        self.database_indices=range(self.size_database) # change this to only take parts of the database
+        #self.database_indices=range(self.size_database) # change this to only take parts of the database
+        self.database_indices=range(50) # change this to only take parts of the database
         self.scope=scope
+        self.verbose=verbose
     
     def setup(self, penalty_constant=1e6, duplicates=1):
         # construction of the model
@@ -78,7 +80,7 @@ class model:
 
         self.Z = gp.Model()
         # model parameters
-        self.Z.setParam('OutputFlag',1)
+        self.Z.setParam('OutputFlag',self.verbose)
         # these prevent non integral values although some solutions are still duplicating -- to fix?
         self.Z.setParam("IntFeasTol", 1e-9)
         self.Z.setParam("IntegralityFocus", 1)
@@ -106,7 +108,6 @@ class model:
         print("Time limit: ", timelimit, " seconds")
         print("------------------------------------")
         self.Z.optimize()
-        print("------------")
         print()
         print("Optimization runtime: ", self.Z.RunTime, "s")
         if(self.Z.status == 3):
@@ -114,7 +115,7 @@ class model:
             return 1
         return 0
 
-    def output(self,output_name="../out/output.csv"):
+    def output(self,output_name=None):
         self.print_sols(self.Z,self.x,self.y, output_name)
         return 0
 
@@ -233,9 +234,6 @@ class model:
             for M in self.database_indices:
                 print(M, "  /  ", self.size_database)
                 for G in range(self.duplicates):
-                    #CM=self.database["reps"][M]
-                    t=time.time()
-                    #expr+=-2*T.T@CM * x[M,G]
                     expr+=-2*targetproducts[M] * x[M,G]
                     penalty += len(self.database["ncharges"][M])*x[M,G] # number of atoms in M
                     for MM in range(M): 
@@ -243,7 +241,6 @@ class model:
                             #CMM=self.database["reps"][MM]
                             #expr+=CM.T@CMM *x[M,G]*x[MM,GG]
                             expr+=2*selfproducts[M,MM] *x[M,G]*x[MM,GG] # times two because of M and MM switch
-                    print(time.time()-t)
 
             expr=expr+self.penalty_constant*penalty
         
@@ -253,16 +250,17 @@ class model:
 
     # Solution processing, saved in "output_repname.csv".
     def print_sols(self,Z, x, y,output_name):
-        print("Saving to "+output_name+"...")
+        self.SolCount=Z.SolCount
         if(self.scope=="local_matrix" or self.scope=="local_vector"):
             d={"SolN":[], "Fragments":[], "Excess":[], "ObjValNoPen":[], "ObjValWithPen":[], "Assignments":[]}
             n=len(self.target['ncharges']) # size of target
             SolCount=Z.SolCount
             for solnb in range(SolCount):
-                print()
-                print("--------------------------------")
                 Z.setParam("SolutionNumber",solnb)
-                print("Processing solution number", solnb+1, "  /  ", SolCount) 
+                if self.verbose:
+                    print()
+                    print("--------------------------------")
+                    print("Processing solution number", solnb+1, "  /  ", SolCount) 
                 fragments=set()
                 A=np.zeros((n,self.size_database,self.duplicates)) # A[j,M,G]
                 for (i,j,M,G) in [v for v in self.I if np.rint(x[v].Xn)==1]:
@@ -302,15 +300,17 @@ class model:
             df=df.drop_duplicates(subset='Fragments')
             df=df.reset_index(drop=True)
         elif(self.scope=="global_vector"):
-            d={"SolN":[], "Fragments":[], "ObjValNoPen":[], "ObjValWithPen":[]}
+            d={"SolN":[], "Fragments":[], "FragmentsID":[], "ObjValNoPen":[], "ObjValWithPen":[]}
             SolCount=Z.SolCount
             for solnb in range(SolCount):
                 Z.setParam("SolutionNumber",solnb)
-                print()
-                print("--------------------------------")
-                print("Sol no", solnb)
-                print("Objective value", Z.PoolObjVal)
+                if self.verbose:
+                    print()
+                    print("--------------------------------")
+                    print("Sol no", solnb)
+                    print("Objective value", Z.PoolObjVal)
                 fragments=[]
+                fragmentsid=[]
                 penalty=-len(self.target["ncharges"]) # number of atoms in target
                 for i in range(len(np.unique(self.target["ncharges"]))):
                     penalty+=y[i].Xn
@@ -318,21 +318,34 @@ class model:
                 for M in self.database_indices:
                     for G in range(self.duplicates):
                         if (np.rint(x[M,G].Xn)==1):
-                            print(self.database["labels"][M])
+                            if self.verbose: print(self.database["labels"][M])
+                            fragmentsid.append(M)
                             fragments.append(self.database["labels"][M])
                             penalty+=len(self.database["ncharges"][M])
                 
                 d["SolN"].append(solnb+1)
                 d["Fragments"].append(fragments)
+                d["FragmentsID"].append(fragmentsid)
                 d["ObjValWithPen"].append(Z.PoolObjVal)
                 d["ObjValNoPen"].append(Z.PoolObjVal-penalty*self.penalty_constant)
                 df=pd.DataFrame(d)
 
-        self.d=d 
+        self.SolDict=d 
         #print(df)
-        df.to_csv(output_name)
-        print("Saved.")
+        if output_name != None:
+            print("Saving to "+output_name+"...")
+            df.to_csv(output_name)
+            print("Saved.")
         return 0
+        
+    def add_forbidden_combination(self, fragmentsid):
+        expr=gp.LinExpr() 
+        for M in fragmentsid:
+            expr+=self.x.sum(M,'*')
+        self.Z.addConstr(expr <= len(fragmentsid)-1)
+        self.Z.update()
+        return 0
+
 
     """
         # model parameters
