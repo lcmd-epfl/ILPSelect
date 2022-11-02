@@ -67,7 +67,7 @@ class model:
 
         self.size_database=len(self.database["labels"])
         self.database_indices=range(self.size_database) # change this to only take parts of the database
-        #self.database_indices=range(100) # change this to only take parts of the database
+        #self.database_indices=range(600) # change this to only take parts of the database
         self.scope=scope
         self.verbose=verbose
     
@@ -81,14 +81,15 @@ class model:
         self.Z = gp.Model()
         # model parameters
         self.Z.setParam('OutputFlag',self.verbose)
-        # these prevent non integral values although some solutions are still duplicating -- to fix?
-        self.Z.setParam("IntFeasTol", 1e-9)
-        self.Z.setParam("IntegralityFocus", 1)
-        self.Z.setParam("Method",1) # dual simplex method tends to keep integrality, reducing duplicate solutions. Method 0 is also possible for primal simplex.
-        self.Z.setParam("NumericFocus",3) # computer should pay more attention to numerical errors at the cost of running time.
-        self.Z.setParam("Quad",1) # should be redundant with Numeric Focus
-        self.Z.setParam("MarkowitzTol",0.99) # should be redundant with Numeric Focus
-        self.Z.setParam("PreQLinearize", 1) # linearizes objective value from quadratic expression
+
+        self.Z.setParam("PreQLinearize", 0)
+        self.Z.setParam("MIPFocus",1)
+        self.Z.setParam("SolutionLimit",50)
+        self.Z.setParam("PoolGap",5)
+        # for memory issues in cluster
+        #self.Z.setParam("Threads",16)
+        #self.Z.setParam("NodefileStart", 0.5)
+        #self.Z.setParam("NodefileDir", "/scratch/haeberle/molekuehl")
 
         self.x,self.y=self.addvariables(self.Z)
         self.addconstraints(self.Z,self.x,self.y)
@@ -140,8 +141,8 @@ class model:
         elif(self.scope=="global_vector"):
             I=[(M,G) for M in self.database_indices for G in range(self.duplicates)] # indices of variable x
             x=Z.addVars(I, vtype=GRB.BINARY)
-            for (M,G) in I:
-                x[M,G].start = GRB.UNDEFINED
+            for M in [0,1,16,28,29,53,92]:
+                x[M,0].start = 1
             y=Z.addVars(len(np.unique(self.target["ncharges"])), vtype='C') # variable for each atom type in target
         print("Variables added.")
         return x,y
