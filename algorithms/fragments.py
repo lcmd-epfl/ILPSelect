@@ -66,10 +66,11 @@ class model:
         self.target=np.load(path_to_target, allow_pickle=True)
 
         self.size_database=len(self.database["labels"])
-        self.database_indices=range(self.size_database) # change this to only take parts of the database
-        #self.database_indices=range(600) # change this to only take parts of the database
+        #self.size_database=600 # uncomment this to only first indices of the database
+        self.database_indices=range(self.size_database)
         self.scope=scope
         self.verbose=verbose
+        self.temporaryconstraints=[]
     
     def setup(self, penalty_constant=1e6, duplicates=1):
         # construction of the model
@@ -84,8 +85,8 @@ class model:
 
         self.Z.setParam("PreQLinearize", 0)
         self.Z.setParam("MIPFocus",1)
-        self.Z.setParam("SolutionLimit",50)
-        self.Z.setParam("PoolGap",5)
+        #self.Z.setParam("SolutionLimit",50)
+        self.Z.setParam("PoolGapAbs",35)
         # for memory issues in cluster
         #self.Z.setParam("Threads",16)
         #self.Z.setParam("NodefileStart", 0.5)
@@ -141,8 +142,8 @@ class model:
         elif(self.scope=="global_vector"):
             I=[(M,G) for M in self.database_indices for G in range(self.duplicates)] # indices of variable x
             x=Z.addVars(I, vtype=GRB.BINARY)
-            for M in [0,1,16,28,29,53,92]:
-                x[M,0].start = 1
+            #for M in [0,1,16,28,29,53,92]:
+            #    x[M,0].start = 1
             y=Z.addVars(len(np.unique(self.target["ncharges"])), vtype='C') # variable for each atom type in target
         print("Variables added.")
         return x,y
@@ -188,6 +189,7 @@ class model:
     # objective value is L2 square distance between target and sum of fragments plus some positive penalty
     def setobjective(self,Z,x,y):
         print("Constructing objective function...")
+        i=0
         if(self.scope=="local_matrix"): # Coulomb case
             expr=gp.QuadExpr()
             T=self.target['rep']
@@ -196,7 +198,8 @@ class model:
                 for l in range(n):
                     expr += T[k,l]**2
             for M in self.database_indices:
-                print(M, "  /  ", self.size_database)
+                i+=1
+                print(i, "  /  ", self.size_database)
                 Mol=self.database['reps'][M]
                 m=len(Mol)
                 for G in range(self.duplicates):
@@ -210,7 +213,8 @@ class model:
             T=self.target['rep']
             n=len(self.target['ncharges']) # size of target
             for M in self.database_indices:
-                print(M, "  /  ", self.size_database)
+                i+=1
+                print(i, "  /  ", self.size_database)
                 Mol=self.database["reps"][M]
                 m=len(Mol)
                 for G in range(self.duplicates):
@@ -233,11 +237,12 @@ class model:
             selfproducts=self.database['reps']@self.database['reps'].T
             targetproducts=self.database['reps']@self.target['rep']
             for M in self.database_indices:
-                if self.verbose : print(M, "  /  ", self.size_database)
+                i+=1
+                if self.verbose : print(i, "  /  ", self.size_database)
                 for G in range(self.duplicates):
                     expr+=(selfproducts[M,M]-2*targetproducts[M]) * x[M,G]
                     penalty += len(self.database["ncharges"][M])*x[M,G] # number of atoms in M
-                    for MM in range(M): 
+                    for MM in [i for i in self.database_indices if i < M]: 
                         for GG in range(self.duplicates):
                             expr+=2*selfproducts[M,MM] *x[M,G]*x[MM,GG] # times two because of M and MM switch
 
@@ -260,6 +265,7 @@ class model:
                     print()
                     print("--------------------------------")
                     print("Processing solution number", solnb+1, "  /  ", SolCount) 
+                    print("Objective value", Z.PoolObjVal)
                 fragments=set()
                 A=np.zeros((n,self.size_database,self.duplicates)) # A[j,M,G]
                 for (i,j,M,G) in [v for v in self.I if np.rint(x[v].Xn)==1]:
@@ -306,7 +312,7 @@ class model:
                 if self.verbose:
                     print()
                     print("--------------------------------")
-                    print("Sol no", solnb)
+                    print("Processing solution number", solnb+1, "  /  ", SolCount) 
                     print("Objective value", Z.PoolObjVal)
                 fragments=[]
                 fragmentsid=[]
@@ -335,15 +341,27 @@ class model:
             print("Saving to "+output_name+"...")
             df.to_csv(output_name)
             print("Saved.")
-        return 0
+        return d
         
-    def add_forbidden_combination(self, fragmentsid):
-        expr=gp.LinExpr() 
-        for M in fragmentsid:
-            expr+=self.x.sum(M,'*')
-        self.Z.addConstr(expr <= len(fragmentsid)-1)
+    def add_forbidden_combinations(self, fragmentsarray):
+        for fragmentsid in fragmentsarray:
+            expr=gp.LinExpr() 
+            for M in fragmentsid:
+                expr+=self.x.sum(M,'*')
+            self.Z.addConstr(expr <= len(fragmentsid)-1)
         self.Z.update()
         return 0
+
+    def randomsubset(self,p):
+        if len(self.temporaryconstraints) > 0:
+            self.Z.remove(self.temporaryconstraints)
+        
+        N=self.size_database
+        mask=np.random.random_sample(N)<p
+        indices=np.arange(0,N)[mask]
+        c=self.Z.addConstrs(self.x.sum(M,'*') == 0 for M in indices)
+        self.temporaryconstraints=c
+        return indices
 
 
     """
