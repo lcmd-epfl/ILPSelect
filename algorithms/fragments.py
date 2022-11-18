@@ -70,7 +70,7 @@ class model:
         self.database_indices=range(self.size_database)
         self.scope=scope
         self.verbose=verbose
-        self.temporaryconstraints=[]
+        self.temporaryconstraints=None
     
     def setup(self, penalty_constant=1e6, duplicates=1):
         # construction of the model
@@ -86,11 +86,11 @@ class model:
         self.Z.setParam("PreQLinearize", 0)
         self.Z.setParam("MIPFocus",1)
         #self.Z.setParam("SolutionLimit",50)
-        self.Z.setParam("PoolGapAbs",35)
+        self.Z.setParam("PoolGapAbs",25)
         # for memory issues in cluster
-        #self.Z.setParam("Threads",16)
-        #self.Z.setParam("NodefileStart", 0.5)
-        #self.Z.setParam("NodefileDir", "/scratch/haeberle/molekuehl")
+        self.Z.setParam("Threads",20)
+        self.Z.setParam("NodefileStart", 0.5)
+        self.Z.setParam("NodefileDir", "/scratch/haeberle/molekuehl")
 
         self.x,self.y=self.addvariables(self.Z)
         self.addconstraints(self.Z,self.x,self.y)
@@ -230,7 +230,7 @@ class model:
             # this does not penalize picking an atom type that is not present in target -- but actually it implicitly does if we also penalize the size as before.
             T=self.target["rep"]
            
-            # penalty is excess number of atom (difference fragments - targe - target) + distances to fulfilling target atom types (y)
+            # penalty is excess number of atom (difference fragments - target) + distances to fulfilling target atom types (y)
             penalty+=y.sum() 
             penalty-=len(self.target["ncharges"]) # number of atoms in target
             expr+=np.linalg.norm(T)**2
@@ -353,16 +353,16 @@ class model:
         return 0
 
     def randomsubset(self,p):
-        if len(self.temporaryconstraints) > 0:
+        if self.temporaryconstraints != None:
             self.Z.remove(self.temporaryconstraints)
-        
+
         N=self.size_database
         mask=np.random.random_sample(N)<p
-        indices=np.arange(0,N)[mask]
-        c=self.Z.addConstrs(self.x.sum(M,'*') == 0 for M in indices)
+        keptindices=np.arange(0,N)[mask]
+        lostindices=np.arange(0,N)[np.logical_not(mask)]
+        c=self.Z.addConstrs(self.x.sum(M,'*') == 0 for M in lostindices)
         self.temporaryconstraints=c
-        return indices
-
+        return keptindices
 
     """
         # model parameters
