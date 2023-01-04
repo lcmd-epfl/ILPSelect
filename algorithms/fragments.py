@@ -10,7 +10,12 @@ import sys
 class model:
     """
     Molecule fragmentation algorithm to split given target with database elements using a common representation.
-
+    ---------
+    Expected file structures
+    
+    Database structure: npz file with keys 'labels', 'ncharges', and 'reps'.
+    Target structure: npz file with keys 'ncharges' and 'rep'.
+    See documentation.
     ---------
     Parameters of __init__
     
@@ -27,6 +32,11 @@ class model:
         sets penalty constant in objective value.
     duplicates: int, optional (default=1)
         number of times the database is processed. Higher values than 1 replicate the database.
+    ## move the two below to self.optimize
+    nthreads: int, optional (default=0)
+        number of threads used by Gurobi for the optimization. Lower values reduce the amount of memory used.
+    poolgapabs: int or float, optional (default=GRB.INFINITY)
+        absolute gap between best and worst solutions that are kept by Gurobi. This is used to filter extremely bad solutions.
     ---------
     Parameters of optimize
     
@@ -72,7 +82,7 @@ class model:
         self.verbose=verbose
         self.temporaryconstraints=None
     
-    def setup(self, penalty_constant=1e6, duplicates=1):
+    def setup(self, penalty_constant=1e6, duplicates=1, nthreads=0, poolgapabs=GRB.INFINITY):
         # construction of the model
         self.duplicates=duplicates
         self.penalty_constant=penalty_constant
@@ -85,12 +95,13 @@ class model:
 
         self.Z.setParam("PreQLinearize", 0)
         self.Z.setParam("MIPFocus",1)
-        #self.Z.setParam("SolutionLimit",50)
-        self.Z.setParam("PoolGapAbs",25)
-        # for memory issues in cluster
-        self.Z.setParam("Threads",20)
+        self.Z.setParam("PoolGapAbs",poolgapabs)
+        #### for memory issues in cluster
+        self.Z.setParam("Threads",nthreads) # decrease number of threads to prevent memory issues
         self.Z.setParam("NodefileStart", 0.5)
         self.Z.setParam("NodefileDir", "/scratch/haeberle/molekuehl")
+        ####
+        print("Parameters: PoolGapAbs=", poolgapabs, "; Number of threads=", nthreads)
 
         self.x,self.y=self.addvariables(self.Z)
         self.addconstraints(self.Z,self.x,self.y)
@@ -104,6 +115,7 @@ class model:
         self.Z.setParam("PoolSearchMode", PoolSearchMode)
         self.Z.setParam("TimeLimit", timelimit) 
         self.Z.setParam("PoolSolutions", number_of_solutions)
+        print("Parameters: PoolSearchMode=", PoolSearchMode, "; Number of solutions=", number_of_solutions, "; Time limit (s)=", timelimit)
 
         print("------------------------------------")
         print("           Optimization")

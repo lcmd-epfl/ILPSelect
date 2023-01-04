@@ -2,18 +2,20 @@ import fragments
 import pandas as pd
 import numpy as np
 
-repfolder='../representations/'
-outfolder='../out/'
+### change this accordingly
+repfolder='/scratch/haeberle/'
+outfolder='/scratch/haeberle/out/'
+###
 
 M=fragments.model(repfolder+"qm7_FCHL_global_data-renamed.npz", repfolder+"penicillin_FCHL_global_data.npz", scope="global_vector", verbose=True)
-M.setup(penalty_constant=0, duplicates=1)
+M.setup(penalty_constant=0, duplicates=1, nthreads=15, poolgapabs=50)
 
 solutions={"Fragments":[], "Value":[]}
-for i in range(2):
+for i in range(35):
     I=M.randomsubset(0.821)
     print("Iteration", i)
     print("Dataset of size", len(I))
-    M.optimize(number_of_solutions=50, PoolSearchMode=2, timelimit=600)
+    M.optimize(number_of_solutions=50, PoolSearchMode=1, timelimit=600)
     M.output()
     d=M.SolDict
     M.add_forbidden_combinations(d['FragmentsID'])
