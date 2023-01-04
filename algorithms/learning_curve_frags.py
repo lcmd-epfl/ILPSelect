@@ -26,21 +26,37 @@ def KRR(X_train, N_train, y_train, X_test, N_test, y_test, sigma, l2reg):
     y_pred = np.dot(K_test, alpha)
     return np.mean(np.abs(y_pred - y_test))
 
-def learning_curve(X, atoms, y, X_test, atoms_test, y_test, sigma=1, l2reg=1e-10, CV=3):
+def learning_curve(X, atoms, y, X_test, atoms_test, y_test, sigma=1, l2reg=1e-10, CV=5, ordered=False):
     train_fractions = np.logspace(-1, 0, num=5, endpoint=True)
     train_sizes = [int(len(y)*x) for x in train_fractions]
 
-    maes = np.zeros((CV, 5))
-    ints = np.arange(len(X))
+    if ordered == False:
+        maes = np.zeros((CV, 5))
+        ints = np.arange(len(X))
+        for i in range(CV):
+            print("Shuffle training data iter...",i+1,"/",CV)
+            np.random.seed(i)
+            np.random.shuffle(ints)
+            X = X[ints]
+            atoms = atoms[ints]
+            y = y[ints]
 
-    for i in range(CV):
-        print("Shuffle training data iter...",i+1,"/",CV)
-        np.random.seed(i)
-        np.random.shuffle(ints)
-        X = X[ints]
-        atoms = atoms[ints]
-        y = y[ints]
+            for j, train_size in enumerate(train_sizes):
+                print("train size", train_size)
+                X_train = X[:train_size]
+                y_train = y[:train_size]
+                atoms_train = atoms[:train_size]
 
+                mae = KRR(X_train, atoms_train, y_train,
+                                            X_test, atoms_test, y_test, sigma=sigma,
+                                            l2reg=l2reg)
+                maes[i,j] = mae
+
+        mean_maes = np.mean(maes, axis=0)
+        stdev = np.std(maes, axis=0)
+
+    elif ordered == True:
+        mean_maes = np.zeros(5)
         for j, train_size in enumerate(train_sizes):
             print("train size", train_size)
             X_train = X[:train_size]
@@ -50,10 +66,8 @@ def learning_curve(X, atoms, y, X_test, atoms_test, y_test, sigma=1, l2reg=1e-10
             mae = KRR(X_train, atoms_train, y_train,
                                         X_test, atoms_test, y_test, sigma=sigma,
                                         l2reg=l2reg)
-            maes[i,j] = mae
-
-    mean_maes = np.mean(maes, axis=0)
-    stdev = np.std(maes, axis=0)
+            mean_maes[j] = mae
+        stdev = np.zeros(5)
 
     return train_sizes, mean_maes, stdev
 
@@ -68,10 +82,7 @@ if __name__ == "__main__":
     for ncharge in target_mol.nuclear_charges:
         target_energy -= atom_energy_coeffs[ncharge]
 
-    # LCs should not be random
-    # the frags should be loaded in the order they are chosen 
-    frag_indices = np.load('fragments.npy', allow_pickle=True)
-    frag_indices = [x for x in frag_indices.item()]
+    frag_indices = np.load('ordered_fragments_27-12-22.npy', allow_pickle=True)
     qm7_xyz = ['qm7/qm7_'+str(idx)+'.xyz' for idx in frag_indices]
     qm7_mols = [qml.Compound(x) for x in qm7_xyz]
     mbtypes = qml.representations.get_slatm_mbtypes([x.nuclear_charges for x in qm7_mols])
@@ -90,11 +101,12 @@ if __name__ == "__main__":
         for ncharge in mol_ncharges:
             qm7_energy[i] -= atom_energy_coeffs[ncharge]
 
-    sigma = 100
-    l2reg = 1e-10
+    sigma = 10
+    l2reg = 1e-4
 
     train_sizes, maes, std = learning_curve(qm7_reps, qm7_nat, qm7_energy,
                                             np.array([target_rep]), 
                                             np.array([target_nat]),
-                                            np.array([target_energy]))
-    np.savez('learning_curve_frags_slatm.npz', train_sizes=train_sizes, maes=maes, std=std)
+                                            np.array([target_energy]),
+                                            ordered=True)
+    np.savez('learning_curve_ordered_frags_27_slatm.npz', train_sizes=train_sizes, maes=maes, std=std)

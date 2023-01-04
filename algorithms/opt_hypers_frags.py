@@ -25,30 +25,21 @@ def KRR(X_train, N_train, y_train, X_test, N_test, y_test, sigma, l2reg):
     return np.mean(np.abs(y_pred - y_test))
 
 
-def hyperparam_opt(X_train, N_train, y_train, X_test, N_test, y_test, CV=3, seed=100):
-    size = int(len(X_train)/CV)
-    sigmas = [10, 100, 1000]
+def hyperparam_opt(X_train, N_train, y_train, X_test, N_test, y_test):
+    sigmas = [1, 10, 100, 1000]
     l2regs = [1e-10, 1e-7, 1e-4]
-    maes = np.zeros((CV, len(sigmas), len(l2regs)))
-    start_index = 0 
+    maes = np.zeros((len(sigmas), len(l2regs)))
 
-    for i in np.arange(CV):
-        seed += 1
-        X_tr = X_train[start_index:start_index+size]
-        y_tr = y_train[start_index:start_index+size]
-        N_tr = N_train[start_index:start_index+size]
-        for j, sigma in enumerate(sigmas):
-            for k, l2reg in enumerate(l2regs):
-                mae = KRR(X_tr, N_tr, y_tr, X_test, N_test, y_test, sigma, l2reg)
-                print('mae', mae, 'for sigma=', sigma, 'l2reg=', l2reg)
-                maes[i,j,k] = mae
-        start_index += size
-    mean_maes = np.mean(maes, axis=0)
-    min_j, min_k = np.unravel_index(np.argmin(mean_maes, axis=None),
-                                   mean_maes.shape)
+    for j, sigma in enumerate(sigmas):
+        for k, l2reg in enumerate(l2regs):
+            mae = KRR(X_train, N_train, y_train, X_test, N_test, y_test, sigma, l2reg)
+            print('mae', mae, 'for sigma=', sigma, 'l2reg=', l2reg)
+            maes[j,k] = mae
+    min_j, min_k = np.unravel_index(np.argmin(maes, axis=None),
+                                   maes.shape)
     min_sigma = sigmas[min_j]
     min_l2reg = l2regs[min_k]
-    print('min mae ',mean_maes[min_j, min_k],' for sigma=',min_sigma,
+    print('min mae ',maes[min_j, min_k],' for sigma=',min_sigma,
          ' and l2reg=',min_l2reg)
     return min_sigma, min_l2reg
 
@@ -62,10 +53,7 @@ if __name__ == "__main__":
     for ncharge in target_mol.nuclear_charges:
         target_energy -= atom_energy_coeffs[ncharge]
 
-    # LCs should not be random
-    # the frags should be loaded in the order they are chosen 
-    frag_indices = np.load('fragments.npy', allow_pickle=True)
-    frag_indices = [x for x in frag_indices.item()]
+    frag_indices = np.load('ordered_fragments_04-01-23.npy', allow_pickle=True)
     qm7_xyz = ['qm7/qm7_'+str(idx)+'.xyz' for idx in frag_indices]
     qm7_mols = [qml.Compound(x) for x in qm7_xyz]
     mbtypes = qml.representations.get_slatm_mbtypes([x.nuclear_charges for x in qm7_mols])
@@ -83,14 +71,6 @@ if __name__ == "__main__":
     for i, mol_ncharges in enumerate(qm7_ncharges):
         for ncharge in mol_ncharges:
             qm7_energy[i] -= atom_energy_coeffs[ncharge]
-
-    # get indices to shuffle
-    ints = np.arange(len(qm7_reps))
-    np.random.seed(3)
-    np.random.shuffle(ints)
-    qm7_nat = qm7_nat[ints]
-    qm7_reps = qm7_reps[ints]
-    qm7_energy = qm7_energy[ints]
 
     sigma, l2reg = hyperparam_opt(qm7_reps, qm7_nat, qm7_energy, np.array([target_rep]), np.array([target_nat]),
                               np.array([target_energy]))
