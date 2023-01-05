@@ -3,15 +3,15 @@ import pandas as pd
 import numpy as np
 
 ### change this accordingly
-repfolder='/scratch/haeberle/'
-outfolder='/scratch/haeberle/out/'
+repfolder='../representations/'
+outfolder='../out/'
 ###
 
-M=fragments.model(repfolder+"qm7_FCHL_global_data-renamed.npz", repfolder+"penicillin_FCHL_global_data.npz", scope="global_vector", verbose=True)
-M.setup(penalty_constant=0, duplicates=1, nthreads=15, poolgapabs=50)
+M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"penicillin_SLATM_local_data.npz", scope="local_vector", verbose=True)
+M.setup(penalty_constant=0, duplicates=1, nthreads=15, poolgapabs=30)
 
 solutions={"Fragments":[], "Value":[]}
-for i in range(35):
+for i in range(2):
     I=M.randomsubset(0.821)
     print("Iteration", i)
     print("Dataset of size", len(I))

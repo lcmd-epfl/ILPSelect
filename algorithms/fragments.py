@@ -76,7 +76,7 @@ class model:
         self.target=np.load(path_to_target, allow_pickle=True)
 
         self.size_database=len(self.database["labels"])
-        #self.size_database=600 # uncomment this to only first indices of the database
+        #self.size_database=100 # uncomment this to only take first indices of the database for testing
         self.database_indices=range(self.size_database)
         self.scope=scope
         self.verbose=verbose
@@ -97,11 +97,11 @@ class model:
         self.Z.setParam("MIPFocus",1)
         self.Z.setParam("PoolGapAbs",poolgapabs)
         #### for memory issues in cluster
-        self.Z.setParam("Threads",nthreads) # decrease number of threads to prevent memory issues
-        self.Z.setParam("NodefileStart", 0.5)
-        self.Z.setParam("NodefileDir", "/scratch/haeberle/molekuehl")
+        #self.Z.setParam("Threads",nthreads) # decrease number of threads to prevent memory issues
+        #self.Z.setParam("NodefileStart", 0.5)
+        #self.Z.setParam("NodefileDir", "/scratch/haeberle/molekuehl")
         ####
-        print("Parameters: PoolGapAbs=", poolgapabs, "; Number of threads=", nthreads)
+        print("Parameters: penalty_constant=", penalty_constant, "; duplicates=", duplicates)
 
         self.x,self.y=self.addvariables(self.Z)
         self.addconstraints(self.Z,self.x,self.y)
@@ -115,7 +115,6 @@ class model:
         self.Z.setParam("PoolSearchMode", PoolSearchMode)
         self.Z.setParam("TimeLimit", timelimit) 
         self.Z.setParam("PoolSolutions", number_of_solutions)
-        print("Parameters: PoolSearchMode=", PoolSearchMode, "; Number of solutions=", number_of_solutions, "; Time limit (s)=", timelimit)
 
         print("------------------------------------")
         print("           Optimization")
@@ -201,7 +200,7 @@ class model:
     # objective value is L2 square distance between target and sum of fragments plus some positive penalty
     def setobjective(self,Z,x,y):
         print("Constructing objective function...")
-        i=0
+        count=0
         if(self.scope=="local_matrix"): # Coulomb case
             expr=gp.QuadExpr()
             T=self.target['rep']
@@ -210,8 +209,8 @@ class model:
                 for l in range(n):
                     expr += T[k,l]**2
             for M in self.database_indices:
-                i+=1
-                print(i, "  /  ", self.size_database)
+                count+=1
+                print(count, "  /  ", self.size_database)
                 Mol=self.database['reps'][M]
                 m=len(Mol)
                 for G in range(self.duplicates):
@@ -225,15 +224,15 @@ class model:
             T=self.target['rep']
             n=len(self.target['ncharges']) # size of target
             for M in self.database_indices:
-                i+=1
-                print(i, "  /  ", self.size_database)
+                count+=1
+                print(count, "  /  ", self.size_database)
                 Mol=self.database["reps"][M]
                 m=len(Mol)
-                for G in range(self.duplicates):
-                    for (i,j) in [v[:2] for v in self.I if v[2:]==(M,G)]:
-                        C=np.linalg.norm(Mol[i]-T[j])**2
-                        expr += C*x[i,j,M,G]
-                    expr += y[M,G]*m*self.penalty_constant
+                for (i,j,G) in [(v[0],v[1],v[3]) for v in self.I if v[2]==M]:
+                    C=np.linalg.norm(Mol[i]-T[j])**2
+                    expr += C*x[i,j,M,G]
+                if self.penalty_constant != 0:
+                    expr += y.sum(M,'*')*m*self.penalty_constant
             expr=expr-n*self.penalty_constant
 
         elif(self.scope=="global_vector"):
@@ -249,11 +248,12 @@ class model:
             selfproducts=self.database['reps']@self.database['reps'].T
             targetproducts=self.database['reps']@self.target['rep']
             for M in self.database_indices:
-                i+=1
-                if self.verbose : print(i, "  /  ", self.size_database)
+                count+=1
+                if self.verbose : print(count, "  /  ", self.size_database)
                 for G in range(self.duplicates):
                     expr+=(selfproducts[M,M]-2*targetproducts[M]) * x[M,G]
-                    penalty += len(self.database["ncharges"][M])*x[M,G] # number of atoms in M
+                    if self.penalty_constant!=0:
+                        penalty += len(self.database["ncharges"][M])*x[M,G] # number of atoms in M
                     for MM in [i for i in self.database_indices if i < M]: 
                         for GG in range(self.duplicates):
                             expr+=2*selfproducts[M,MM] *x[M,G]*x[MM,GG] # times two because of M and MM switch
@@ -268,7 +268,7 @@ class model:
     def print_sols(self,Z, x, y,output_name):
         self.SolCount=Z.SolCount
         if(self.scope=="local_matrix" or self.scope=="local_vector"):
-            d={"SolN":[], "Fragments":[], "Excess":[], "ObjValNoPen":[], "ObjValWithPen":[], "Assignments":[]}
+            d={"SolN":[], "Fragments":[], "FragmentsID":[], "Excess":[], "ObjValNoPen":[], "ObjValWithPen":[], "Assignments":[]}
             n=len(self.target['ncharges']) # size of target
             SolCount=Z.SolCount
             for solnb in range(SolCount):
@@ -279,7 +279,8 @@ class model:
                     print("Processing solution number", solnb+1, "  /  ", SolCount) 
                     print("Objective value", Z.PoolObjVal)
                 fragments=set()
-                A=np.zeros((n,self.size_database,self.duplicates)) # A[j,M,G]
+                # constructs matrix A with entry [j,M,G] that takes value i+1 if x[i,j,M,G]=1, and 0 otherwise
+                A=np.zeros((n,self.size_database,self.duplicates)) 
                 for (i,j,M,G) in [v for v in self.I if np.rint(x[v].Xn)==1]:
                     fragments.add((M,G))
                     A[j,M,G]=i+1
@@ -289,6 +290,7 @@ class model:
                 assignments=[]
                 excess=[]
                 fragmentlabels=[]
+                fragmentsid=[]
                 k=0
                 for (M,G) in fragments:
                     used_indices=[]
@@ -296,6 +298,7 @@ class model:
                     m=len(self.database["ncharges"][M])
                     penalty+=m
                     fragmentlabels.append(self.database["labels"][M])
+                    fragmentsid.append(M)
                     for j in range(n):
                         i=int(A[j,M,G]-1)
                         if i>=0:
@@ -307,6 +310,7 @@ class model:
                     k=k+1
                 d["Excess"].append(excess)
                 d["Fragments"].append(fragmentlabels)
+                d["FragmentsID"].append(fragmentsid)
                 d["SolN"].append(solnb+1)
                 d["ObjValNoPen"].append(Z.PoolObjVal-penalty*self.penalty_constant)
                 d["ObjValWithPen"].append(Z.PoolObjVal)
@@ -348,7 +352,6 @@ class model:
                 df=pd.DataFrame(d)
 
         self.SolDict=d 
-        #print(df)
         if output_name != None:
             print("Saving to "+output_name+"...")
             df.to_csv(output_name)
@@ -359,7 +362,10 @@ class model:
         for fragmentsid in fragmentsarray:
             expr=gp.LinExpr() 
             for M in fragmentsid:
-                expr+=self.x.sum(M,'*')
+                if(self.scope=="global_vector"):
+                    expr+=self.x.sum(M,'*')
+                else:
+                    expr+=self.y.sum(M,'*')
             self.Z.addConstr(expr <= len(fragmentsid)-1)
         self.Z.update()
         return 0
@@ -372,24 +378,11 @@ class model:
         mask=np.random.random_sample(N)<p
         keptindices=np.arange(0,N)[mask]
         lostindices=np.arange(0,N)[np.logical_not(mask)]
-        c=self.Z.addConstrs(self.x.sum(M,'*') == 0 for M in lostindices)
+        
+        if(self.scope=="global_vector"):
+            c=self.Z.addConstrs(self.x.sum(M,'*') == 0 for M in lostindices)
+        else:
+            c=self.Z.addConstrs(self.y.sum(M,'*') == 0 for M in lostindices)
+
         self.temporaryconstraints=c
         return keptindices
-
-    """
-        # model parameters
-        # PoolSearchMode 1/2 forces to fill the solution pool. 2 finds the best solutions.
-        Z.setParam("PoolSearchMode", 2) 
-        # these prevent non integral values although some solutions are still duplicating -- to fix?
-        Z.setParam("IntFeasTol", 1e-9)
-        Z.setParam("IntegralityFocus", 1)
-        Z.setParam("Method",1) # dual simplex method tends to keep integrality, reducing duplicate solutions. Method 0 is also possible for primal simplex.
-        Z.setParam("NumericFocus",3) # computer should pay more attention to numerical errors at the cost of running time.
-        Z.setParam("Quad",1) # should be redundant with Numeric Focus
-        Z.setParam("MarkowitzTol",0.99) # should be redundant with Numeric Focus
-        Z.setParam("PreQLinearize", 1)
-     
-        Z.setParam("TimeLimit", timelimit) 
-        Z.setParam("PoolSolutions", numbersolutions)
-""" 
-
