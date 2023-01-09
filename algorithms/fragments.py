@@ -370,6 +370,16 @@ class model:
         self.Z.update()
         return 0
 
+    def remove_fragments(self, fragmentsarray):
+        for fragmentsid in fragmentsarray:
+            for M in fragmentsid:
+                if(self.scope=="global_vector"):
+                    self.Z.addConstr(self.x.sum(M,'*')==0)
+                else:
+                    self.Z.addConstr(self.y.sum(M,'*')==0)
+        self.Z.update()
+        return 0
+
     def randomsubset(self,p):
         if self.temporaryconstraints != None:
             self.Z.remove(self.temporaryconstraints)
