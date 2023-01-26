@@ -7,8 +7,8 @@ repfolder='../representations/'
 outfolder='../out/'
 ###
 
-M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"penicillin_SLATM_local_data.npz", scope="local_vector", verbose=True)
-M.setup(penalty_constant=0, duplicates=1, nthreads=15, poolgapabs=30)
+M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"pruned-penicillin_SLATM_local_data.npz", scope="local_vector", verbose=True)
+M.setup(penalty_constant=10, duplicates=1, poolgapabs=30)
 
 solutions={"Fragments":[], "Value":[]}
 for i in range(2):

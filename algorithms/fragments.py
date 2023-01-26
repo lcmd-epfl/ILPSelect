@@ -97,7 +97,7 @@ class model:
         self.Z.setParam("MIPFocus",1)
         self.Z.setParam("PoolGapAbs",poolgapabs)
         #### for memory issues in cluster
-        #self.Z.setParam("Threads",nthreads) # decrease number of threads to prevent memory issues
+        self.Z.setParam("Threads",nthreads) # decrease number of threads to decrease memory use
         #self.Z.setParam("NodefileStart", 0.5)
         #self.Z.setParam("NodefileDir", "/scratch/haeberle/molekuehl")
         ####
