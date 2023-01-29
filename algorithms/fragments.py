@@ -148,8 +148,8 @@ class model:
                 self.I=self.I+[(i,j,M,G) for G in range(self.duplicates) for i in range(m) for j in range(n) if Mcharges[i] == Tcharges[j]] # if condition excludes j; i always takes all m values
                 J=J+[(M,G) for G in range(self.duplicates)]
 
-            x=Z.addVars(self.I, vtype=GRB.BINARY)
-            y=Z.addVars(J, vtype=GRB.BINARY)
+            y=Z.addVars(J, vtype=GRB.BINARY, name='y')
+            x=Z.addVars(self.I, vtype=GRB.BINARY, name='x')
         elif(self.scope=="global_vector"):
             I=[(M,G) for M in self.database_indices for G in range(self.duplicates)] # indices of variable x
             x=Z.addVars(I, vtype=GRB.BINARY)
@@ -396,3 +396,7 @@ class model:
 
         self.temporaryconstraints=c
         return keptindices
+
+    def savemodel(self, filepath='model.mps'):
+        self.Z.write(filepath)
+        return 0
