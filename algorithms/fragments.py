@@ -76,13 +76,13 @@ class model:
         self.target=np.load(path_to_target, allow_pickle=True)
 
         self.size_database=len(self.database["labels"])
-        #self.size_database=100 # uncomment this to only take first indices of the database for testing
+        self.size_database=20 # uncomment this to only take first indices of the database for testing
         self.database_indices=range(self.size_database)
         self.scope=scope
         self.verbose=verbose
         self.temporaryconstraints=None
     
-    def setup(self, penalty_constant=1e6, duplicates=1, nthreads=0, poolgapabs=GRB.INFINITY):
+    def setup(self, penalty_constant=1e6, duplicates=1, poolgapabs=GRB.INFINITY, nthreads=0):
         # construction of the model
         self.duplicates=duplicates
         self.penalty_constant=penalty_constant
@@ -127,10 +127,92 @@ class model:
             print("Model was proven to be infeasible.")
             return 1
         return 0
+   
+    def readmodel(self, filepath):
+        self.Z=gp.read(filepath)
+        
+        x=gp.tupledict()
+        y=gp.tupledict()
+        Varlist=self.Z.getVars()
+        for v in Varlist:
+            vname=v.VarName
+            if vname[0]=='x':
+                x.update({(eval(vname[2:-1])): v})
+            elif vname[0]=='y':
+                y.update({(eval(vname[2:-1])): v})
+        self.x=x
+        self.y=y
+        return 0
 
+    def changepenalty(self, newpenalty):
+        self.penaltyconstant=newpenalty
+        Mol=self.database['ncharges'][0]
+        m=len(Mol)
+
+        # z = indicator variable for fragments
+        if(self.scope=="global_vector"):
+            z=self.x
+        else:
+            z=self.y
+
+        penratio=newpenalty/z[0,0].obj*m # =newpen/oldpen 
+        for i in z.keys():
+            obj=z[i].obj
+            z[i].setAttr('obj', obj*penratio)
+            self.Z.update()
+        return 0
+
+    # example filepath '../out/model.mps'
+    def savemodel(self, filepath):
+        if self.temporaryconstraints != None:
+            self.Z.remove(self.temporaryconstraints)
+        self.Z.write(filepath)
+        return 0
+    
     def output(self,output_name=None):
         self.print_sols(self.Z,self.x,self.y, output_name)
         return 0
+
+    ############## functions for subset selection ###############
+
+    def add_forbidden_combinations(self, fragmentsarray):
+        for fragmentsid in fragmentsarray:
+            expr=gp.LinExpr() 
+            for M in fragmentsid:
+                if(self.scope=="global_vector"):
+                    expr+=self.x.sum(M,'*')
+                else:
+                    expr+=self.y.sum(M,'*')
+            self.Z.addConstr(expr <= len(fragmentsid)-1)
+        self.Z.update()
+        return 0
+
+    def remove_fragments(self, fragmentsarray):
+        for fragmentsid in fragmentsarray:
+            for M in fragmentsid:
+                if(self.scope=="global_vector"):
+                    self.Z.addConstr(self.x.sum(M,'*')==0)
+                else:
+                    self.Z.addConstr(self.y.sum(M,'*')==0)
+        self.Z.update()
+        return 0
+
+    def randomsubset(self,p):
+        if self.temporaryconstraints != None:
+            self.Z.remove(self.temporaryconstraints)
+
+        N=self.size_database
+        mask=np.random.random_sample(N)<p
+        keptindices=np.arange(0,N)[mask]
+        lostindices=np.arange(0,N)[np.logical_not(mask)]
+        
+        if(self.scope=="global_vector"):
+            c=self.Z.addConstrs(self.x.sum(M,'*') == 0 for M in lostindices)
+        else:
+            c=self.Z.addConstrs(self.y.sum(M,'*') == 0 for M in lostindices)
+
+        self.temporaryconstraints=c
+        return keptindices
 
     ############## tool functions below used by callable functions above ####################
 
@@ -140,16 +222,16 @@ class model:
             Tcharges = self.target["ncharges"]
             n=len(Tcharges) # size of target
             upperbounds=[]
-            self.I=[]
+            I=[]
             J=[]
             for M in self.database_indices:
                 Mcharges=self.database["ncharges"][M]
                 m=len(Mcharges)
-                self.I=self.I+[(i,j,M,G) for G in range(self.duplicates) for i in range(m) for j in range(n) if Mcharges[i] == Tcharges[j]] # if condition excludes j; i always takes all m values
+                I=I+[(i,j,M,G) for G in range(self.duplicates) for i in range(m) for j in range(n) if Mcharges[i] == Tcharges[j]] # if condition excludes j; i always takes all m values
                 J=J+[(M,G) for G in range(self.duplicates)]
 
             y=Z.addVars(J, vtype=GRB.BINARY, name='y')
-            x=Z.addVars(self.I, vtype=GRB.BINARY, name='x')
+            x=Z.addVars(I, vtype=GRB.BINARY, name='x')
         elif(self.scope=="global_vector"):
             I=[(M,G) for M in self.database_indices for G in range(self.duplicates)] # indices of variable x
             x=Z.addVars(I, vtype=GRB.BINARY)
@@ -165,13 +247,14 @@ class model:
             n=len(self.target['ncharges']) # size of target
             # bijection into [n]
             Z.addConstrs(x.sum('*',j,'*', '*') == 1 for j in range(n))
-                
+            I=x.keys()
+
             for M in self.database_indices:
                 m=len(self.database['ncharges'][M])
                 # each i of each group is used at most once
                 Z.addConstrs(x.sum(i,'*',M,G) <= 1 for i in range(m) for G in range(self.duplicates))
                 # y[M,G] = OR gate of the x[i,j,M,G] for each (M,G) 
-                Z.addConstrs(y[M,G] >= x[v] for G in range(self.duplicates) for v in self.I if v[2:]==(M,G))
+                Z.addConstrs(y[M,G] >= x[v] for G in range(self.duplicates) for v in I if v[2:]==(M,G))
                 Z.addConstrs(y[M,G] <= x.sum('*','*',M,G) for G in range(self.duplicates))
 
         elif(self.scope=="global_vector"):
@@ -203,6 +286,7 @@ class model:
         count=0
         if(self.scope=="local_matrix"): # Coulomb case
             expr=gp.QuadExpr()
+            I=x.keys()
             T=self.target['rep']
             n=len(self.target['ncharges']) # size of target
             for k in range(n):
@@ -214,13 +298,14 @@ class model:
                 Mol=self.database['reps'][M]
                 m=len(Mol)
                 for G in range(self.duplicates):
-                    for (i,k) in [v[:2] for v in self.I if v[2:]==(M,G)]:
-                        for (j,l) in [v[:2] for v in self.I if v[2:]==(M,G)]:
+                    for (i,k) in [v[:2] for v in I if v[2:]==(M,G)]:
+                        for (j,l) in [v[:2] for v in I if v[2:]==(M,G)]:
                             expr += (Mol[i,j]**2 - 2*T[k,l]*Mol[i,j])*x[i,k,M,G]*x[j,l,M,G]
                     expr += y[M,G]*m*self.penalty_constant
             expr=expr-n*self.penalty_constant
         elif(self.scope=="local_vector"):
             expr=gp.LinExpr()
+            I=x.keys()
             T=self.target['rep']
             n=len(self.target['ncharges']) # size of target
             for M in self.database_indices:
@@ -228,7 +313,7 @@ class model:
                 print(count, "  /  ", self.size_database)
                 Mol=self.database["reps"][M]
                 m=len(Mol)
-                for (i,j,G) in [(v[0],v[1],v[3]) for v in self.I if v[2]==M]:
+                for (i,j,G) in [(v[0],v[1],v[3]) for v in I if v[2]==M]:
                     C=np.linalg.norm(Mol[i]-T[j])**2
                     expr += C*x[i,j,M,G]
                 if self.penalty_constant != 0:
@@ -271,6 +356,7 @@ class model:
             d={"SolN":[], "Fragments":[], "FragmentsID":[], "Excess":[], "ObjValNoPen":[], "ObjValWithPen":[], "Assignments":[]}
             n=len(self.target['ncharges']) # size of target
             SolCount=Z.SolCount
+            I=x.keys()
             for solnb in range(SolCount):
                 Z.setParam("SolutionNumber",solnb)
                 if self.verbose:
@@ -281,7 +367,7 @@ class model:
                 fragments=set()
                 # constructs matrix A with entry [j,M,G] that takes value i+1 if x[i,j,M,G]=1, and 0 otherwise
                 A=np.zeros((n,self.size_database,self.duplicates)) 
-                for (i,j,M,G) in [v for v in self.I if np.rint(x[v].Xn)==1]:
+                for (i,j,M,G) in [v for v in I if np.rint(x[v].Xn)==1]:
                     fragments.add((M,G))
                     A[j,M,G]=i+1
                 
@@ -358,45 +444,3 @@ class model:
             print("Saved.")
         return d
         
-    def add_forbidden_combinations(self, fragmentsarray):
-        for fragmentsid in fragmentsarray:
-            expr=gp.LinExpr() 
-            for M in fragmentsid:
-                if(self.scope=="global_vector"):
-                    expr+=self.x.sum(M,'*')
-                else:
-                    expr+=self.y.sum(M,'*')
-            self.Z.addConstr(expr <= len(fragmentsid)-1)
-        self.Z.update()
-        return 0
-
-    def remove_fragments(self, fragmentsarray):
-        for fragmentsid in fragmentsarray:
-            for M in fragmentsid:
-                if(self.scope=="global_vector"):
-                    self.Z.addConstr(self.x.sum(M,'*')==0)
-                else:
-                    self.Z.addConstr(self.y.sum(M,'*')==0)
-        self.Z.update()
-        return 0
-
-    def randomsubset(self,p):
-        if self.temporaryconstraints != None:
-            self.Z.remove(self.temporaryconstraints)
-
-        N=self.size_database
-        mask=np.random.random_sample(N)<p
-        keptindices=np.arange(0,N)[mask]
-        lostindices=np.arange(0,N)[np.logical_not(mask)]
-        
-        if(self.scope=="global_vector"):
-            c=self.Z.addConstrs(self.x.sum(M,'*') == 0 for M in lostindices)
-        else:
-            c=self.Z.addConstrs(self.y.sum(M,'*') == 0 for M in lostindices)
-
-        self.temporaryconstraints=c
-        return keptindices
-
-    def savemodel(self, filepath='model.mps'):
-        self.Z.write(filepath)
-        return 0

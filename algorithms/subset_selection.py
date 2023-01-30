@@ -8,7 +8,10 @@ outfolder='../out/'
 ###
 
 M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"pruned-penicillin_SLATM_local_data.npz", scope="local_vector", verbose=True)
-M.setup(penalty_constant=10, duplicates=1, poolgapabs=30)
+#M.setup(penalty_constant=10, duplicates=1, poolgapabs=30)
+#M.savemodel(outfolder+'model.mps')
+M.readmodel(outfolder+'model.mps')
+M.changepenalty(10)
 
 solutions={"Fragments":[], "Value":[]}
 for i in range(2):
