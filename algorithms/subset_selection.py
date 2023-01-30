@@ -8,8 +8,12 @@ outfolder='../out/'
 ###
 
 M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"pruned-penicillin_SLATM_local_data.npz", scope="local_vector", verbose=True)
+
+# sets up model and writes to a file. Only needed once.
 #M.setup(penalty_constant=10, duplicates=1, poolgapabs=30)
 #M.savemodel(outfolder+'model.mps')
+
+# reads files and changes the penalty constant
 M.readmodel(outfolder+'model.mps')
 M.changepenalty(10)
 

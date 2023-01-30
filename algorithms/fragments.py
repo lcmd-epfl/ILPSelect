@@ -69,6 +69,8 @@ class model:
     """
 
     ################### functions to call below ##################
+    # TODO: move initial arguments to the setup phase?
+    # since it's not useful when reading from file (it's used right now but may be changed)
     def __init__(self, path_to_database, path_to_target, scope, verbose=0):
         assert scope == "local_vector" or scope == "local_matrix" or scope == "global_vector", "Scope takes values local_matrix, local_vector, and global_vector only."
         self.database=np.load(path_to_database, allow_pickle=True)
@@ -76,7 +78,7 @@ class model:
         self.target=np.load(path_to_target, allow_pickle=True)
 
         self.size_database=len(self.database["labels"])
-        self.size_database=20 # uncomment this to only take first indices of the database for testing
+        #self.size_database=20 # uncomment this to only take first indices of the database for testing
         self.database_indices=range(self.size_database)
         self.scope=scope
         self.verbose=verbose
@@ -159,7 +161,9 @@ class model:
         for i in z.keys():
             obj=z[i].obj
             z[i].setAttr('obj', obj*penratio)
-            self.Z.update()
+        
+        self.Z.setAttr('ObjCon', self.Z.ObjCon*penratio)
+        self.Z.update()
         return 0
 
     # example filepath '../out/model.mps'
