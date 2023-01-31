@@ -10,7 +10,7 @@ outfolder='../out/'
 M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"pruned-penicillin_SLATM_local_data.npz", scope="local_vector", verbose=True)
 
 # sets up model and writes to a file. Only needed once.
-#M.setup(penalty_constant=10, duplicates=1, poolgapabs=30)
+#M.setup(penalty_constant=10, duplicates=1)
 #M.savemodel(outfolder+'model.mps')
 
 # reads files and changes the penalty constant
@@ -18,11 +18,11 @@ M.readmodel(outfolder+'model.mps')
 M.changepenalty(10)
 
 solutions={"Fragments":[], "Value":[]}
-for i in range(2):
+for i in range(24):
     I=M.randomsubset(0.821)
     print("Iteration", i)
     print("Dataset of size", len(I))
-    M.optimize(number_of_solutions=50, PoolSearchMode=1, timelimit=600)
+    M.optimize(number_of_solutions=50, PoolSearchMode=1, timelimit=600, poolgapabs=30)
     M.output()
     d=M.SolDict
     M.add_forbidden_combinations(d['FragmentsID'])

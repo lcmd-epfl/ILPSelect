@@ -84,7 +84,7 @@ class model:
         self.verbose=verbose
         self.temporaryconstraints=None
     
-    def setup(self, penalty_constant=1e6, duplicates=1, poolgapabs=GRB.INFINITY, nthreads=0):
+    def setup(self, penalty_constant=1e6, duplicates=1):
         # construction of the model
         self.duplicates=duplicates
         self.penalty_constant=penalty_constant
@@ -92,17 +92,13 @@ class model:
         start=timeit.default_timer() 
 
         self.Z = gp.Model()
+        
         # model parameters
         self.Z.setParam('OutputFlag',self.verbose)
+        # useless now?
+        #self.Z.setParam("PreQLinearize", 0)
+        #self.Z.setParam("MIPFocus",1)
 
-        self.Z.setParam("PreQLinearize", 0)
-        self.Z.setParam("MIPFocus",1)
-        self.Z.setParam("PoolGapAbs",poolgapabs)
-        #### for memory issues in cluster
-        self.Z.setParam("Threads",nthreads) # decrease number of threads to decrease memory use
-        #self.Z.setParam("NodefileStart", 0.5)
-        #self.Z.setParam("NodefileDir", "/scratch/haeberle/molekuehl")
-        ####
         print("Parameters: penalty_constant=", penalty_constant, "; duplicates=", duplicates)
 
         self.x,self.y=self.addvariables(self.Z)
@@ -112,11 +108,18 @@ class model:
         print("Model setup: ", stop-start, "s")
         return 0
 
-    def optimize(self, number_of_solutions=15, timelimit=43200, PoolSearchMode=2):
-        # optimization
+    def optimize(self, number_of_solutions=15, timelimit=43200, PoolSearchMode=2, poolgapabs=GRB.INFINITY, nthreads=0):
+        # model parameters
         self.Z.setParam("PoolSearchMode", PoolSearchMode)
         self.Z.setParam("TimeLimit", timelimit) 
         self.Z.setParam("PoolSolutions", number_of_solutions)
+        
+        self.Z.setParam("PoolGapAbs",poolgapabs)
+        #### for memory issues in cluster
+        self.Z.setParam("Threads",nthreads) # decrease number of threads to decrease memory use
+        #self.Z.setParam("NodefileStart", 0.5)
+        #self.Z.setParam("NodefileDir", "/scratch/haeberle/molekuehl")
+        ####
 
         print("------------------------------------")
         print("           Optimization")
@@ -132,7 +135,8 @@ class model:
    
     def readmodel(self, filepath):
         self.Z=gp.read(filepath)
-        
+        self.duplicates=0
+
         x=gp.tupledict()
         y=gp.tupledict()
         Varlist=self.Z.getVars()
@@ -142,12 +146,15 @@ class model:
                 x.update({(eval(vname[2:-1])): v})
             elif vname[0]=='y':
                 y.update({(eval(vname[2:-1])): v})
+                if vname[2]=='0':
+                    self.duplicates+=1
         self.x=x
         self.y=y
+        print(self.duplicates)
         return 0
 
     def changepenalty(self, newpenalty):
-        self.penaltyconstant=newpenalty
+        self.penalty_constant=newpenalty
         Mol=self.database['ncharges'][0]
         m=len(Mol)
 
