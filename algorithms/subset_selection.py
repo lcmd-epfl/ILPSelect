@@ -11,10 +11,10 @@ M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"prune
 
 # sets up model and writes to a file. Only needed once.
 #M.setup(penalty_constant=10, duplicates=1)
-#M.savemodel(outfolder+'model.mps')
+#M.savemodel(outfolder+'out.mps')
 
 # reads files and changes the penalty constant
-M.readmodel(outfolder+'model.mps')
+M.readmodel(outfolder+'out.mps')
 M.changepenalty(10)
 
 solutions={"Fragments":[], "Value":[]}
