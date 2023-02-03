@@ -171,6 +171,7 @@ class model:
         
         self.Z.setAttr('ObjCon', self.Z.ObjCon*penratio)
         self.Z.update()
+        print("New penalty:", newpenalty)
         return 0
 
     # example filepath '../out/model.mps'

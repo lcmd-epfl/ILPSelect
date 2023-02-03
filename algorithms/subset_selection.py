@@ -1,6 +1,7 @@
 import fragments
 import pandas as pd
 import numpy as np
+import sys
 
 ### change this accordingly
 repfolder='../representations/'
@@ -14,8 +15,9 @@ M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"prune
 #M.savemodel(outfolder+'out.mps')
 
 # reads files and changes the penalty constant
+pen=float(sys.argv[1])
 M.readmodel(outfolder+'out.mps')
-M.changepenalty(10)
+M.changepenalty(pen)
 
 solutions={"Fragments":[], "Value":[]}
 for i in range(24):
@@ -32,7 +34,7 @@ for i in range(24):
         solutions["Value"].append(d["ObjValWithPen"][k])
 
 df=pd.DataFrame(solutions)
-df.to_csv(outfolder+"solutions.csv")
+df.to_csv(outfolder+"solutions" + str(pen) + ".csv")
 
 #sorts solutions found by objective value
 sorteddf=df.sort_values('Value')['Fragments']
@@ -44,4 +46,4 @@ for e in sorteddf:
 
 #creates dict from keys of fullarray, keeping the first occurence of each fragment only, and hence keeping order of appearance
 ordered_frags=list(dict.fromkeys(fullarray))
-np.save(outfolder+'ordered_fragments.npy', ordered_frags)
+np.save(outfolder+'ordered_fragments'+str(pen)+'.npy', ordered_frags)
