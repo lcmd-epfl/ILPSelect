@@ -83,7 +83,8 @@ class model:
         self.scope=scope
         self.verbose=verbose
         self.temporaryconstraints=None
-    
+        self.visitedfragments=[]
+
     def setup(self, penalty_constant=1e6, duplicates=1):
         # construction of the model
         self.duplicates=duplicates
@@ -108,12 +109,14 @@ class model:
         print("Model setup: ", stop-start, "s")
         return 0
 
-    def optimize(self, number_of_solutions=15, timelimit=43200, PoolSearchMode=2, poolgapabs=GRB.INFINITY, nthreads=0):
+    def optimize(self, number_of_solutions=20, timelimit=600, PoolSearchMode=1, poolgapabs=GRB.INFINITY, nthreads=0, callback=False, objbound=40, number_of_fragments=20):
         # model parameters
         self.Z.setParam("PoolSearchMode", PoolSearchMode)
         self.Z.setParam("TimeLimit", timelimit) 
         self.Z.setParam("PoolSolutions", number_of_solutions)
         
+        self.Z.setParam("LazyConstraints", 1)
+
         self.Z.setParam("PoolGapAbs",poolgapabs)
         #### for memory issues in cluster
         self.Z.setParam("Threads",nthreads) # decrease number of threads to decrease memory use
@@ -125,14 +128,19 @@ class model:
         print("           Optimization")
         print("Time limit: ", timelimit, " seconds")
         print("------------------------------------")
-        self.Z.optimize()
+        if callback:
+            self.objbound=objbound
+            self.number_of_fragments=number_of_fragments
+            self.Z.optimize(lambda _, where: self.callback(where))
+        else:
+            self.Z.optimize()
         print()
         print("Optimization runtime: ", self.Z.RunTime, "s")
         if(self.Z.status == 3):
             print("Model was proven to be infeasible.")
             return 1
         return 0
-   
+
     def readmodel(self, filepath):
         self.Z=gp.read(filepath)
         self.duplicates=0
@@ -150,7 +158,6 @@ class model:
                     self.duplicates+=1
         self.x=x
         self.y=y
-        print(self.duplicates)
         return 0
 
     def changepenalty(self, newpenalty):
@@ -191,6 +198,7 @@ class model:
         for fragmentsid in fragmentsarray:
             expr=gp.LinExpr() 
             for M in fragmentsid:
+                self.add_visited_fragment(M)
                 if(self.scope=="global_vector"):
                     expr+=self.x.sum(M,'*')
                 else:
@@ -227,6 +235,46 @@ class model:
         return keptindices
 
     ############## tool functions below used by callable functions above ####################
+
+    # adds fragment index to self.visitedfragments if not already inside
+    def add_visited_fragment(self, M):
+        if not np.any(np.isin(self.visitedfragments, M)):
+            self.visitedfragments.append(M)
+        return 0
+    
+    # used only by self.callback() !
+    # 
+    def add_lazy_constraint(self):
+        expr=gp.LinExpr()
+        
+        # var is the variable indicator of fragments (x or y)
+        if(self.scope=="global_vector"):
+            var=self.x
+        else:
+            var=self.y
+        
+        # values of var, 1 if fragment is picked, 0 otherwise.
+        frags=self.Z.cbGetSolution(var)
+        s=0
+        for i in frags.keys():
+            if frags[i]:
+                expr+=var[i]
+                s+=1
+                self.add_visited_fragment(i[0]) # visited fragment
+        self.Z.cbLazy(expr <= s-1) # forbids combination found
+        return 0
+
+    # argument model is already in self
+    def callback(self, where):
+        # adds lazy constraint whenever a solution is found that is within poolgapabs bounds
+        if where == GRB.Callback.MIPSOL and self.Z.cbGet(GRB.Callback.MIPSOL_OBJ) < self.objbound:
+            print(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
+            self.add_lazy_constraint()
+            print(len(self.visitedfragments))
+            if len(self.visitedfragments) >= self.number_of_fragments:
+                self.Z.terminate()
+                print("Interrupting because enough fragments were found.")
+        return 0
 
     def addvariables(self,Z):
         print("Adding variables...")

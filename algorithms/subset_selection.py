@@ -19,12 +19,18 @@ pen=float(sys.argv[1])
 M.readmodel(outfolder+'out.mps')
 M.changepenalty(pen)
 
+M.optimize(number_of_solutions=10, PoolSearchMode=1, timelimit=300, poolgapabs=35, callback=True, objbound=35, number_of_fragments=10)
+
+print(M.visitedfragments)
+np.save(outfolder+"newfrag"+str(pen)+".npy", np.array(M.visitedfragments))
+
+"""
 solutions={"Fragments":[], "Value":[]}
 for i in range(24):
     I=M.randomsubset(0.821)
     print("Iteration", i)
     print("Dataset of size", len(I))
-    M.optimize(number_of_solutions=50, PoolSearchMode=1, timelimit=600, poolgapabs=30)
+    M.optimize(number_of_solutions=10, PoolSearchMode=1, timelimit=600, poolgapabs=30)
     M.output()
     d=M.SolDict
     M.add_forbidden_combinations(d['FragmentsID'])
@@ -47,3 +53,4 @@ for e in sorteddf:
 #creates dict from keys of fullarray, keeping the first occurence of each fragment only, and hence keeping order of appearance
 ordered_frags=list(dict.fromkeys(fullarray))
 np.save(outfolder+'ordered_fragments'+str(pen)+'.npy', ordered_frags)
+"""
