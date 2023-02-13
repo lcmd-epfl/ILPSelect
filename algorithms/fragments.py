@@ -262,7 +262,7 @@ class model:
         frags=self.Z.cbGetSolution(var)
         S=[]
         for i in frags.keys():
-            if frags[i]:
+            if np.abs(frags[i]-1)<1e-5:
                 expr+=var[i]
                 S.append(i[0])
         
@@ -273,7 +273,7 @@ class model:
     # argument model is already in self
     def callback(self, where):
         # adds lazy constraint whenever a solution is found that is within poolgapabs bounds
-        if where == GRB.Callback.MIPSOL and self.Z.cbGet(GRB.Callback.MIPSOL_OBJ) < self.objbound:
+        if (where == GRB.Callback.MIPSOL) and self.Z.cbGet(GRB.Callback.MIPSOL_OBJ) < self.objbound:
             print(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
             self.add_lazy_constraint()
             print(len(self.visitedfragments))
