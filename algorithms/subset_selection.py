@@ -22,7 +22,22 @@ M.changepenalty(pen)
 M.optimize(number_of_solutions=10, PoolSearchMode=1, timelimit=300, poolgapabs=35, callback=True, objbound=35, number_of_fragments=10)
 
 print(M.visitedfragments)
-np.save(outfolder+"newfrag"+str(pen)+".npy", np.array(M.visitedfragments))
+#np.save(outfolder+"newfrag"+str(pen)+".npy", np.array(M.visitedfragments))
+
+df=pd.DataFrame(M.solutions)
+df.to_csv(outfolder+"newsolutions"+str(pen)+".csv")
+
+#sorts solutions found by objective value
+sorteddf=df.sort_values('Value')['Fragments']
+#adds all fragments in order to fullarray, allowing duplicates
+fullarray=[]
+for e in sorteddf:
+    for f in e:
+        fullarray.append(f)
+
+#creates dict from keys of fullarray, keeping the first occurence of each fragment only, and hence keeping order of appearance
+ordered_frags=list(dict.fromkeys(fullarray))
+np.save(outfolder+'newfrags'+str(pen)+'.npy', ordered_frags)
 
 """
 solutions={"Fragments":[], "Value":[]}

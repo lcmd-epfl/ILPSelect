@@ -131,6 +131,7 @@ class model:
         if callback:
             self.objbound=objbound
             self.number_of_fragments=number_of_fragments
+            self.solutions={"Fragments":[], "Value":[]}
             self.Z.optimize(lambda _, where: self.callback(where))
         else:
             self.Z.optimize()
@@ -197,8 +198,8 @@ class model:
     def add_forbidden_combinations(self, fragmentsarray):
         for fragmentsid in fragmentsarray:
             expr=gp.LinExpr() 
+            self.add_visited_fragments(fragmentsid)
             for M in fragmentsid:
-                self.add_visited_fragment(M)
                 if(self.scope=="global_vector"):
                     expr+=self.x.sum(M,'*')
                 else:
@@ -236,10 +237,14 @@ class model:
 
     ############## tool functions below used by callable functions above ####################
 
+    # adds solutions and objective value to dictionary self.solutions 
     # adds fragment index to self.visitedfragments if not already inside
-    def add_visited_fragment(self, M):
-        if not np.any(np.isin(self.visitedfragments, M)):
-            self.visitedfragments.append(M)
+    def add_visited_fragments(self, frags):
+        self.solutions["Fragments"].append(frags)
+        self.solutions["Value"].append(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
+        for M in frags:
+            if not np.any(np.isin(self.visitedfragments, M)):
+                self.visitedfragments.append(M)
         return 0
     
     # used only by self.callback() !
@@ -255,13 +260,14 @@ class model:
         
         # values of var, 1 if fragment is picked, 0 otherwise.
         frags=self.Z.cbGetSolution(var)
-        s=0
+        S=[]
         for i in frags.keys():
             if frags[i]:
                 expr+=var[i]
-                s+=1
-                self.add_visited_fragment(i[0]) # visited fragment
-        self.Z.cbLazy(expr <= s-1) # forbids combination found
+                S.append(i[0])
+        
+        self.add_visited_fragments(S) # visited fragment
+        self.Z.cbLazy(expr <= len(S)-1) # forbids combination found
         return 0
 
     # argument model is already in self
