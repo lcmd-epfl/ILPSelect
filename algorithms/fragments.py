@@ -209,7 +209,7 @@ class model:
             self.Z.addConstr(expr <= len(fragmentsid)-1)
         self.Z.update()
         return 0
-
+    
     def remove_fragments(self, fragmentsarray):
         for fragmentsid in fragmentsarray:
             for M in fragmentsid:
@@ -243,7 +243,8 @@ class model:
     # adds fragment index to self.visitedfragments if not already inside
     def add_visited_fragments(self, frags):
         for M in frags:
-            if not np.any(np.isin(self.visitedfragments, M)):
+            #if not np.any(np.isin(self.visitedfragments, M)):
+            if not M in self.visitedfragments:
                 self.visitedfragments.append(M)
         return 0
 
@@ -257,7 +258,6 @@ class model:
     # used only by self.callback() !
     # 
     def add_lazy_constraint(self):
-        expr=gp.LinExpr()
         
         # var is the variable indicator of fragments (x or y)
         if(self.scope=="global_vector"):
@@ -270,11 +270,19 @@ class model:
         S=[]
         for i in frags.keys():
             if np.abs(frags[i]-1)<1e-5:
-                expr+=var[i]
+                #expr+=var[i]
                 S.append(i[0])
         
-        self.add_to_solutions(S) # adds found combination with objective value to solutions and visitedfragments
-        self.Z.cbLazy(expr <= len(S)-1) # forbids combination found
+        # adds found combination with objective value to solutions and visitedfragments
+        self.add_to_solutions(S)
+        # forces new fragment to appear: expr sums over indices NOT in visitedfragments.
+        #expr=gp.LinExpr()
+        #self.Z.cbLazy(expr <= len(S)-1) # forbids combination found
+        #I=[i for (i,_) in var.keys() if not np.any(np.isin(self.visitedfragments, i))]
+        I=[i for (i,_) in var.keys() if not i in self.visitedfragments]
+        expr=var.sum(I, '*')
+        self.Z.cbLazy(expr >= 1)
+        
         return 0
 
     # argument model is already in self
