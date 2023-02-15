@@ -84,6 +84,9 @@ class model:
         self.verbose=verbose
         self.temporaryconstraints=None
         self.visitedfragments=[]
+        self.solutions={"Fragments":[], "Value":[]}
+        self.objbound=None
+        self.number_of_fragments=None
 
     def setup(self, penalty_constant=1e6, duplicates=1):
         # construction of the model
@@ -131,8 +134,7 @@ class model:
         if callback:
             self.objbound=objbound
             self.number_of_fragments=number_of_fragments
-            self.solutions={"Fragments":[], "Value":[]}
-            self.Z.optimize(lambda _, where: self.callback(where))
+            self.Z.optimize(lambda _, where: self.callback(where)) # argument model is already in self
         else:
             self.Z.optimize()
         print()
@@ -240,13 +242,18 @@ class model:
     # adds solutions and objective value to dictionary self.solutions 
     # adds fragment index to self.visitedfragments if not already inside
     def add_visited_fragments(self, frags):
-        self.solutions["Fragments"].append(frags)
-        self.solutions["Value"].append(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
         for M in frags:
             if not np.any(np.isin(self.visitedfragments, M)):
                 self.visitedfragments.append(M)
         return 0
-    
+
+    # only used by self.callback() !
+    def add_to_solutions(self, frags):
+        self.add_visited_fragments(frags)
+        self.solutions["Fragments"].append(frags)
+        self.solutions["Value"].append(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
+        return 0
+
     # used only by self.callback() !
     # 
     def add_lazy_constraint(self):
@@ -266,7 +273,7 @@ class model:
                 expr+=var[i]
                 S.append(i[0])
         
-        self.add_visited_fragments(S) # visited fragment
+        self.add_to_solutions(S) # adds found combination with objective value to solutions and visitedfragments
         self.Z.cbLazy(expr <= len(S)-1) # forbids combination found
         return 0
 

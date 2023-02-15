@@ -19,7 +19,12 @@ pen=float(sys.argv[1])
 M.readmodel(outfolder+'out.mps')
 M.changepenalty(pen)
 
-M.optimize(number_of_solutions=10, PoolSearchMode=1, timelimit=300, poolgapabs=35, callback=True, objbound=35, number_of_fragments=10)
+# reads already found combinations to remove then (if we want to continue previous optimization for example)
+# df=pd.read_csv(outfolder+"newsolutions"+str(pen)+".csv")
+# M.add_forbidden_combinations(df['Fragments'].apply(eval))
+
+# optimize with callback
+M.optimize(number_of_solutions=10, PoolSearchMode=1, timelimit=300, poolgapabs=50, callback=True, objbound=50, number_of_fragments=10)
 
 print(M.visitedfragments)
 #np.save(outfolder+"newfrag"+str(pen)+".npy", np.array(M.visitedfragments))
