@@ -2,10 +2,11 @@ import fragments
 import pandas as pd
 import numpy as np
 import sys
+import time
 
 ### change this accordingly
-repfolder='../representations/'
-outfolder='../out/'
+repfolder='/scratch/haeberle/molekuehl/'
+outfolder='/scratch/haeberle/out/'
 ###
 
 M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"pruned-penicillin_SLATM_local_data.npz", scope="local_vector", verbose=True)
@@ -16,7 +17,7 @@ M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"prune
 
 # reads files and changes the penalty constant
 pen=float(sys.argv[1])
-M.readmodel(outfolder+'out.mps')
+M.readmodel(repfolder+'out.mps')
 M.changepenalty(pen)
 
 # reads already found combinations to remove then (if we want to continue previous optimization for example)
@@ -24,17 +25,19 @@ M.changepenalty(pen)
 # M.add_forbidden_combinations(df['Fragments'].apply(eval))
 
 # optimize with callback
-M.optimize(number_of_solutions=10, PoolSearchMode=1, timelimit=300, poolgapabs=50, callback=True, objbound=50, number_of_fragments=10)
+M.optimize(number_of_solutions=100, PoolSearchMode=1, timelimit=4*3600, poolgapabs=35, callback=True, objbound=50, number_of_fragments=1000)
 
 print(M.visitedfragments)
 #np.save(outfolder+"newfrag"+str(pen)+".npy", np.array(M.visitedfragments))
 
 df=pd.DataFrame(M.solutions)
-df.to_csv(outfolder+"newsolutions"+str(pen)+".csv")
+df.to_csv(outfolder+"solutions"+str(pen)+"-"+time.strftime("%Y%m%d-%H%M%S")+".csv")
 
 #sorts solutions found by objective value
 sorteddf=df.sort_values('Value')['Fragments']
+
 #adds all fragments in order to fullarray, allowing duplicates
+"""
 fullarray=[]
 for e in sorteddf:
     for f in e:
@@ -42,7 +45,14 @@ for e in sorteddf:
 
 #creates dict from keys of fullarray, keeping the first occurence of each fragment only, and hence keeping order of appearance
 ordered_frags=list(dict.fromkeys(fullarray))
-np.save(outfolder+'newfrags'+str(pen)+'.npy', ordered_frags)
+"""
+ordered_frags=[]
+for e in sorteddf:
+    for f in e:
+        if not f in ordered_frags:
+            ordered_frags.append(f)
+
+np.save(outfolder+'frag'+str(pen)+"-"+time.strftime("%Y%m%d-%H%M%S")+'.npy', ordered_frags)
 
 """
 solutions={"Fragments":[], "Value":[]}
