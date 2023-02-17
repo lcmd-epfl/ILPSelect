@@ -5,8 +5,8 @@ import sys
 import time
 
 ### change this accordingly
-repfolder='/scratch/haeberle/molekuehl/'
-outfolder='/scratch/haeberle/out/'
+repfolder='../representations/'
+outfolder='../out/'
 ###
 
 M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"pruned-penicillin_SLATM_local_data.npz", scope="local_vector", verbose=True)
@@ -17,70 +17,35 @@ M=fragments.model(repfolder+"qm7_SLATM_local_data-renamed.npz", repfolder+"prune
 
 # reads files and changes the penalty constant
 pen=float(sys.argv[1])
-M.readmodel(repfolder+'out.mps')
-M.changepenalty(pen)
+M.readmodel("../models/SLATM-local-5.mps")
+#M.changepenalty(pen)
 
 # reads already found combinations to remove then (if we want to continue previous optimization for example)
 # df=pd.read_csv(outfolder+"newsolutions"+str(pen)+".csv")
 # M.add_forbidden_combinations(df['Fragments'].apply(eval))
 
-# optimize with callback
-M.optimize(number_of_solutions=100, PoolSearchMode=1, timelimit=4*3600, poolgapabs=35, callback=True, objbound=50, number_of_fragments=1000)
-
-print(M.visitedfragments)
-#np.save(outfolder+"newfrag"+str(pen)+".npy", np.array(M.visitedfragments))
-
-df=pd.DataFrame(M.solutions)
-df.to_csv(outfolder+"solutions"+str(pen)+"-"+time.strftime("%Y%m%d-%H%M%S")+".csv")
-
-#sorts solutions found by objective value
-sorteddf=df.sort_values('Value')['Fragments']
-
-#adds all fragments in order to fullarray, allowing duplicates
-"""
-fullarray=[]
-for e in sorteddf:
-    for f in e:
-        fullarray.append(f)
-
-#creates dict from keys of fullarray, keeping the first occurence of each fragment only, and hence keeping order of appearance
-ordered_frags=list(dict.fromkeys(fullarray))
-"""
+# reduces penalty every 100 fragments (from 5 to pen)
+# ordered_frags is ordered in groups of 100 as well since objective values cannot be compared
 ordered_frags=[]
-for e in sorteddf:
-    for f in e:
-        if not f in ordered_frags:
-            ordered_frags.append(f)
+for i in range(10):
+    newpen=5-i/9*(5-pen)
+    M.changepenalty(newpen)
+    
+    # optimize with callback
+    M.optimize(number_of_solutions=100, PoolSearchMode=1, timelimit=4*3600, poolgapabs=35, callback=True, objbound=30, number_of_fragments=100*(i+1))
 
-np.save(outfolder+'frag'+str(pen)+"-"+time.strftime("%Y%m%d-%H%M%S")+'.npy', ordered_frags)
+    print(M.visitedfragments)
 
-"""
-solutions={"Fragments":[], "Value":[]}
-for i in range(24):
-    I=M.randomsubset(0.821)
-    print("Iteration", i)
-    print("Dataset of size", len(I))
-    M.optimize(number_of_solutions=10, PoolSearchMode=1, timelimit=600, poolgapabs=30)
-    M.output()
-    d=M.SolDict
-    M.add_forbidden_combinations(d['FragmentsID'])
-    for k in range(len(d['FragmentsID'])):
-        print(d["FragmentsID"][k])
-        solutions["Fragments"].append(d["FragmentsID"][k])
-        solutions["Value"].append(d["ObjValWithPen"][k])
+    df=pd.DataFrame(M.solutions)
+    df.to_csv(outfolder+"solutions"+str(pen)+"-"+time.strftime("%Y%m%d-%H%M%S")+".csv")
 
-df=pd.DataFrame(solutions)
-df.to_csv(outfolder+"solutions" + str(pen) + ".csv")
+    # sorts solutions found by objective value
+    # and saves fragments to file
+    sorteddf=df.sort_values('Value')['Fragments']
+    for e in sorteddf:
+        for f in e:
+            if not f in ordered_frags:
+                ordered_frags.append(f)
 
-#sorts solutions found by objective value
-sorteddf=df.sort_values('Value')['Fragments']
-#adds all fragments in order to fullarray, allowing duplicates
-fullarray=[]
-for e in sorteddf:
-    for f in e:
-        fullarray.append(f)
+    np.save(outfolder+'frag'+str(pen)+"-"+time.strftime("%Y%m%d-%H%M%S")+'.npy', ordered_frags)
 
-#creates dict from keys of fullarray, keeping the first occurence of each fragment only, and hence keeping order of appearance
-ordered_frags=list(dict.fromkeys(fullarray))
-np.save(outfolder+'ordered_fragments'+str(pen)+'.npy', ordered_frags)
-"""
