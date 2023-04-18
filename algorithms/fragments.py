@@ -88,7 +88,7 @@ class model:
         self.objbound=None
         self.number_of_fragments=None
 
-    def setup(self, penalty_constant=1e6, duplicates=1):
+    def setup(self, penalty_constant=10, duplicates=1):
         # construction of the model
         self.duplicates=duplicates
         self.penalty_constant=penalty_constant
@@ -117,8 +117,6 @@ class model:
         self.Z.setParam("PoolSearchMode", PoolSearchMode)
         self.Z.setParam("TimeLimit", timelimit) 
         self.Z.setParam("PoolSolutions", number_of_solutions)
-        
-        self.Z.setParam("LazyConstraints", 1)
 
         self.Z.setParam("PoolGapAbs",poolgapabs)
         #### for memory issues in cluster
@@ -132,6 +130,7 @@ class model:
         print("Time limit: ", timelimit, " seconds")
         print("------------------------------------")
         if callback:
+            self.Z.setParam("LazyConstraints", 1)
             self.objbound=objbound
             self.number_of_fragments=number_of_fragments
             self.Z.optimize(lambda _, where: self.callback(where)) # argument model is already in self
@@ -192,8 +191,8 @@ class model:
         return 0
     
     def output(self,output_name=None):
-        self.print_sols(self.Z,self.x,self.y, output_name)
-        return 0
+        d=self.print_sols(self.Z,self.x,self.y, output_name)
+        return d
 
     ############## functions for subset selection ###############
 
@@ -236,6 +235,20 @@ class model:
 
         self.temporaryconstraints=c
         return keptindices
+
+    def add_cps_constraint(self):
+        # z = indicator variable for fragments
+        if(self.scope=="global_vector"):
+            z=self.x
+        else:
+            z=self.y
+        self.Z.addConstr(z.sum() == 1)
+        # remove bijection constraints
+        for C in self.Z.getConstrs():
+            if C.sense=='=':
+                self.Z.remove(C)
+        self.Z.update()
+        return 0
 
     ############## tool functions below used by callable functions above ####################
 
@@ -327,16 +340,16 @@ class model:
         if(self.scope=="local_matrix" or self.scope=="local_vector"):
             n=len(self.target['ncharges']) # size of target
             # bijection into [n]
-            Z.addConstrs(x.sum('*',j,'*', '*') == 1 for j in range(n))
+            Z.addConstrs((x.sum('*',j,'*', '*') == 1 for j in range(n)), name='bij')
             I=x.keys()
 
             for M in self.database_indices:
                 m=len(self.database['ncharges'][M])
-                # each i of each group is used at most once
+                # each i of each group is used at most once #TODO: does this make sense?
                 Z.addConstrs(x.sum(i,'*',M,G) <= 1 for i in range(m) for G in range(self.duplicates))
                 # y[M,G] = OR gate of the x[i,j,M,G] for each (M,G) 
                 Z.addConstrs(y[M,G] >= x[v] for G in range(self.duplicates) for v in I if v[2:]==(M,G))
-                Z.addConstrs(y[M,G] <= x.sum('*','*',M,G) for G in range(self.duplicates))
+                Z.addConstrs(y[M,G] <= x.sum('*','*',M,G) for G in range(self.duplicates)) # not needed if y is pushed down?
 
         elif(self.scope=="global_vector"):
 
