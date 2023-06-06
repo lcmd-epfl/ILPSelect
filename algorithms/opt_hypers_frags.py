@@ -53,7 +53,7 @@ if __name__ == "__main__":
     for ncharge in target_mol.nuclear_charges:
         target_energy -= atom_energy_coeffs[ncharge]
 
-    frag_indices = np.load('ordered_fragments_04-01-23.npy', allow_pickle=True)
+    frag_indices = np.load('local_environment.npy')
     qm7_xyz = ['qm7/qm7_'+str(idx)+'.xyz' for idx in frag_indices]
     qm7_mols = [qml.Compound(x) for x in qm7_xyz]
     mbtypes = qml.representations.get_slatm_mbtypes([x.nuclear_charges for x in qm7_mols])
