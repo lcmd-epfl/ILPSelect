@@ -7,6 +7,7 @@ import pickle
 import pdb
 import matplotlib.pyplot as plt
 random.seed(42)
+np.random.seed(42)
 #matplotlib font size 
 plt.rcParams.update({'font.size': 18})
 
@@ -33,7 +34,7 @@ def train_predict_model(X_train, atoms_train, y_train, X_test, atoms_test, y_tes
     return mae, y_pred
 
 def opt_hypers(X_train, atoms_train, y_train, X_test, atoms_test, y_test):
-    sigmas = [0.5, 0.75, 1]
+    sigmas = [0.5, 0.75, 1, 1.25]
     l2regs = [1e-10, 1e-7, 1e-4]
     
     maes = np.zeros((len(sigmas), len(l2regs)))
@@ -73,102 +74,118 @@ def get_ranking(X, X_target, Q, Q_target):
 
 if __name__ == '__main__':
 
+    NEW_FIT, PLOT = True, False
+    ALL_TARGETS = pd.read_csv("./targets/targets.csv")
+    TARGETS_XYZ, TARGETS_y = ALL_TARGETS["xyz"].values, ALL_TARGETS["energies"].values
 
-    NEW_FIT, PLOT = False, True
+
+
     if NEW_FIT:
+        #here everything in hartree units
         with open('atom_energy_coeffs.pickle', 'rb') as f:
             atom_energy_coeffs = pickle.load(f)
-        TARGET_PATH, y_target = "/home/jan/projects/molekuehl/opt-amons-penicillin-target/penicillin.xyz", -1427.03460550
-        FRAGMENTS_PATH = "/home/jan/projects/molekuehl/qm7"
-        FRAG_y = pd.read_csv(f"{FRAGMENTS_PATH}/energies_qm7.csv")
-        #randomly shuffle the data
-        FRAG_y = FRAG_y.sample(frac=1, random_state=42)
-        xyzs, y_train =FRAG_y["file"].values, FRAG_y["energy / Ha"].values
 
 
 
-        mols       = np.array([qml.Compound(f"{FRAGMENTS_PATH}/{x}.xyz") for x in xyzs])
-        target_mol = qml.Compound(TARGET_PATH)
-        target_nat = len(target_mol.nuclear_charges)
-        for ncharge in target_mol.nuclear_charges:
-            y_target -= atom_energy_coeffs[ncharge]
-
-        X, Q = get_representations(mols, params=None)
-        qm7_nat = np.array([len(x) for x in Q])
-
-        for i, mol_ncharges in enumerate(Q):
-            for ncharge in mol_ncharges:
-                y_train[i] -= atom_energy_coeffs[ncharge]
+        for xyz_target, y_target in zip(TARGETS_XYZ, TARGETS_y):
+            print("Target:", xyz_target)
+            target_name = xyz_target.split(".")[0]
+            TARGET_PATH = f"./targets/{xyz_target}"
+            FRAGMENTS_PATH = "/home/jan/projects/molekuehl/qm7"
+            FRAG_y = pd.read_csv(f"{FRAGMENTS_PATH}/energies_qm7.csv")
+            #randomly shuffle the data
+            FRAG_y = FRAG_y.sample(frac=1, random_state=42)
+            xyzs, y_train =FRAG_y["file"].values, FRAG_y["energy / Ha"].values
 
 
-        X_target, Q_target = get_representations([target_mol], params=None)
-        
-        CV = 5
-        N = [2**i for i in range(4, 13)]
-        N.append(len(X))
 
-        all_maes_random, mae_sml = [], []
-        for i in range(CV):
-            maes_random = []
-            ints = np.arange(len(X))
-            print("Shuffle training data iter...",i+1,"/",CV)
-            np.random.seed(i)
-            np.random.shuffle(ints)
-            X_sub = X[ints]
-            Q_sub = Q[ints]
-            y_sub = y_train[ints]
+            mols       = np.array([qml.Compound(f"{FRAGMENTS_PATH}/{x}.xyz") for x in xyzs])
+            target_mol = qml.Compound(TARGET_PATH)
+            target_nat = len(target_mol.nuclear_charges)
+            for ncharge in target_mol.nuclear_charges:
+                y_target -= atom_energy_coeffs[ncharge]
 
-            if i == 0:
-                ranking = get_ranking(X_sub, X_target, Q_sub, Q_target)[0]
+            X, Q = get_representations(mols, params=None)
+            qm7_nat = np.array([len(x) for x in Q])
 
+            for i, mol_ncharges in enumerate(Q):
+                for ncharge in mol_ncharges:
+                    y_train[i] -= atom_energy_coeffs[ncharge]
+
+
+            X_target, Q_target = get_representations([target_mol], params=None)
+            
+            
+            N = [2**i for i in range(4, 13)][:7]
+            #N.append(len(X))
+            mae_sml = []
+            #SML
+            opt_ranking = get_ranking(X, X_target, Q, Q_target)[0]
+            
             for n in N:
+                ranking = opt_ranking[:n]
+                min_sigma, min_l2reg = opt_hypers(X[ranking], Q[ranking], y_train[ranking], X_target, Q_target, y_target)
+                mae, y_pred          = train_predict_model(X[ranking], Q[ranking], y_train[ranking], X_target, Q_target, y_target, sigma=min_sigma, l2reg=min_l2reg)
+                mae_sml.append(mae)
+                print("SML", n, mae)
 
-                if i == 0:
-                    opt_ranking = ranking[:n]
-                    min_sigma, min_l2reg = opt_hypers(X_sub[opt_ranking], Q_sub[opt_ranking], y_sub[opt_ranking], X_target, Q_target, y_target)
-                    mae, y_pred          = train_predict_model(X_sub[opt_ranking], Q_sub[opt_ranking], y_sub[opt_ranking], X_target, Q_target, y_target, sigma=min_sigma, l2reg=min_l2reg)
-                    mae_sml.append(mae)
-                    print("SML", n, mae)
-                
+            mae_sml = np.array(mae_sml)
 
-                min_sigma, min_l2reg = opt_hypers(X_sub[:n], Q_sub[:n], y_sub[:n], X_target, Q_target, y_target)
-                mae, y_pred          = train_predict_model(X_sub[:n], Q_sub[:n], y_sub[:n], X_target, Q_target, y_target, sigma=min_sigma, l2reg=min_l2reg)
-                maes_random.append(mae)
-                print("Random", n, mae)
+            #five fold cross validation
+            CV = 5
+            all_maes_random = []
+            for i in range(CV):
+                maes_random = []
+                ints = np.arange(len(X))
+                print("Shuffle training data iter...",i+1,"/",CV)
+                np.random.seed(i)
+                np.random.shuffle(ints)
+                X_sub = X[ints]
+                Q_sub = Q[ints]
+                y_sub = y_train[ints]
 
-            all_maes_random.append(maes_random)
+                for n in N:
 
-        all_maes_random = np.array(all_maes_random)
-        mae_sml = np.array(mae_sml)
-        np.savez('learning_curve_sml.npz', train_sizes=N, all_maes_random=all_maes_random, mae_sml=mae_sml)
+                    min_sigma, min_l2reg = opt_hypers(X_sub[:n], Q_sub[:n], y_sub[:n], X_target, Q_target, y_target)
+                    mae, y_pred          = train_predict_model(X_sub[:n], Q_sub[:n], y_sub[:n], X_target, Q_target, y_target, sigma=min_sigma, l2reg=min_l2reg)
+                    maes_random.append(mae)
+                    print("Random", n, mae)
+
+                all_maes_random.append(maes_random)
+
+            all_maes_random = np.array(all_maes_random)
+            np.savez(f'./results/learning_curve_sml_{target_name}.npz', train_sizes=N, all_maes_random=all_maes_random, mae_sml=mae_sml, ranking_xyz=xyzs[opt_ranking])
     
     if PLOT:
-        LEARNING_CURVE = np.load('learning_curve_sml.npz')
-        MEAN_RANDOM, STD_RANDOM = np.mean(LEARNING_CURVE['all_maes_random'], axis=0)*Ha2kcal, np.std(LEARNING_CURVE['all_maes_random'], axis=0)*Ha2kcal
-        SML = LEARNING_CURVE['mae_sml']*Ha2kcal
-        N = LEARNING_CURVE['train_sizes']
-        #create figure and axis
-        fig, ax = plt.subplots(figsize=(11,6))
-        #plot learning curve random with std as error bars
-        ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt='o-', label='Random')
-        #plot learning curve SML
-        ax.plot(N, SML, 'o-', label='SML')
-        #set axis labels
-        ax.set_xlabel('Training set size')
-        ax.set_ylabel('MAE [kcal/mol]')
-        #set log scale on x axis
-        ax.set_xscale('log')
-        #set log scale on y axis
-        ax.set_yscale('log')
-        #legend
-        ax.legend()
-        #save figure
-        #turn minor ticks off 
-        ax.minorticks_off()
-        #make x ticks as N
-        ax.set_xticks(N)
-        ax.set_xticklabels(N)
-        #grid on
-        ax.grid()
-        #save figure
-        fig.savefig('learning_curve_sml.png', dpi=300)
+
+        for xyz_target in TARGETS_XYZ:
+            target_name = xyz_target.split(".")[0]
+            LEARNING_CURVE = np.load(f'./results/learning_curve_sml_{target_name}.npz')
+            MEAN_RANDOM, STD_RANDOM = np.mean(LEARNING_CURVE['all_maes_random'], axis=0)*Ha2kcal, np.std(LEARNING_CURVE['all_maes_random'], axis=0)*Ha2kcal
+            SML = LEARNING_CURVE['mae_sml']*Ha2kcal
+            N = LEARNING_CURVE['train_sizes']
+            #create figure and axis
+            fig, ax = plt.subplots(figsize=(11,6))
+            #plot learning curve random with std as error bars
+            ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt='o-', label='Random')
+            #plot learning curve SML
+            ax.plot(N, SML, 'o-', label='SML')
+            #set axis labels
+            ax.set_xlabel('Training set size')
+            ax.set_ylabel('MAE [kcal/mol]')
+            #set log scale on x axis
+            ax.set_xscale('log')
+            #set log scale on y axis
+            ax.set_yscale('log')
+            #legend
+            ax.legend()
+            #save figure
+            #turn minor ticks off 
+            ax.minorticks_off()
+            #make x ticks as N
+            ax.set_xticks(N)
+            ax.set_xticklabels(N)
+            #grid on
+            ax.grid()
+            #save figure
+            fig.savefig(f'./results/learning_curve_sml_{target_name}.png', dpi=300)
