@@ -70,11 +70,9 @@ def get_ranking(X, X_target, Q, Q_target):
     return np.argsort(K)[::-1]
 
 
-
-
 if __name__ == '__main__':
 
-    NEW_FIT, PLOT = True, False
+    NEW_FIT, PLOT = False, True
     ALL_TARGETS = pd.read_csv("./targets/targets.csv")
     TARGETS_XYZ, TARGETS_y = ALL_TARGETS["xyz"].values, ALL_TARGETS["energies"].values
 
