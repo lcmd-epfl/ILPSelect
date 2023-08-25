@@ -72,9 +72,10 @@ def get_ranking(X, X_target, Q, Q_target):
 
 if __name__ == '__main__':
 
-    NEW_FIT, PLOT = False, True
+    pen=0
+    NEW_FIT, PLOT, MEAN_PLOT = False, True, False
     # take just the first target
-    ALL_TARGETS = pd.read_csv("./targets/targets.csv").head(1)
+    ALL_TARGETS = pd.read_csv("./targets/targets.csv")
     TARGETS_XYZ, TARGETS_y = ALL_TARGETS["xyz"].values, ALL_TARGETS["energies"].values
 
 
@@ -106,9 +107,6 @@ if __name__ == '__main__':
 
             X, Q = get_representations(mols, params=None)
 
-            # to use in the fragments algo
-            np.savez(f"./results/data_qm7.npz", ncharges=Q, reps=X, labels=xyzs)
-
             qm7_nat = np.array([len(x) for x in Q])
 
             for i, mol_ncharges in enumerate(Q):
@@ -117,15 +115,12 @@ if __name__ == '__main__':
 
 
             X_target, Q_target = get_representations([target_mol], params=None)
-            
-            # to use in the fragments algo
-            np.savez(f"./results/{target_name}.npz", ncharges=Q_target[0], rep=X_target[0])
                 
             N = [2**i for i in range(4, 13)][:7]
             #N.append(len(X))
             mae_frag = []
             #fragments algorithm ranking 
-            opt_ranking = np.load(f"./results/{target_name}-rank.npy")
+            opt_ranking = np.load(f"./results/{target_name}-rank-{pen}.npy")
             print(opt_ranking)
             
             for n in N:
@@ -136,15 +131,14 @@ if __name__ == '__main__':
                 print("FRAG", n, mae)
 
             mae_frag = np.array(mae_frag)
-
-            np.savez(f'./results/learning_curve_compared_{target_name}.npz', train_sizes=N, mae_frag=mae_frag, ranking_xyz=xyzs[opt_ranking])
+            np.savez(f'./results/learning_curve_frag_{target_name}-{pen}.npz', train_sizes=N, mae_frag=mae_frag, ranking_xyz=xyzs[opt_ranking])
     
     if PLOT:
 
         for xyz_target in TARGETS_XYZ:
             target_name = xyz_target.split(".")[0]
             LEARNING_CURVE = np.load(f'./results/learning_curve_sml_{target_name}.npz')
-            FRAG_CURVE = np.load(f"./results/learning_curve_compared_{target_name}.npz")
+            FRAG_CURVE = np.load(f"./results/learning_curve_frag_{target_name}-{pen}.npz")
             MEAN_RANDOM, STD_RANDOM = np.mean(LEARNING_CURVE['all_maes_random'], axis=0)*Ha2kcal, np.std(LEARNING_CURVE['all_maes_random'], axis=0)*Ha2kcal
             SML = LEARNING_CURVE['mae_sml']*Ha2kcal
             FRAG = FRAG_CURVE["mae_frag"]*Ha2kcal
@@ -156,7 +150,7 @@ if __name__ == '__main__':
             #plot learning curve SML
             ax.plot(N, SML, 'o-', label='SML')
             #plot learning curve FRAG
-            ax.plot(N, FRAG, 'o-', label='Fragments algo')
+            ax.plot(N, FRAG, 'o-', label=f'Fragments algo pen {pen}')
             #set axis labels
             ax.set_xlabel('Training set size')
             ax.set_ylabel('MAE [kcal/mol]')
@@ -166,7 +160,8 @@ if __name__ == '__main__':
             ax.set_yscale('log')
             #legend
             ax.legend()
-            #save figure
+            #title
+            plt.title(f"Learning curve on target {target_name}")
             #turn minor ticks off 
             ax.minorticks_off()
             #make x ticks as N
@@ -175,4 +170,59 @@ if __name__ == '__main__':
             #grid on
             ax.grid()
             #save figure
-            fig.savefig(f'./results/learning_curve_comp_sml_{target_name}.png', dpi=300)
+            fig.savefig(f'./results/learning_curve_comp_sml_{target_name}-{pen}.png', dpi=300)
+    
+    if MEAN_PLOT:
+        
+        MEAN_RANDOM=[]
+        STD_RANDOM=[]
+
+        SML=[]
+        FRAG=[]
+        N=np.array([2**i for i in range(4, 11)])
+
+        for xyz_target in TARGETS_XYZ:
+            target_name = xyz_target.split(".")[0]
+            LEARNING_CURVE = np.load(f'./results/learning_curve_sml_{target_name}.npz')
+            FRAG_CURVE = np.load(f"./results/learning_curve_frag_{target_name}-{pen}.npz")
+            
+            MEAN_RANDOM.append(np.mean(LEARNING_CURVE['all_maes_random'], axis=0)*Ha2kcal)
+            STD_RANDOM.append(np.std(LEARNING_CURVE['all_maes_random'], axis=0)*Ha2kcal)
+            SML.append(LEARNING_CURVE['mae_sml']*Ha2kcal)
+            FRAG.append(FRAG_CURVE["mae_frag"]*Ha2kcal)
+        
+        MEAN_RANDOM=np.mean(MEAN_RANDOM, axis=0)
+        STD_RANDOM= np.mean(STD_RANDOM, axis=0)
+
+        SML = np.mean(SML, axis=0)
+        FRAG= np.mean(FRAG, axis=0)
+
+
+        #create figure and axis
+        fig, ax = plt.subplots(figsize=(11,6))
+        #plot learning curve random with std as error bars
+        ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt='o-', label='Average random')
+        #plot learning curve SML
+        ax.plot(N, SML, 'o-', label='Average SML')
+        #plot learning curve FRAG
+        ax.plot(N, FRAG, 'o-', label=f'Average frags')
+        #set axis labels
+        ax.set_xlabel('Training set size')
+        ax.set_ylabel('MAE [kcal/mol]')
+        #set log scale on x axis
+        ax.set_xscale('log')
+        #set log scale on y axis
+        ax.set_yscale('log')
+        #legend
+        ax.legend()
+        #title
+        plt.title(f"Average learning curves")
+        #turn minor ticks off 
+        ax.minorticks_off()
+        #make x ticks as N
+        ax.set_xticks(N)
+        ax.set_xticklabels(N)
+        #grid on
+        ax.grid()
+        #save figure
+        fig.savefig("./results/learning_curve_average.png", dpi=300)
