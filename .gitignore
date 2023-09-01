@@ -11,3 +11,7 @@ representations/*SOAP*.npz
 representations/qm7_aCM_data.npz
 .ipynb_checkpoints/
 algorithms/__pycache__/
+cluster/data/*
+cluster/models/*
+cluster/__pycache__/
+cluster/scripts/__pycache__/

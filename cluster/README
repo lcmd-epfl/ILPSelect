@@ -1,0 +1,20 @@
+The main.py combines all files of scripts/ to do the following.
+
+- read target names from targets/targets.csv file. The corresponding .xyz file should be present in targets/.
+- read the config script for all parameters: database, representation, algorithm-specific parameters, learning curve parameters
+- generate the representations if not present ({rep}-{target}.npz and {rep}-{database}.npz) and save to data/. The database must be in molekuehl/{database}/.
+- compute fragment subsets using different techniques (indices of database)
+	- subset selection by algorithm:
+		- generate model and write it to models/ OR read it and modify it's parameters if possible (penalty changed eg)
+		- solve model and output subset to rankings/ with prefix algo_, and solution of ILP to solutions/
+	- subset selection by SML:
+		- output subset to rankings/ with prefix sml_
+	- subset selection random:
+		- output subset to rankings/ with prefix random_
+- compute the learning curve of each subset and save to learning_curves/
+- draw the learning curves and save to plots/
+
+WARNING: to use algo_model and algo_subset, the molekuehl folder should be added to the pythonpath.
+Example:
+>>> export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"
+Add this line at the end of your .bashrc file to add it systematically.
