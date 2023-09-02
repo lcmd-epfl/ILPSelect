@@ -14,10 +14,11 @@ def random_subset(repository_folder, database, N, random_state=None, target_to_r
         "file != @target_to_remove"
     )["file"]
 
-    SAVE_PATH = f"{repository_folder}cluster/rankings/random_{database}.npy"
+    ranking = database_files.sample(n=N, random_state=random_state).index
 
-    np.save(SAVE_PATH, database_files.sample(n=N, random_state=random_state).index)
+    # no need to save, it's kept in the learning_curve_random npz file.
+    # SAVE_PATH = f"{repository_folder}cluster/rankings/random_{database}.npy"
+    # np.save(SAVE_PATH, ranking)
+    # print(f"Saved ranking of {N} random fragments of database {database} to {SAVE_PATH}.")
 
-    print(f"Saved ranking of {N} random fragments of database {database} to {SAVE_PATH}.")
-
-    return 0
+    return ranking

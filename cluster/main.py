@@ -88,7 +88,7 @@ if config["algo_subset"]:
     dump["time_algo_subset"] = t
 # %%
 # generate learning curves
-from scripts.learning_curves import learning_curves, learning_curves_random
+from scripts.learning_curves import learning_curves
 
 if config["learning_curves"]:
     t = time.time()
@@ -103,11 +103,13 @@ if config["learning_curves"]:
     t = time.time() - t
     dump["time_learning_curves"] = t
 # %%
+from scripts.learning_curves import learning_curves_random
+
 CV = 5
 if config["learning_curves_random"]:
     t = time.time()
     learning_curves_random(
-        parent_directory=repository_folder,
+        repository_path=repository_folder,
         database=database,
         targets=target_names,
         representation=representation,
