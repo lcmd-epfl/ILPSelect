@@ -1,0 +1,21 @@
+#!/bin/bash
+#SBATCH --chdir /scratch/haeberle/out
+#SBATCH --mem=65536
+#SBATCH --time=16:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=24
+#SBATCH --job-name=FCHL-qm7-sildenafil-0
+
+echo STARTING AT `date`
+
+source /home/haeberle/venvs/venv-mlkrr/bin/activate
+
+module load gcc/11.3.0 python/3.10.4 intel-mkl/2020.4.304 gurobi
+ 
+export GRB_LICENSE_FILE=/ssoft/spack/external/gurobi/gurobi.lic
+export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"
+
+python /home/haeberle/molekuehl/cluster/main.py
+
+echo FINISHED AT `date`
