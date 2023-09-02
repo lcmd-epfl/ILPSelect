@@ -234,13 +234,13 @@ def learning_curves_random(
 
         SAVE_PATH = f"{repository_path}cluster/learning_curves/random_{representation}_{database}_{target_name}.npz"
 
-        all_maes_random = []
-        opt_rankings = []
+        all_maes_random = [[]]
+        opt_rankings = [[]]
 
         if add_onto_old and os.path.isfile(SAVE_PATH):
             old_random = np.load(SAVE_PATH, allow_pickle=True)
-            all_maes_random = old_random["all_maes_random"]
-            opt_rankings = old_random["ranking_xyz"]
+            all_maes_random = old_random["all_maes_random"].tolist()
+            opt_rankings = old_random["ranking_xyz"].tolist()
 
         for iteration in range(CV):
             # random ranking
@@ -252,7 +252,7 @@ def learning_curves_random(
                 target_to_remove=target_name if config["remove_target_from_database"] else None,
             )
 
-            opt_rankings = np.concatenate((opt_rankings, opt_rankings))
+            opt_rankings.append(database_info["labels"][opt_ranking])
 
             maes_random = []
             for n in config["learning_curve_ticks"]:
@@ -280,15 +280,15 @@ def learning_curves_random(
                 maes_random.append(mae)
                 print("Random", n, mae)
 
-            all_maes_random = np.concatenate((all_maes_random, maes_random))
+            all_maes_random.append(maes_random)
 
-        all_maes_random = np.array(all_maes_random)
+        # all_maes_random = np.array(all_maes_random)
 
         np.savez(
             SAVE_PATH,
             train_sizes=config["learning_curve_ticks"],
             all_maes_random=all_maes_random,
-            ranking_xyz=[database_info["labels"][opt_ranking] for opt_ranking in opt_rankings],
+            ranking_xyz=opt_rankings,
         )
 
         print(f"Saved to file {SAVE_PATH}.")
