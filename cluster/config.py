@@ -16,7 +16,7 @@ config = {
         "sildenafil",
         "penicillin",
         "troglitazone",
-    ]
+    ],
     ###
     "generate_database": False,
     "generate_targets": True,
