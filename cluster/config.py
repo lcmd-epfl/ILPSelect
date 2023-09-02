@@ -7,15 +7,18 @@ config = {
     "remove_target_from_database": False,
     "representation": "FCHL",
     ###
-    "target_names": ["sildenafil"],  # corresponding names must be in targets/targets.csv
+    "target_names": [
+        "penicillin",
+        "troglitazone",
+    ],  # corresponding names must be in targets/targets.csv
     ###
     "generate_database": False,
-    "generate_targets": False,
-    "sml_subset": False,
-    "algo_model": False,
-    "algo_subset": False,
-    "learning_curves": False,
-    "learning_curves_random": False,
+    "generate_targets": True,
+    "sml_subset": True,
+    "algo_model": True,
+    "algo_subset": True,
+    "learning_curves": True,
+    "learning_curves_random": True,
     "plots": True,
     ###
     "scope": "local_vector",
@@ -26,7 +29,8 @@ config = {
     "number_of_fragments": 1024,  # size of subset selected
     "verbose": False,
     ###
-    "learning_curve_ticks": [2**k for k in range(4, 11)],
+    # "learning_curve_ticks": [2**k for k in range(4, 11)],
+    "learning_curve_ticks": [2**k for k in range(4, 5)],
     ###
     "random_state": None,  # for multiple random subset selection, don't use a fixed state!
 }

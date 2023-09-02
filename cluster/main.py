@@ -142,8 +142,10 @@ import json
 from datetime import datetime
 
 time = datetime.now().strftime("%Y-%m-%d")
-DUMP_PATH = f"run/dump-{time}.json"
+DUMP_PATH = f"{repository_folder}cluster/run/dump-{time}.json"
 with open(DUMP_PATH, "w") as f:
     json.dump(dump, f, indent=2)
 
 print(f"Dumped timings to {DUMP_PATH}")
+
+# %%
