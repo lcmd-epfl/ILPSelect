@@ -28,7 +28,7 @@ def get_representations(mols, params, representation):
             for mol in mols
         ]
     )
-    nuclear_charges = np.array([mol.nuclear_charges for mol in mols])
+    nuclear_charges = np.array([mol.nuclear_charges for mol in mols], dtype=object)
     return reps, nuclear_charges
 
 
