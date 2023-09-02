@@ -15,7 +15,7 @@ def get_kernel(X1, X2, charges1, charges2, sigma=1):
 
 def get_ranking(X, X_target, Q, Q_target):
     K = get_kernel(X, X_target, Q, Q_target, sigma=1)
-    return np.argsort(K)[::-1]
+    return np.argsort(K)[::-1][0]
 
 
 def sml_subset(parent_folder, database, targets, representation, N, remove_target_from_database):

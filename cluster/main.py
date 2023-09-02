@@ -18,9 +18,6 @@ algorithms = ["fragments", "sml"]
 # generate representations
 from scripts.generate import generate_database, generate_targets
 
-if config["remove_target_from_database"]:
-    fragment_to_remove = 1
-
 generate_database(database, representation, repository_folder)
 
 generate_targets(target_names, representation, current_folder)

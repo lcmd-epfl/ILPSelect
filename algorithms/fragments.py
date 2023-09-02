@@ -232,6 +232,7 @@ class model:
         return 0
 
     def remove_fragments(self, fragmentsarray):
+        # removes every fragment of a solution, that is, an array of array of fragment ids
         for fragmentsid in fragmentsarray:
             for M in fragmentsid:
                 if self.scope == "global_vector":
@@ -239,6 +240,11 @@ class model:
                 else:
                     self.Z.addConstr(self.y.sum(M, "*") == 0)
         self.Z.update()
+        return 0
+
+    def remove_fragment(self, fragment_id):
+        # wrapper to remove lone fragment
+        self.remove_fragments([[fragment_id]])
         return 0
 
     def randomsubset(self, p):
