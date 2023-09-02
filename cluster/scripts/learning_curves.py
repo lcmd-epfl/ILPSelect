@@ -251,7 +251,8 @@ def learning_curves_random(
                 random_state=config["random_state"],
                 target_to_remove=target_name if config["remove_target_from_database"] else None,
             )
-            opt_rankings.append(opt_rankings)
+
+            opt_rankings = np.concatenate((opt_rankings, opt_rankings))
 
             maes_random = []
             for n in config["learning_curve_ticks"]:
@@ -279,7 +280,7 @@ def learning_curves_random(
                 maes_random.append(mae)
                 print("Random", n, mae)
 
-            all_maes_random.append(maes_random)
+            all_maes_random = np.concatenate((all_maes_random, maes_random))
 
         all_maes_random = np.array(all_maes_random)
 
