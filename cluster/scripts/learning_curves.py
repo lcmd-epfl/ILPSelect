@@ -46,7 +46,7 @@ def opt_hypers(X_train, atoms_train, y_train, X_test, atoms_test, y_test):
             mae, y_pred = train_predict_model(
                 X_train, atoms_train, y_train, X_test, atoms_test, y_test, sigma=sigma, l2reg=l2reg
             )
-            print("sigma", sigma, "l2reg", l2reg, "mae", mae)
+            # print("sigma", sigma, "l2reg", l2reg, "mae", mae)
             maes[i, j] = mae
 
     min_j, min_k = np.unravel_index(np.argmin(maes, axis=None), maes.shape)

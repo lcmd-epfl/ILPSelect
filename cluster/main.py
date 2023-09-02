@@ -1,6 +1,4 @@
 # %%
-%reload_ext autoreload
-%autoreload 2
 from config import config
 
 # read target names, database
@@ -8,7 +6,6 @@ target_names = config["target_names"]
 print(f"Read {len(target_names)} target(s): {target_names}")
 
 database = config["database"]
-
 
 representation = config["representation"]
 repository_folder = config["repository_folder"]
@@ -88,7 +85,7 @@ learning_curves_random(
     representation=representation,
     config=config,
     CV=CV,
-    add_onto_old=True
+    add_onto_old=True,
 )
 
 # %%
