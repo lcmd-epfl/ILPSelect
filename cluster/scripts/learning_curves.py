@@ -234,8 +234,8 @@ def learning_curves_random(
 
         SAVE_PATH = f"{repository_path}cluster/learning_curves/random_{representation}_{database}_{target_name}.npz"
 
-        all_maes_random = [[]]
-        opt_rankings = [[]]
+        all_maes_random = []
+        opt_rankings = []
 
         if add_onto_old and os.path.isfile(SAVE_PATH):
             old_random = np.load(SAVE_PATH, allow_pickle=True)

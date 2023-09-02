@@ -1,6 +1,4 @@
 # %%
-%reload_ext autoreload
-%autoreload 2
 import time
 
 from config import config
