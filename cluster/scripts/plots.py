@@ -31,24 +31,27 @@ def plots(parent_directory, database, targets, representation, config, algorithm
         SML_CURVE_PATH = (
             f"{parent_directory}learning_curves/sml_{representation}_{database}_{target_name}.npz"
         )
+        RANDOM_CURVE_PATH = f"{parent_directory}learning_curves/random_{representation}_{database}_{target_name}.npz"
 
-        SML_LEARNING_CURVE = np.load(SML_CURVE_PATH)
-        ALGO_CURVE = np.load(ALGO_CURVE_PATH)
+        SML_LEARNING_CURVE = np.load(SML_CURVE_PATH, allow_pickle=True)
+        ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
+        RANDOM_CURVE = np.load(RANDOM_CURVE_PATH, allow_pickle=True)
         MEAN_RANDOM, STD_RANDOM = (
-            np.mean(SML_LEARNING_CURVE["all_maes_random"], axis=0) * Ha2kcal,
-            np.std(SML_LEARNING_CURVE["all_maes_random"], axis=0) * Ha2kcal,
+            np.mean(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal,
+            np.std(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal,
         )
         SML = SML_LEARNING_CURVE["mae"] * Ha2kcal
-        FRAG = ALGO_CURVE["mae"] * Ha2kcal
+        ALGO = ALGO_CURVE["mae"] * Ha2kcal
         N = SML_LEARNING_CURVE["train_sizes"]
         # create figure and axis
         fig, ax = plt.subplots(figsize=(11, 6))
         # plot learning curve random with std as error bars
-        ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt="o-", label="Random")
+        CV = len(RANDOM_CURVE["all_maes_random"])
+        ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt="o-", label=f"Random ({CV}-fold)")
         # plot learning curve SML
         ax.plot(N, SML, "o-", label="SML")
-        # plot learning curve FRAG
-        ax.plot(N, FRAG, "o-", label=f"Fragments algo pen {pen}")
+        # plot learning curve ALGO
+        ax.plot(N, ALGO, "o-", label=f"Fragments algo pen {pen}")
         # set axis labels
         ax.set_xlabel("Training set size")
         ax.set_ylabel("MAE [kcal/mol]")
@@ -77,7 +80,7 @@ def plots(parent_directory, database, targets, representation, config, algorithm
     STD_RANDOM = []
 
     SML = []
-    FRAG = []
+    ALGO = []
     N = np.array([2**i for i in range(4, 11)])
 
     for target_name in targets:
@@ -85,30 +88,33 @@ def plots(parent_directory, database, targets, representation, config, algorithm
         SML_CURVE_PATH = (
             f"{parent_directory}learning_curves/sml_{representation}_{database}_{target_name}.npz"
         )
+        RANDOM_CURVE_PATH = f"{parent_directory}learning_curves/random_{representation}_{database}_{target_name}.npz"
 
-        SML_LEARNING_CURVE = np.load(SML_CURVE_PATH)
-        ALGO_CURVE = np.load(ALGO_CURVE_PATH)
+        SML_LEARNING_CURVE = np.load(SML_CURVE_PATH, allow_pickle=True)
+        ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
+        RANDOM_CURVE = np.load(RANDOM_CURVE_PATH, allow_pickle=True)
 
-        MEAN_RANDOM.append(np.mean(SML_LEARNING_CURVE["all_maes_random"], axis=0) * Ha2kcal)
-        STD_RANDOM.append(np.std(SML_LEARNING_CURVE["all_maes_random"], axis=0) * Ha2kcal)
+        MEAN_RANDOM.append(np.mean(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal)
+        STD_RANDOM.append(np.std(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal)
         SML.append(SML_LEARNING_CURVE["mae"] * Ha2kcal)
-        FRAG.append(ALGO_CURVE["mae"] * Ha2kcal)
+        ALGO.append(ALGO_CURVE["mae"] * Ha2kcal)
 
     # TODO: not sure average of STDs makes sense
     MEAN_RANDOM = np.mean(MEAN_RANDOM, axis=0)
     STD_RANDOM = np.mean(STD_RANDOM, axis=0)
 
     SML = np.mean(SML, axis=0)
-    FRAG = np.mean(FRAG, axis=0)
+    ALGO = np.mean(ALGO, axis=0)
 
     # create figure and axis
     fig, ax = plt.subplots(figsize=(11, 6))
     # plot learning curve random with std as error bars
-    ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt="o-", label="Average random")
+    CV = len(RANDOM_CURVE["all_maes_random"])
+    ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt="o-", label=f"Average random ({CV}-fold)")
     # plot learning curve SML
     ax.plot(N, SML, "o-", label="Average SML")
-    # plot learning curve FRAG
-    ax.plot(N, FRAG, "o-", label=f"Average frags")
+    # plot learning curve ALGO
+    ax.plot(N, ALGO, "o-", label=f"Average frags")
     # set axis labels
     ax.set_xlabel("Training set size")
     ax.set_ylabel("MAE [kcal/mol]")
@@ -119,7 +125,7 @@ def plots(parent_directory, database, targets, representation, config, algorithm
     # legend
     ax.legend()
     # title
-    plt.title(f"Average learning curves")
+    plt.title(f"Average learning curves on {len(targets)} targets")
     # turn minor ticks off
     ax.minorticks_off()
     # make x ticks as N

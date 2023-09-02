@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def random_subset(repository_folder, database, N, random_state=None):
+def random_subset(repository_folder, database, N, random_state=None, target_to_remove=None):
     """
     Randomly shuffle database and return the first N indices.
 
@@ -10,7 +10,9 @@ def random_subset(repository_folder, database, N, random_state=None):
         database_path: path to database with `energies.csv` frame present containing column "file"
         N: number of indices to return
     """
-    database_files = pd.read_csv(f"{repository_folder}{database}/energies.csv")["file"]
+    database_files = pd.read_csv(f"{repository_folder}{database}/energies.csv").query(
+        "file != @target_to_remove"
+    )["file"]
 
     SAVE_PATH = f"{repository_folder}cluster/rankings/random_{database}.npy"
 

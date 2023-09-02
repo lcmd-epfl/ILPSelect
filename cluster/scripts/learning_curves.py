@@ -1,3 +1,4 @@
+import os
 import pickle
 
 import numpy as np
@@ -181,7 +182,9 @@ def learning_curves(repository_path, database, targets, representation, config, 
     return 0
 
 
-def learning_curves_random(repository_path, database, targets, representation, config, CV):
+def learning_curves_random(
+    repository_path, database, targets, representation, config, CV, add_onto_old=True
+):
     """
     Compute learning curves once for each prefix, and each target. For N-fold random learning curves, use `learning_curves_random`.
 
@@ -229,7 +232,16 @@ def learning_curves_random(repository_path, database, targets, representation, c
         for ncharge in Q_target:
             y_target -= atom_energy_coeffs[ncharge]
 
+        SAVE_PATH = f"{repository_path}cluster/learning_curves/random_{representation}_{database}_{target_name}.npz"
+
         all_maes_random = []
+        opt_rankings = []
+
+        if add_onto_old and os.path.isfile(SAVE_PATH):
+            old_random = np.load(SAVE_PATH, allow_pickle=True)
+            all_maes_random = old_random["all_maes_random"]
+            opt_rankings = old_random["ranking_xyz"]
+
         for iteration in range(CV):
             # random ranking
             opt_ranking = random_subset(
@@ -237,7 +249,9 @@ def learning_curves_random(repository_path, database, targets, representation, c
                 database,
                 N=config["learning_curve_ticks"][-1],
                 random_state=config["random_state"],
+                target_to_remove=target_name if config["remove_target_from_database"] else None,
             )
+            opt_rankings.append(opt_rankings)
 
             maes_random = []
             for n in config["learning_curve_ticks"]:
@@ -269,13 +283,11 @@ def learning_curves_random(repository_path, database, targets, representation, c
 
         all_maes_random = np.array(all_maes_random)
 
-        SAVE_PATH = f"{repository_path}cluster/learning_curves/random_{representation}_{database}_{target_name}.npz"
-
         np.savez(
             SAVE_PATH,
             train_sizes=config["learning_curve_ticks"],
             all_maes_random=all_maes_random,
-            ranking_xyz=database_info["labels"][opt_ranking],
+            ranking_xyz=[database_info["labels"][opt_ranking] for opt_ranking in opt_rankings],
         )
 
         print(f"Saved to file {SAVE_PATH}.")

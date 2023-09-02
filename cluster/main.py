@@ -9,22 +9,25 @@ print(f"Read {len(target_names)} target(s): {target_names}")
 
 database = config["database"]
 
-# %%
-# generate representations
-from scripts.generate import generate_database, generate_targets
 
 representation = config["representation"]
 repository_folder = config["repository_folder"]
 current_folder = config["current_folder"]
 
+size_subset = config["learning_curve_ticks"][-1]
+
+algorithms = ["fragments", "sml"]
+# %%
+# generate representations
+from scripts.generate import generate_database, generate_targets
+
 if config["remove_target_from_database"]:
     fragment_to_remove = 1
 
-generate_database(database, representation, repository_folder, )
+generate_database(database, representation, repository_folder)
 
 generate_targets(target_names, representation, current_folder)
 
-size_subset = config["learning_curve_ticks"][-1]
 
 # %%
 # generate sml subset
@@ -68,7 +71,6 @@ algo_subset(
 # generate learning curves
 from scripts.learning_curves import learning_curves, learning_curves_random
 
-algorithms = ["fragments", "sml"]
 learning_curves(
     repository_path=repository_folder,
     database=database,
@@ -77,8 +79,8 @@ learning_curves(
     config=config,
     algorithms=algorithms,
 )
-#%%
-CV = 1
+# %%
+CV = 5
 learning_curves_random(
     parent_directory=repository_folder,
     database=database,
@@ -86,6 +88,7 @@ learning_curves_random(
     representation=representation,
     config=config,
     CV=CV,
+    add_onto_old=True
 )
 
 # %%
@@ -100,3 +103,5 @@ plots(
     config=config,
     algorithms=algorithms,
 )
+
+# %%

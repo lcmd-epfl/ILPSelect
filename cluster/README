@@ -18,3 +18,7 @@ WARNING: to use algo_model and algo_subset, the molekuehl folder should be added
 Example:
 >>> export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"
 Add this line at the end of your .bashrc file to add it systematically.
+
+WARNING: create folders models/ and data/. The files it contains are large and thus in the .gitignore.
+>>> mkdir models
+>>> mkdir data
