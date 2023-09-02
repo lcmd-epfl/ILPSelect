@@ -331,9 +331,11 @@ class model:
         if (where == GRB.Callback.MIPSOL) and self.Z.cbGet(
             GRB.Callback.MIPSOL_OBJ
         ) < self.objbound:
-            if self.verbose: print(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
+            if self.verbose:
+                print(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
             self.add_lazy_constraint()
-            if self.verbose: print(len(self.visitedfragments))
+            if self.verbose:
+                print(len(self.visitedfragments))
             if len(self.visitedfragments) >= self.number_of_fragments:
                 self.Z.terminate()
                 print("Interrupting because enough fragments were found.")
@@ -439,7 +441,8 @@ class model:
                     expr += T[k, l] ** 2
             for M in self.database_indices:
                 count += 1
-                if self.verbose: print(count, "  /  ", self.size_database)
+                if self.verbose:
+                    print(count, "  /  ", self.size_database)
                 Mol = self.database["reps"][M]
                 m = len(Mol)
                 for G in range(self.duplicates):
