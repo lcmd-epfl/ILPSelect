@@ -9,6 +9,15 @@ config = {
     ###
     "target_names": ["sildenafil"],  # corresponding names must be in targets/targets.csv
     ###
+    "generate_data":False,
+    "generate_targets":False,
+    "sml_subset":False,
+    "algo_model":False,
+    "algo_subset":False,
+    "learning_curves":True,
+    "learning_curves_random":True,
+    "plots":True,
+    ###
     "scope": "local_vector",
     "penalty": 0,
     "duplicates": 1,

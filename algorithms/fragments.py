@@ -70,7 +70,7 @@ class model:
     ################### functions to call below ##################
     # TODO: move initial arguments to the setup phase?
     # since it's not useful when reading from file (it's used right now but may be changed)
-    def __init__(self, path_to_database, path_to_target, scope, verbose=0):
+    def __init__(self, path_to_database, path_to_target, scope, verbose=False):
         assert (
             scope == "local_vector"
             or scope == "local_matrix"
@@ -101,7 +101,6 @@ class model:
         self.Z = gp.Model()
 
         # model parameters
-        self.Z.setParam("OutputFlag", self.verbose)
         # useless now?
         # self.Z.setParam("PreQLinearize", 0)
         # self.Z.setParam("MIPFocus",1)
@@ -132,6 +131,7 @@ class model:
         number_of_fragments=20,
     ):
         # model parameters
+        self.Z.setParam("OutputFlag", self.verbose)
         self.Z.setParam("PoolSearchMode", PoolSearchMode)
         self.Z.setParam("TimeLimit", timelimit)
         self.Z.setParam("PoolSolutions", number_of_solutions)
@@ -331,9 +331,9 @@ class model:
         if (where == GRB.Callback.MIPSOL) and self.Z.cbGet(
             GRB.Callback.MIPSOL_OBJ
         ) < self.objbound:
-            print(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
+            if self.verbose: print(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
             self.add_lazy_constraint()
-            print(len(self.visitedfragments))
+            if self.verbose: print(len(self.visitedfragments))
             if len(self.visitedfragments) >= self.number_of_fragments:
                 self.Z.terminate()
                 print("Interrupting because enough fragments were found.")
@@ -439,7 +439,7 @@ class model:
                     expr += T[k, l] ** 2
             for M in self.database_indices:
                 count += 1
-                print(count, "  /  ", self.size_database)
+                if self.verbose: print(count, "  /  ", self.size_database)
                 Mol = self.database["reps"][M]
                 m = len(Mol)
                 for G in range(self.duplicates):
