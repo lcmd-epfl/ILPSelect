@@ -8,9 +8,15 @@ config = {
     "representation": "FCHL",
     ###
     "target_names": [
+        #"sildenafil",
         "penicillin",
         "troglitazone",
     ],  # corresponding names must be in targets/targets.csv
+    "plot_average_target_names": [ 
+        "sildenafil",
+        "penicillin",
+        "troglitazone",
+    ]
     ###
     "generate_database": False,
     "generate_targets": True,
@@ -29,8 +35,7 @@ config = {
     "number_of_fragments": 1024,  # size of subset selected
     "verbose": False,
     ###
-    # "learning_curve_ticks": [2**k for k in range(4, 11)],
-    "learning_curve_ticks": [2**k for k in range(4, 5)],
+    "learning_curve_ticks": [2**k for k in range(4, 11)],
     ###
     "random_state": None,  # for multiple random subset selection, don't use a fixed state!
 }

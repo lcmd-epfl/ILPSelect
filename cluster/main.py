@@ -124,6 +124,8 @@ if config["learning_curves_random"]:
 # draw learning curves
 from scripts.plots import plots
 
+# TODO: split plots() into individal and average plots
+# and use config["plot_average_target_names"] for the latter
 if config["plots"]:
     t = time.time()
     plots(
