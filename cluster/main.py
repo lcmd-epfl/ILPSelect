@@ -122,22 +122,32 @@ if config["learning_curves_random"]:
 
 # %%
 # draw learning curves
-from scripts.plots import plots
+from scripts.plots import plots_average, plots_individual
 
-# TODO: split plots() into individal and average plots
-# and use config["plot_average_target_names"] for the latter
-if config["plots"]:
+if config["plots_individual"]:
     t = time.time()
-    plots(
+    plots_individual(
         parent_directory=current_folder,
         database=database,
         targets=target_names,
         representation=representation,
-        config=config,
-        algorithms=algorithms,
+        pen=config["penalty"],
     )
     t = time.time() - t
-    dump["time_plots"] = t
+    dump["time_plots_individual"] = t
+
+if config["plots_average"]:
+    t = time.time()
+    plots_average(
+        parent_directory=current_folder,
+        database=database,
+        targets=config["plot_average_target_names"],
+        representation=representation,
+        pen=config["penalty"],
+    )
+    t = time.time() - t
+    dump["time_plots_average"] = t
+
 
 # %%
 import json

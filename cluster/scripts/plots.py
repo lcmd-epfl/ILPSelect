@@ -7,9 +7,9 @@ plt.rcParams.update({"font.size": 18})
 Ha2kcal = 627.5
 
 
-def plots(parent_directory, database, targets, representation, config, algorithms):
+def plots_individual(parent_directory, database, targets, representation, pen):
     """
-    Draw combined plots and average plot of the learning curves and saves them to plots/.
+    Draw combined plots of the learning curves for each target and saves them to plots/.
 
     Parameters:
         parent_directory: cluster/ absolute path
@@ -19,11 +19,6 @@ def plots(parent_directory, database, targets, representation, config, algorithm
         config: config directory. Must include key "penalty"
         algorithms: list of algorithms to test (array(str)). WARNING only ["fragments", "sml"] is handled.
     """
-
-    for algorithm in algorithms:
-        assert algorithm in ["fragments", "sml"], "only fragments and sml algorithms are handled"
-
-    pen = config["penalty"]
 
     # individual plots
     for target_name in targets:
@@ -74,8 +69,21 @@ def plots(parent_directory, database, targets, representation, config, algorithm
         SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_{target_name}_{pen}.png"
         fig.savefig(SAVE_PATH, dpi=300)
         print(f"Saved plot to {SAVE_PATH}")
+    return 0
 
-    # average plot
+
+def plots_average(parent_directory, database, targets, representation, pen):
+    """
+    Draw average plots of the learning curves and saves them to plots/.
+
+    Parameters:
+        parent_directory: cluster/ absolute path
+        database: name of database (str) eg "qm7"
+        targets: array of target names (array(str))
+        representation: representation (str) eg "FCHL"
+        config: config directory. Must include key "penalty"
+        algorithms: list of algorithms to test (array(str)). WARNING only ["fragments", "sml"] is handled.
+    """
     MEAN_RANDOM = []
     STD_RANDOM = []
 
@@ -109,8 +117,8 @@ def plots(parent_directory, database, targets, representation, config, algorithm
     # create figure and axis
     fig, ax = plt.subplots(figsize=(11, 6))
     # plot learning curve random with std as error bars
-    CV = len(RANDOM_CURVE["all_maes_random"])
-    ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt="o-", label=f"Average random ({CV}-fold)")
+    # TODO: different targets have different CV!
+    ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt="o-", label=f"Average random")
     # plot learning curve SML
     ax.plot(N, SML, "o-", label="Average SML")
     # plot learning curve ALGO
