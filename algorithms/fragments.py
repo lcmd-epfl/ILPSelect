@@ -462,7 +462,8 @@ class model:
             n = len(self.target["ncharges"])  # size of target
             for M in self.database_indices:
                 count += 1
-                print(count, "  /  ", self.size_database)
+                if self.verbose:
+                    print(count, "  /  ", self.size_database)
                 Mol = self.database["reps"][M]
                 m = len(Mol)
                 for i, j, G in [(v[0], v[1], v[3]) for v in I if v[2] == M]:
