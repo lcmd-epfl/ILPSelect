@@ -31,7 +31,13 @@ if config["generate_database"]:
 
 if config["generate_targets"]:
     t = time.time()
-    generate_targets(target_names, representation, current_folder)
+    generate_targets(
+        targets=target_names,
+        representation=representation,
+        repository_path=repository_folder,
+        database=database,
+        in_database=config["in_database"],
+    )
     t = time.time() - t
     dump["time_generate_targets"] = t
 
@@ -49,7 +55,6 @@ if config["sml_subset"]:
         targets=target_names,
         representation=representation,
         N=size_subset,
-        remove_target_from_database=config["remove_target_from_database"],
     )
     t = time.time() - t
     dump["time_sml_subset"] = t

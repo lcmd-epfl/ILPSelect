@@ -4,20 +4,20 @@ config = {
     "repository_folder": "/home/haeberle/molekuehl/",
     ###
     "database": "qm7",
-    "remove_target_from_database": False,
     "representation": "FCHL",
     ###
     # corresponding names must be in targets/targets.csv
     "target_names": ["sildenafil", "penicillin", "troglitazone"],
+    "in_database": True,
     "plot_average_target_names": ["sildenafil", "penicillin", "troglitazone"],
     ###
-    "generate_database": False,
-    "generate_targets": False,
-    "sml_subset": False,
-    "algo_model": False,
-    "algo_subset": False,
-    "learning_curves": False,
-    "learning_curves_random": False,
+    "generate_database": True,
+    "generate_targets": True,
+    "sml_subset": True,
+    "algo_model": True,
+    "algo_subset": True,
+    "learning_curves": True,
+    "learning_curves_random": True,
     "plots_individual": True,
     "plots_average": True,
     ###
@@ -36,17 +36,17 @@ config = {
 
 ############ for 2 targets inside qm7 ############
 
-# import numpy as np
-# import pandas as pd
+import numpy as np
+import pandas as pd
 
-# qm7 = np.load("/home/haeberle/molekuehl/cluster/data/FCHL_qm7.npz", allow_pickle=True)
-# qm7_df = pd.DataFrame({"ncharges": qm7["ncharges"], "labels": qm7["labels"]})
+qm7 = np.load("/home/haeberle/molekuehl/cluster/data/FCHL_qm7.npz", allow_pickle=True)
+qm7_df = pd.DataFrame({"ncharges": qm7["ncharges"], "labels": qm7["labels"]})
 
-# num_heavy_atoms = qm7_df["ncharges"].map(lambda charges: sum(charges != 1))
+num_heavy_atoms = qm7_df["ncharges"].map(lambda charges: sum(charges != 1))
 
-# # take 2 with fixed random state (doesn't matter so much)
-# target_sample = qm7_df[num_heavy_atoms >= 7]["labels"].sample(2, random_state=42).values
+# take 2 with fixed random state (doesn't matter so much)
+target_sample = qm7_df[num_heavy_atoms >= 7]["labels"].sample(2, random_state=42).values
 
-# config["target_names"] = target_sample
-# config["plot_average_target_names"] = target_sample
-# config["remove_target_from_database"] = True
+config["target_names"] = target_sample
+config["plot_average_target_names"] = target_sample
+config["in_database"] = True

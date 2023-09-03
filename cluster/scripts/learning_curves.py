@@ -249,7 +249,7 @@ def learning_curves_random(
                 database,
                 N=config["learning_curve_ticks"][-1],
                 random_state=config["random_state"],
-                target_to_remove=target_name if config["remove_target_from_database"] else None,
+                target_to_remove=target_name if config["in_database"] else None,
             )
 
             opt_rankings.append(database_info["labels"][opt_ranking])

@@ -1,11 +1,5 @@
 import numpy as np
 import qml
-from qml.math import cho_solve
-
-
-def krr(kernel, properties, l2reg=1e-9):
-    alpha = cho_solve(kernel, properties, l2reg=l2reg)
-    return alpha
 
 
 def get_kernel(X1, X2, charges1, charges2, sigma=1):
@@ -15,10 +9,10 @@ def get_kernel(X1, X2, charges1, charges2, sigma=1):
 
 def get_ranking(X, X_target, Q, Q_target):
     K = get_kernel(X, X_target, Q, Q_target, sigma=1)
-    return np.argsort(K)[::-1][0]
+    return np.argsort(K[0])[::-1]
 
 
-def sml_subset(parent_folder, database, targets, representation, N, remove_target_from_database):
+def sml_subset(parent_folder, database, targets, representation, N):
     """
     Generate SML subsets of size N for each target from the database.
 
@@ -38,20 +32,16 @@ def sml_subset(parent_folder, database, targets, representation, N, remove_targe
     for target_name in targets:
         target_info = np.load(f"{DATA_PATH}{representation}_{target_name}.npz", allow_pickle=True)
 
-        ranking = get_ranking(
-            database_reps,
-            np.array([target_info["rep"]]),
-            database_ncharges,
-            np.array([target_info["ncharges"]]),
-        )[: N + 1]
+        mask = database_info["labels"] != target_name
 
-        if remove_target_from_database:
-            # the best ranking fragment should be itself!
-            assert database_info["labels"][ranking[0]] == target_name
-            ranking = ranking[:1]
-        else:
-            # discard the n+1st, not that it matters.
-            ranking = ranking[:-1]
+        # TODO: figure out why the kernel isn't maximized when the representations are the same!!
+        # target in database should be first of ranking but isn't..
+        ranking = get_ranking(
+            database_reps[mask],
+            np.array([target_info["rep"]]),
+            database_ncharges[mask],
+            np.array([target_info["ncharges"]]),
+        )[:N]
 
         SAVE_PATH = f"{parent_folder}rankings/sml_{representation}_{database}_{target_name}.npy"
 

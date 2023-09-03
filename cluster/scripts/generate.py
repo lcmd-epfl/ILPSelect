@@ -1,20 +1,17 @@
-import pdb
-import pickle
-import random
-
 import numpy as np
 import pandas as pd
 import qml
-from qml.math import cho_solve
 
 
-def get_representations(mols, params, representation):
+def get_representations(mols, max_natoms=None, elements=None, representation="FCHL"):
     # TODO: add other representations
 
     assert representation == "FCHL", "Only FCHL is implemented."
 
-    max_natoms = max([len(mol.nuclear_charges) for mol in mols])
-    elements = np.unique(np.concatenate([(mol.nuclear_charges) for mol in mols]))
+    if max_natoms is None:
+        max_natoms = max([len(mol.nuclear_charges) for mol in mols])
+    if elements is None:
+        elements = np.unique(np.concatenate([(mol.nuclear_charges) for mol in mols]))
 
     reps = np.array(
         [
@@ -23,16 +20,18 @@ def get_representations(mols, params, representation):
                 mol.coordinates,
                 elements=elements,
                 gradients=False,
-                pad=max_natoms,
+                # pad=max_natoms,
+                pad=23,
             )
             for mol in mols
-        ]
+        ],
+        dtype=object,
     )
     nuclear_charges = np.array([mol.nuclear_charges for mol in mols], dtype=object)
     return reps, nuclear_charges
 
 
-def generate_targets(targets, representation, parent_folder):
+def generate_targets(targets, representation, repository_path, database, in_database=False):
     """
     Generate representation of targets in parent_folder/data/.
 
@@ -42,25 +41,40 @@ def generate_targets(targets, representation, parent_folder):
         parent_folder: above folder which contains a targets/ folder with the .xyz files
     """
 
+    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
+    database_info = np.load(DATA_PATH, allow_pickle=True)
+
+    elements_database = np.unique(np.concatenate([(x) for x in database_info["ncharges"]]))
+
     for target_name in targets:
-        TARGET_PATH = f"{parent_folder}targets/{target_name}.xyz"
+        if not in_database:
+            TARGET_PATH = f"{repository_path}cluster/targets/{target_name}.xyz"
+        else:
+            TARGET_PATH = f"{repository_path}{database}/{target_name}.xyz"
+
+        # very important to keep structure of representation
 
         target_mol = qml.Compound(TARGET_PATH)
 
         X_target, Q_target = get_representations(
-            [target_mol], params=None, representation=representation
+            [target_mol],
+            max_natoms=len(target_mol.coordinates),
+            elements=elements_database,
+            representation=representation,
         )
 
         # to use in the fragments algo
-        SAVE_PATH = f"{parent_folder}data/{representation}_{target_name}"
-        np.savez(f"{SAVE_PATH}.npz", ncharges=Q_target[0], rep=X_target[0])
+        SAVE_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+        np.savez(SAVE_PATH, ncharges=Q_target[0], rep=X_target[0])
 
         print(f"Generated representation {representation} of target {target_name} in {SAVE_PATH}.")
+
+    return 0
 
 
 def generate_database(database, representation, repository_folder):
     """
-    Generate representation of full databases in repository_folder/cluster/data/ from xyz files in /repository_folder/{representation}
+    Generate representation of full databases in repository_folder/cluster/data/ from xyz files in /repository_folder/{database}
     There must be a `energies.csv` in the database folder with columns "file" and "energy / Ha".
 
     Parameters:
@@ -79,10 +93,12 @@ def generate_database(database, representation, repository_folder):
 
     mols = np.array([qml.Compound(f"{FRAGMENTS_PATH}{x}") for x in xyzs])
 
-    X, Q = get_representations(mols, params=None, representation=representation)
+    X, Q = get_representations(mols, representation=representation)
 
-    SAVE_PATH = f"{repository_folder}cluster/data/"
+    SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{database}.npz"
 
-    np.savez(f"{SAVE_PATH}{representation}_{database}.npz", reps=X, labels=file_names, ncharges=Q)
+    np.savez(SAVE_PATH, reps=X, labels=file_names, ncharges=Q)
 
     print(f"Generated representation {representation} of database {database} in {SAVE_PATH}.")
+
+    return 0

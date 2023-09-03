@@ -32,7 +32,7 @@ def algo_subset(repository_path, database, targets, representation, N, config):
         # reads already found combinations to remove then (if we want to continue previous optimization for example)
         # df=pd.read_csv(outfolder+"newsolutions"+str(pen)+".csv")
         # M.add_forbidden_combinations(df['Fragments'].apply(eval))
-        if config["remove_target_from_database"]:
+        if config["in_database"]:
             M.remove_fragment(target_name)
 
         # optimize with callback
