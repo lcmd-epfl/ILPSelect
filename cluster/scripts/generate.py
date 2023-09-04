@@ -20,7 +20,7 @@ def get_representations(mols, max_natoms=None, elements=None, representation="FC
                 mol.coordinates,
                 elements=elements,
                 gradients=False,
-                # pad=max_natoms,
+                # pad=max_natoms, #not needed
                 pad=23,
             )
             for mol in mols
@@ -34,16 +34,20 @@ def get_representations(mols, max_natoms=None, elements=None, representation="FC
 def generate_targets(targets, representation, repository_path, database, in_database=False):
     """
     Generate representation of targets in parent_folder/data/.
+    The database must already be generated in order to keep the same parameters!
 
     Parameters:
         targets: array of names (array(strings))
         representaion: representation name (string)
-        parent_folder: above folder which contains a targets/ folder with the .xyz files
+        repository_path: absolute path to repository which contains {database}/ and cluster/ (str)
+        database: name of database (str) eg. "FCHL"
+        in_database: whether the targets are inside the database or not.
     """
 
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
 
+    # very important to keep structure of representation
     elements_database = np.unique(np.concatenate([(x) for x in database_info["ncharges"]]))
 
     for target_name in targets:
@@ -51,8 +55,6 @@ def generate_targets(targets, representation, repository_path, database, in_data
             TARGET_PATH = f"{repository_path}cluster/targets/{target_name}.xyz"
         else:
             TARGET_PATH = f"{repository_path}{database}/{target_name}.xyz"
-
-        # very important to keep structure of representation
 
         target_mol = qml.Compound(TARGET_PATH)
 

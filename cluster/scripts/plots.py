@@ -16,8 +16,7 @@ def plots_individual(parent_directory, database, targets, representation, pen):
         database: name of database (str) eg "qm7"
         targets: array of target names (array(str))
         representation: representation (str) eg "FCHL"
-        config: config directory. Must include key "penalty"
-        algorithms: list of algorithms to test (array(str)). WARNING only ["fragments", "sml"] is handled.
+        pen: penalty of the solutions for the file names (int, float or str)
     """
 
     # individual plots
@@ -81,8 +80,7 @@ def plots_average(parent_directory, database, targets, representation, pen):
         database: name of database (str) eg "qm7"
         targets: array of target names (array(str))
         representation: representation (str) eg "FCHL"
-        config: config directory. Must include key "penalty"
-        algorithms: list of algorithms to test (array(str)). WARNING only ["fragments", "sml"] is handled.
+        pen: same as config["penatly"]
     """
     MEAN_RANDOM = []
     STD_RANDOM = []
