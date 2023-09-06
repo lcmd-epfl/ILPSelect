@@ -77,10 +77,15 @@ class model:
             or scope == "global_vector"
         ), "Scope takes values local_matrix, local_vector, and global_vector only."
         self.database = np.load(path_to_database, allow_pickle=True)
+        self.database_reps = self.database["reps"]
+        self.database_ncharges = self.database["ncharges"]
+        self.database_labels = self.database["labels"]
 
         self.target = np.load(path_to_target, allow_pickle=True)
+        self.target_rep = self.target["rep"]
+        self.target_ncharges = self.target["ncharges"]
 
-        self.size_database = len(self.database["labels"])
+        self.size_database = len(self.database_labels)
         # self.size_database=20 # uncomment this to only take first indices of the database for testing
         self.database_indices = range(self.size_database)
         self.scope = scope
@@ -186,7 +191,7 @@ class model:
 
     def changepenalty(self, newpenalty):
         self.penalty_constant = newpenalty
-        Mol = self.database["ncharges"][0]
+        Mol = self.database_ncharges[0]
         m = len(Mol)
 
         # z = indicator variable for fragments
@@ -344,13 +349,15 @@ class model:
     def addvariables(self, Z):
         print("Adding variables...")
         if self.scope == "local_matrix" or self.scope == "local_vector":
-            Tcharges = self.target["ncharges"]
+            Tcharges = self.target_ncharges
+            Trep = self.target_rep
             n = len(Tcharges)  # size of target
             upperbounds = []
             I = []
             J = []
             for M in self.database_indices:
-                Mcharges = self.database["ncharges"][M]
+                Mcharges = self.database_ncharges[M]
+                Mrep = self.database_reps[M]
                 m = len(Mcharges)
                 I = I + [
                     (i, j, M, G)
@@ -358,6 +365,7 @@ class model:
                     for i in range(m)
                     for j in range(n)
                     if Mcharges[i] == Tcharges[j]
+                    and np.linalg.norm(Mrep[i] - Trep[j]) < 1  # EXPERIMENTAL
                 ]  # if condition excludes j; i always takes all m values
                 J = J + [(M, G) for G in range(self.duplicates)]
 
@@ -371,7 +379,7 @@ class model:
             # for M in [0,1,16,28,29,53,92]:
             #    x[M,0].start = 1
             y = Z.addVars(
-                len(np.unique(self.target["ncharges"])), vtype="C"
+                len(np.unique(self.target_ncharges)), vtype="C"
             )  # variable for each atom type in target
         print("Variables added.")
         return x, y
@@ -379,13 +387,13 @@ class model:
     def addconstraints(self, Z, x, y):
         print("Adding constraints...")
         if self.scope == "local_matrix" or self.scope == "local_vector":
-            n = len(self.target["ncharges"])  # size of target
+            n = len(self.target_ncharges)  # size of target
             # bijection into [n]
             Z.addConstrs((x.sum("*", j, "*", "*") == 1 for j in range(n)), name="bij")
             I = x.keys()
 
             for M in self.database_indices:
-                m = len(self.database["ncharges"][M])
+                m = len(self.database_ncharges[M])
                 # each i of each group is used at most once #TODO: does this make sense?
                 Z.addConstrs(
                     x.sum(i, "*", M, G) <= 1
@@ -405,11 +413,11 @@ class model:
 
         elif self.scope == "global_vector":
             # constraints on x: sum of picked sizes bigger than size of target
-            Tcharges = self.target["ncharges"]
+            Tcharges = self.target_ncharges
             n = len(Tcharges)  # size of target
             expr = gp.LinExpr()  # number of atoms in picked molecules
             for M in self.database_indices:
-                m = len(self.database["ncharges"][M])  # size of molecule M
+                m = len(self.database_ncharges[M])  # size of molecule M
                 expr += m * x.sum(M, "*")
             Z.addConstr(expr >= n)
 
@@ -417,7 +425,7 @@ class model:
             uniqueTcharges = np.unique(Tcharges, return_counts=True)
             penalties = [gp.LinExpr() + s for s in uniqueTcharges[1]]
             for M in self.database_indices:
-                Mcharges = np.array(self.database["ncharges"][M])
+                Mcharges = np.array(self.database_ncharges[M])
                 for i in range(len(penalties)):
                     penalties[i] -= np.count_nonzero(
                         Mcharges == uniqueTcharges[0][i]
@@ -434,8 +442,8 @@ class model:
         if self.scope == "local_matrix":  # Coulomb case
             expr = gp.QuadExpr()
             I = x.keys()
-            T = self.target["rep"]
-            n = len(self.target["ncharges"])  # size of target
+            T = self.target_rep
+            n = len(self.target_ncharges)  # size of target
             for k in range(n):
                 for l in range(n):
                     expr += T[k, l] ** 2
@@ -443,7 +451,7 @@ class model:
                 count += 1
                 if self.verbose:
                     print(count, "  /  ", self.size_database)
-                Mol = self.database["reps"][M]
+                Mol = self.database_reps[M]
                 m = len(Mol)
                 for G in range(self.duplicates):
                     for i, k in [v[:2] for v in I if v[2:] == (M, G)]:
@@ -458,13 +466,13 @@ class model:
         elif self.scope == "local_vector":
             expr = gp.LinExpr()
             I = x.keys()
-            T = self.target["rep"]
-            n = len(self.target["ncharges"])  # size of target
+            T = self.target_rep
+            n = len(self.target_ncharges)  # size of target
             for M in self.database_indices:
                 count += 1
                 if self.verbose:
                     print(count, "  /  ", self.size_database)
-                Mol = self.database["reps"][M]
+                Mol = self.database_reps[M]
                 m = len(Mol)
                 for i, j, G in [(v[0], v[1], v[3]) for v in I if v[2] == M]:
                     C = np.linalg.norm(Mol[i] - T[j]) ** 2
@@ -481,14 +489,14 @@ class model:
                 gp.LinExpr()
             )  # positive penalty added equal to sum over the atom types of max(0, number atoms in target - number of atoms in fragments)
             # this does not penalize picking an atom type that is not present in target -- but actually it implicitly does if we also penalize the size as before.
-            T = self.target["rep"]
+            T = self.target_rep
 
             # penalty is excess number of atom (difference fragments - target) + distances to fulfilling target atom types (y)
             penalty += y.sum()
-            penalty -= len(self.target["ncharges"])  # number of atoms in target
+            penalty -= len(self.target_ncharges)  # number of atoms in target
             expr += np.linalg.norm(T) ** 2
-            selfproducts = self.database["reps"] @ self.database["reps"].T
-            targetproducts = self.database["reps"] @ self.target["rep"]
+            selfproducts = self.database_reps @ self.database_reps.T
+            targetproducts = self.database_reps @ self.target_rep
             for M in self.database_indices:
                 count += 1
                 if self.verbose:
@@ -497,7 +505,7 @@ class model:
                     expr += (selfproducts[M, M] - 2 * targetproducts[M]) * x[M, G]
                     if self.penalty_constant != 0:
                         penalty += (
-                            len(self.database["ncharges"][M]) * x[M, G]
+                            len(self.database_ncharges[M]) * x[M, G]
                         )  # number of atoms in M
                     for MM in [i for i in self.database_indices if i < M]:
                         for GG in range(self.duplicates):
@@ -524,7 +532,7 @@ class model:
                 "ObjValWithPen": [],
                 "Assignments": [],
             }
-            n = len(self.target["ncharges"])  # size of target
+            n = len(self.target_ncharges)  # size of target
             SolCount = Z.SolCount
             I = x.keys()
             for solnb in range(SolCount):
@@ -551,9 +559,9 @@ class model:
                 for M, G in fragments:
                     used_indices = []
                     maps = []
-                    m = len(self.database["ncharges"][M])
+                    m = len(self.database_ncharges[M])
                     penalty += m
-                    fragmentlabels.append(self.database["labels"][M])
+                    fragmentlabels.append(self.database_labels[M])
                     fragmentsid.append(M)
                     for j in range(n):
                         i = int(A[j, M, G] - 1)
@@ -561,7 +569,7 @@ class model:
                             maps.append((i + 1, j + 1))
                             used_indices.append(i)
                     assignments.append(maps)
-                    charges = np.array(self.database["ncharges"][M])
+                    charges = np.array(self.database_ncharges[M])
                     excess.append(charges[np.delete(range(m), used_indices)].tolist())
                     k = k + 1
                 d["Excess"].append(excess)
@@ -594,18 +602,18 @@ class model:
                     print("Objective value", Z.PoolObjVal)
                 fragments = []
                 fragmentsid = []
-                penalty = -len(self.target["ncharges"])  # number of atoms in target
-                for i in range(len(np.unique(self.target["ncharges"]))):
+                penalty = -len(self.target_ncharges)  # number of atoms in target
+                for i in range(len(np.unique(self.target_ncharges))):
                     penalty += y[i].Xn
 
                 for M in self.database_indices:
                     for G in range(self.duplicates):
                         if np.rint(x[M, G].Xn) == 1:
                             if self.verbose:
-                                print(self.database["labels"][M])
+                                print(self.database_labels[M])
                             fragmentsid.append(M)
-                            fragments.append(self.database["labels"][M])
-                            penalty += len(self.database["ncharges"][M])
+                            fragments.append(self.database_labels[M])
+                            penalty += len(self.database_ncharges[M])
 
                 d["SolN"].append(solnb + 1)
                 d["Fragments"].append(fragments)
