@@ -8,6 +8,7 @@ import pdb
 import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 from MBDF import generate_mbdf
+from qml.kernels import get_global_kernel
 import os
 
 random.seed(42)
@@ -91,10 +92,20 @@ def get_representations_mbdf(mols):
 
 
 
-def get_ranking(X_train, X_target, Q_train, Q_target):
-    K = get_kernel(X_train, X_target, Q_train, Q_target, sigma=1)
-    return np.argsort(K)[::-1]
+def get_ranking_rep(X_train, X_target):
+    
+    #shape1, shape2 = X_train.shape[0], X_target.shape[0]
+    #distances = np.linalg.norm(X_train.reshape((shape1, -1)) - X_target.reshape((shape2, -1)), axis=1)
+    
 
+    #np.sum(X_train, axis=2)
+    distances = np.linalg.norm(np.sum(X_train, axis=2) - np.sum(X_target, axis=2) , axis=1)
+
+    sorted_indices = np.argsort(distances)
+
+    return sorted_indices
+
+#get_global_kernel
 
 if __name__ == '__main__':
 
@@ -167,18 +178,15 @@ if __name__ == '__main__':
             
             
             mae_sml = []
-
-            X_target, Q_target = np.array([X_target]), np.array([Q_target])
-            
-            opt_ranking = get_ranking(X_train, X_target, Q_train, Q_target)[0]
-            
             Q_train = np.array(Q_train)
+            X_target, Q_target = np.array([X_target]), np.array([Q_target])
+            distances = -1 * get_global_kernel(X_train,X_target, Q_train ,Q_target, 1)
+            opt_ranking = np.argsort(distances)[0]
             
             for n in N:
                 ranking = opt_ranking[:n]
                 
                 min_sigma, min_l2reg =  opt_hypers(X_train[ranking], Q_train[ranking], y_train[ranking])
-                
                 print(min_sigma, min_l2reg)
                 mae, y_pred          = train_predict_model(X_train[ranking], Q_train[ranking], y_train[ranking],X_target, Q_target, y_target, sigma=min_sigma, l2reg=min_l2reg)
                 mae_sml.append(mae)

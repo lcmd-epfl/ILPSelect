@@ -7,6 +7,9 @@ import pickle
 import pdb
 import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
+from qml.kernels import get_global_kernel
+import os
+
 random.seed(42)
 np.random.seed(42)
 #matplotlib font size 
@@ -83,16 +86,19 @@ def get_representations(mols, max_natoms=None, elements=None):
     nuclear_charges = np.array([mol.nuclear_charges for mol in mols])
     return reps, nuclear_charges
 
-
-def get_ranking(X, X_target, Q, Q_target):
-    K = get_kernel(X, X_target, Q, Q_target, sigma=1)
-    return np.argsort(K)[::-1]
+def get_ranking_rep(X_train, X_target):
+    distances = np.linalg.norm(np.sum(X_train, axis=2) - np.sum(X_target, axis=2) , axis=1)
+    sorted_indices = np.argsort(distances)
+    return sorted_indices
 
 
 if __name__ == '__main__':
 
     NEW_FIT, PLOT = True, True
-    ALL_TARGETS = pd.read_csv("/home/weinreic/exe/molekuehl/cluster/targets/targets.csv")
+    if os.uname()[1] == "voy":
+        ALL_TARGETS = pd.read_csv("/home/jan/projects/molekuehl/cluster/targets/targets.csv")
+    else:
+        ALL_TARGETS = pd.read_csv("/home/weinreic/exe/molekuehl/cluster/targets/targets.csv")
     TARGETS_XYZ, TARGETS_y = ALL_TARGETS["xyz"].values, ALL_TARGETS["energies"].values
 
 
@@ -107,10 +113,16 @@ if __name__ == '__main__':
         for xyz_target, y_target in zip(TARGETS_XYZ, TARGETS_y):
             print("Target:", xyz_target)
             target_name = xyz_target.split(".")[0]
-            TARGET_PATH = f"/home/weinreic/exe/molekuehl/cluster/targets//{xyz_target}"
-            FRAGMENTS_PATH = "/home/weinreic/sml/qm7"
+            #get the name of the current host
+            if os.uname()[1] == "voy":
+                TARGET_PATH = f"/home/jan/projects/molekuehl/sml/targets/{xyz_target}"
+                FRAGMENTS_PATH = "/home/jan/projects/molekuehl/qm7"
+                FRAG_y = pd.read_csv(f"{FRAGMENTS_PATH}/energies.csv")
+            else:
+                TARGET_PATH = f"/home/weinreic/exe/molekuehl/cluster/targets/{xyz_target}"
+                FRAGMENTS_PATH = "/home/weinreic/sml/qm7"
+                FRAG_y = pd.read_csv(f"{FRAGMENTS_PATH}/energies_qm7.csv")
             #FRAGMENTS_PATH = "./qm7"
-            FRAG_y = pd.read_csv(f"{FRAGMENTS_PATH}/energies_qm7.csv")
             #randomly shuffle the data
             FRAG_y = FRAG_y.sample(frac=1, random_state=42)
             xyzs, y_train =FRAG_y["file"].values, FRAG_y["energy / Ha"].values
@@ -140,8 +152,11 @@ if __name__ == '__main__':
             
             #N.append(len(X))
             mae_sml = []
-            #SML
-            opt_ranking = get_ranking(X, X_target, Q, Q_target)[0]
+
+
+            Q = np.array(Q)
+            opt_ranking = get_ranking_rep(X,X_target)
+
             
             for n in N:
                 ranking = opt_ranking[:n]
