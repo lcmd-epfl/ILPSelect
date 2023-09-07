@@ -1,7 +1,10 @@
 import numpy as np
-import qml
+from algorithms import fragments
 
+# import qml
 
+# old ranking with kernels
+"""
 def get_kernel(X1, X2, charges1, charges2, sigma=1):
     K = qml.kernels.get_local_kernel(X1, X2, charges1, charges2, sigma)
     return K
@@ -10,6 +13,18 @@ def get_kernel(X1, X2, charges1, charges2, sigma=1):
 def get_ranking(X, X_target, Q, Q_target):
     K = get_kernel(X, X_target, Q, Q_target, sigma=1)
     return np.argsort(K[0])[::-1]
+"""
+
+
+# new ranking as closest point sampling
+def get_ranking(X, X_target):
+    database_global_rep = np.array([np.sum(rep, axis=0) for rep in X])
+    target_global_rep = np.sum(X_target, axis=0)
+    distances = np.linalg.norm((database_global_rep - target_global_rep).astype(float), axis=1)
+    # Sort the indices by the distances
+    sorted_indices = np.argsort(distances)
+
+    return sorted_indices
 
 
 def sml_subset(parent_folder, database, targets, representation, N):
@@ -27,21 +42,25 @@ def sml_subset(parent_folder, database, targets, representation, N):
     database_info = np.load(f"{DATA_PATH}{representation}_{database}.npz", allow_pickle=True)
 
     database_reps = database_info["reps"]
-    database_ncharges = database_info["ncharges"]
+    # database_ncharges = database_info["ncharges"]
 
     for target_name in targets:
         target_info = np.load(f"{DATA_PATH}{representation}_{target_name}.npz", allow_pickle=True)
+        target_rep = target_info["rep"]
 
         mask = database_info["labels"] != target_name
 
-        # TODO: figure out why the kernel isn't maximized when the representations are the same!!
-        # target in database should be first of ranking but isn't..
+        # old ranking with kernels
+        """
         ranking = get_ranking(
             database_reps[mask],
             np.array([target_info["rep"]]),
             database_ncharges[mask],
             np.array([target_info["ncharges"]]),
         )[:N]
+        """
+        # closest point sampling
+        ranking = get_ranking(database_reps[mask], target_rep)[:N]
 
         SAVE_PATH = f"{parent_folder}rankings/sml_{representation}_{database}_{target_name}.npy"
 

@@ -20,12 +20,11 @@ def get_representations(mols, max_natoms=None, elements=None, representation="FC
                 mol.coordinates,
                 elements=elements,
                 gradients=False,
-                # pad=max_natoms, #not needed
-                pad=23,
+                pad=max_natoms,
             )
             for mol in mols
         ],
-        dtype=object,
+        # dtype=object,
     )
     nuclear_charges = np.array([mol.nuclear_charges for mol in mols], dtype=object)
     return reps, nuclear_charges
