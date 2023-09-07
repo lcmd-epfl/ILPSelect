@@ -172,6 +172,8 @@ class model:
 
     def readmodel(self, filepath):
         self.Z = gp.read(filepath)
+
+        # finding duplicates and x, y variables
         self.duplicates = 0
 
         x = gp.tupledict()
@@ -187,6 +189,18 @@ class model:
                     self.duplicates += 1
         self.x = x
         self.y = y
+
+        # finding penalty constant
+        Mol = self.database_ncharges[0]
+        m = len(Mol)
+        # z = indicator variable for fragments
+        if self.scope == "global_vector":
+            z = x
+        else:
+            z = y
+
+        self.penalty_constant = z[0, 0].obj / m
+        print(f"Found penalty constant of {self.penalty_constant}.")
         return 0
 
     def changepenalty(self, newpenalty):
