@@ -91,6 +91,7 @@ if config["algo_subset"]:
     )
     t = time.time() - t
     dump["time_algo_subset"] = t
+
 # %%
 # generate learning curves
 from scripts.learning_curves import learning_curves
@@ -138,7 +139,7 @@ if config["plots_individual"]:
         representation=representation,
         pen=config["penalty"],
         learning_curve_ticks=config["learning_curve_ticks"],
-        curves=["sml"]
+        curves=algorithms,
     )
     t = time.time() - t
     dump["time_plots_individual"] = t

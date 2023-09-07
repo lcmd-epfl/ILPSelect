@@ -5,8 +5,7 @@ import numpy as np
 import pandas as pd
 import qml
 from qml.math import cho_solve
-
-from .random_subset import random_subset
+from sklearn.model_selection import KFold
 
 
 def krr(kernel, properties, l2reg=1e-9):
@@ -36,23 +35,44 @@ def train_predict_model(
     return mae, y_pred
 
 
-def opt_hypers(X_train, atoms_train, y_train, X_test, atoms_test, y_test):
-    sigmas = [0.5, 0.75, 1, 1.25]
-    l2regs = [1e-10, 1e-7, 1e-4]
+def opt_hypers(X_train, atoms_train, y_train):
+    sigmas = [0.25, 0.5, 0.75, 1e0, 1e1, 1.25, 1.5]
+    l2regs = [1e-7, 1e-6, 1e-4]
+
+    n_folds = 5
+    kf = KFold(n_splits=n_folds)
 
     maes = np.zeros((len(sigmas), len(l2regs)))
+
     for i, sigma in enumerate(sigmas):
         for j, l2reg in enumerate(l2regs):
-            mae, y_pred = train_predict_model(
-                X_train, atoms_train, y_train, X_test, atoms_test, y_test, sigma=sigma, l2reg=l2reg
-            )
-            # print("sigma", sigma, "l2reg", l2reg, "mae", mae)
-            maes[i, j] = mae
+            fold_maes = []
+            for train_index, val_index in kf.split(X_train):
+                X_train_fold, X_val_fold = X_train[train_index], X_train[val_index]
+                atoms_train_fold, atoms_val_fold = atoms_train[train_index], atoms_train[val_index]
+                y_train_fold, y_val_fold = y_train[train_index], y_train[val_index]
+
+                mae, _ = train_predict_model(
+                    X_train_fold,
+                    atoms_train_fold,
+                    y_train_fold,
+                    X_val_fold,
+                    atoms_val_fold,
+                    y_val_fold,
+                    sigma=sigma,
+                    l2reg=l2reg,
+                )
+                fold_maes.append(mae)
+
+            avg_mae = np.mean(fold_maes)
+            print("sigma", sigma, "l2reg", l2reg, "avg mae", avg_mae)
+            maes[i, j] = avg_mae
 
     min_j, min_k = np.unravel_index(np.argmin(maes, axis=None), maes.shape)
     min_sigma = sigmas[min_j]
     min_l2reg = l2regs[min_k]
-    print("min mae", maes[min_j, min_k], "for sigma=", min_sigma, "and l2reg=", min_l2reg)
+    print("min avg mae", maes[min_j, min_k], "for sigma=", min_sigma, "and l2reg=", min_l2reg)
+
     return min_sigma, min_l2reg
 
 
@@ -142,14 +162,7 @@ def learning_curves(repository_path, database, targets, representation, config, 
             for n in config["learning_curve_ticks"]:
                 ranking = opt_ranking[:n]
 
-                min_sigma, min_l2reg = opt_hypers(
-                    X[ranking],
-                    Q[ranking],
-                    y[ranking],
-                    np.array([X_target]),
-                    np.array([Q_target]),
-                    y_target,
-                )
+                min_sigma, min_l2reg = opt_hypers(X[ranking], Q[ranking], y[ranking])
 
                 mae, y_pred = train_predict_model(
                     X[ranking],
@@ -204,6 +217,7 @@ def learning_curves_random(
     database_info = np.load(DATA_PATH, allow_pickle=True)
     X = database_info["reps"]
     Q = database_info["ncharges"]
+    database_labels = database_info["labels"]
 
     y = pd.read_csv(f"{repository_path}{database}/energies.csv")["energy / Ha"].values
 
@@ -242,45 +256,34 @@ def learning_curves_random(
             all_maes_random = old_random["all_maes_random"].tolist()
             opt_rankings = old_random["ranking_xyz"].tolist()
 
-        for iteration in range(CV):
-            # random ranking
-            opt_ranking = random_subset(
-                repository_path,
-                database,
-                N=config["learning_curve_ticks"][-1],
-                random_state=config["random_state"],
-                target_to_remove=target_name if config["in_database"] else None,
-            )
+        # five fold cross validation
+        CV = 5
+        kf = KFold(n_splits=CV, shuffle=True, random_state=130)
 
-            opt_rankings.append(database_info["labels"][opt_ranking])
-
+        for i, (train_index, test_index) in enumerate(kf.split(X)):
             maes_random = []
+
             for n in config["learning_curve_ticks"]:
-                ranking = opt_ranking[:n]
-
                 min_sigma, min_l2reg = opt_hypers(
-                    X[ranking],
-                    Q[ranking],
-                    y[ranking],
-                    np.array([X_target]),
-                    np.array([Q_target]),
-                    y_target,
+                    X[train_index][:n], Q[train_index][:n], y[train_index][:n]
                 )
-
+                print(min_sigma, min_l2reg)
                 mae, y_pred = train_predict_model(
-                    X[ranking],
-                    Q[ranking],
-                    y[ranking],
-                    np.array([X_target]),
-                    np.array([Q_target]),
+                    X[train_index][:n],
+                    Q[train_index][:n],
+                    y[train_index][:n],
+                    X_target,
+                    Q_target,
                     y_target,
                     sigma=min_sigma,
                     l2reg=min_l2reg,
                 )
+
                 maes_random.append(mae)
                 print("Random", n, mae)
 
             all_maes_random.append(maes_random)
+            opt_rankings.append(database_labels[train_index])
 
         # all_maes_random = np.array(all_maes_random)
 
