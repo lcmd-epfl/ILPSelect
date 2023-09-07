@@ -7,7 +7,7 @@ plt.rcParams.update({"font.size": 18})
 Ha2kcal = 627.5
 
 
-def plots_individual(parent_directory, database, targets, representation, pen):
+def plots_individual(parent_directory, database, targets, representation, pen, learning_curve_ticks, curves=["algo", "sml", "random"]):
     """
     Draw combined plots of the learning curves for each target and saves them to plots/.
 
@@ -17,35 +17,43 @@ def plots_individual(parent_directory, database, targets, representation, pen):
         targets: array of target names (array(str))
         representation: representation (str) eg "FCHL"
         pen: penalty of the solutions for the file names (int, float or str)
+        curves: list of curves to compute plots for
     """
 
     # individual plots
     for target_name in targets:
-        ALGO_CURVE_PATH = f"{parent_directory}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
-        SML_CURVE_PATH = (
-            f"{parent_directory}learning_curves/sml_{representation}_{database}_{target_name}.npz"
-        )
-        RANDOM_CURVE_PATH = f"{parent_directory}learning_curves/random_{representation}_{database}_{target_name}.npz"
-
-        SML_LEARNING_CURVE = np.load(SML_CURVE_PATH, allow_pickle=True)
-        ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
-        RANDOM_CURVE = np.load(RANDOM_CURVE_PATH, allow_pickle=True)
-        MEAN_RANDOM, STD_RANDOM = (
-            np.mean(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal,
-            np.std(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal,
-        )
-        SML = SML_LEARNING_CURVE["mae"] * Ha2kcal
-        ALGO = ALGO_CURVE["mae"] * Ha2kcal
-        N = SML_LEARNING_CURVE["train_sizes"]
         # create figure and axis
         fig, ax = plt.subplots(figsize=(11, 6))
-        # plot learning curve random with std as error bars
-        CV = len(RANDOM_CURVE["all_maes_random"])
-        ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt="o-", label=f"Random ({CV}-fold)")
-        # plot learning curve SML
-        ax.plot(N, SML, "o-", label="SML")
-        # plot learning curve ALGO
-        ax.plot(N, ALGO, "o-", label=f"Fragments algo pen {pen}")
+        N = learning_curve_ticks
+        
+        if "algo" in curves:
+            ALGO_CURVE_PATH = f"{parent_directory}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
+            ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
+            ALGO = ALGO_CURVE["mae"] * Ha2kcal
+            # plot learning curve ALGO
+            ax.plot(N, ALGO, "o-", label=f"Fragments algo pen {pen}")
+        
+        if "sml" in curves:
+            SML_CURVE_PATH = (
+                f"{parent_directory}learning_curves/sml_{representation}_{database}_{target_name}.npz"
+            )
+            SML_LEARNING_CURVE = np.load(SML_CURVE_PATH, allow_pickle=True)
+            SML = SML_LEARNING_CURVE["mae"] * Ha2kcal
+            # plot learning curve SML
+            ax.plot(N, SML, "o-", label="SML")
+        
+        if "random" in curves:
+            RANDOM_CURVE_PATH = f"{parent_directory}learning_curves/random_{representation}_{database}_{target_name}.npz"
+            RANDOM_CURVE = np.load(RANDOM_CURVE_PATH, allow_pickle=True)
+            MEAN_RANDOM, STD_RANDOM = (
+                np.mean(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal,
+                np.std(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal,
+            )
+
+            # plot learning curve random with std as error bars
+            CV = len(RANDOM_CURVE["all_maes_random"])
+            ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt="o-", label=f"Random ({CV}-fold)")
+        
         # set axis labels
         ax.set_xlabel("Training set size")
         ax.set_ylabel("MAE [kcal/mol]")

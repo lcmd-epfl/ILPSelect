@@ -7,7 +7,16 @@ config = {
     "representation": "FCHL",
     ###
     # corresponding names must be in targets/targets.csv
-    "target_names": ["121259", "12351", "35811", "85759", "96295"],
+    "target_names": [
+        "sildenafil",
+        "penicillin",
+        "troglitazone",
+        "121259",
+        "12351",
+        "35811",
+        "85759",
+        "96295",
+    ],
     "in_database": False,
     "plot_average_target_names": [
         "sildenafil",
@@ -21,13 +30,13 @@ config = {
     ],
     ###
     "generate_database": False,
-    "generate_targets": True,
+    "generate_targets": False,
     "sml_subset": True,
-    "algo_model": True,
-    "algo_subset": True,
+    "algo_model": False,
+    "algo_subset": False,
     "learning_curves": True,
     "learning_curves_random": False,
-    "plots_individual": False,
+    "plots_individual": True,
     "plots_average": False,
     ###
     "scope": "local_vector",

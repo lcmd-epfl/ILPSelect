@@ -137,6 +137,8 @@ if config["plots_individual"]:
         targets=target_names,
         representation=representation,
         pen=config["penalty"],
+        learning_curve_ticks=config["learning_curve_ticks"],
+        curves=["sml"]
     )
     t = time.time() - t
     dump["time_plots_individual"] = t

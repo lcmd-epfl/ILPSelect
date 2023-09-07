@@ -1,7 +1,8 @@
 import numpy as np
 import qml
 
-
+#old ranking with kernels
+"""
 def get_kernel(X1, X2, charges1, charges2, sigma=1):
     K = qml.kernels.get_local_kernel(X1, X2, charges1, charges2, sigma)
     return K
@@ -10,7 +11,17 @@ def get_kernel(X1, X2, charges1, charges2, sigma=1):
 def get_ranking(X, X_target, Q, Q_target):
     K = get_kernel(X, X_target, Q, Q_target, sigma=1)
     return np.argsort(K[0])[::-1]
+"""
 
+#new ranking as closest point sampling 
+def get_ranking(X_train, X_target):
+    shape1, shape2 = X_train.shape[0], X_target.shape[0]
+    distances = np.linalg.norm(X_train.reshape((shape1, -1)) - X_target.reshape((shape2, -1)), axis=1)
+
+    # Sort the indices by the distances
+    sorted_indices = np.argsort(distances)
+
+    return sorted_indices
 
 def sml_subset(parent_folder, database, targets, representation, N):
     """
@@ -34,13 +45,18 @@ def sml_subset(parent_folder, database, targets, representation, N):
 
         mask = database_info["labels"] != target_name
 
-        # TODO: figure out why the kernel isn't maximized when the representations are the same!!
-        # target in database should be first of ranking but isn't..
+        # old ranking with kernels
+        """
         ranking = get_ranking(
             database_reps[mask],
             np.array([target_info["rep"]]),
             database_ncharges[mask],
             np.array([target_info["ncharges"]]),
+        )[:N]
+        """
+        ranking = get_ranking(
+            database_reps[mask],
+            np.array([target_info["rep"]]),
         )[:N]
 
         SAVE_PATH = f"{parent_folder}rankings/sml_{representation}_{database}_{target_name}.npy"
