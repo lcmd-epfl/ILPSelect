@@ -36,7 +36,7 @@ def train_predict_model(
 
 
 def opt_hypers(X_train, atoms_train, y_train):
-    sigmas = [0.25, 0.5, 0.75, 1e0, 1e1, 1.25, 1.5]
+    sigmas = [0.25, 0.5, 0.75, 1e0, 1.25, 1.5]
     l2regs = [1e-7, 1e-6, 1e-4]
 
     n_folds = 5
@@ -268,12 +268,13 @@ def learning_curves_random(
                     X[train_index][:n], Q[train_index][:n], y[train_index][:n]
                 )
                 print(min_sigma, min_l2reg)
+
                 mae, y_pred = train_predict_model(
                     X[train_index][:n],
                     Q[train_index][:n],
                     y[train_index][:n],
-                    X_target,
-                    Q_target,
+                    np.array([X_target]),
+                    np.array([Q_target]),
                     y_target,
                     sigma=min_sigma,
                     l2reg=min_l2reg,
