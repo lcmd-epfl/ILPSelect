@@ -71,11 +71,11 @@ class model:
     # TODO: move initial arguments to the setup phase?
     # since it's not useful when reading from file (it's used right now but may be changed)
     def __init__(self, path_to_database, path_to_target, scope, verbose=False):
-        assert (
-            scope == "local_vector"
-            or scope == "local_matrix"
-            or scope == "global_vector"
-        ), "Scope takes values local_matrix, local_vector, and global_vector only."
+        assert scope in [
+            "local_vector",
+            "local_matrix",
+            "global_vector",
+        ], "Scope takes values local_matrix, local_vector, and global_vector only."
         self.database = np.load(path_to_database, allow_pickle=True)
         self.database_reps = self.database["reps"]
         self.database_ncharges = self.database["ncharges"]
@@ -261,8 +261,10 @@ class model:
         self.Z.update()
         return 0
 
-    def remove_fragment(self, fragment_id):
-        # wrapper to remove lone fragment
+    def remove_fragment_name(self, fragment_name):
+        # remove lone fragment by name
+        fragment_id = np.where(self.database_labels==fragment_name)[0][0]
+
         self.remove_fragments([[fragment_id]])
         return 0
 

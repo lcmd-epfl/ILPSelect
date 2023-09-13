@@ -33,7 +33,7 @@ def algo_subset(repository_path, database, targets, representation, N, config):
         # df=pd.read_csv(outfolder+"newsolutions"+str(pen)+".csv")
         # M.add_forbidden_combinations(df['Fragments'].apply(eval))
         if config["in_database"]:
-            M.remove_fragment(target_name)
+            M.remove_fragment_name(target_name)
 
         # optimize with callback
         M.optimize(
