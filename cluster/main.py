@@ -15,8 +15,6 @@ current_folder = config["current_folder"]
 
 size_subset = config["learning_curve_ticks"][-1]
 
-algorithms = ["fragments", "sml"]
-
 dump = {"num_targets": len(target_names)}
 
 # %%
@@ -55,6 +53,7 @@ if config["sml_subset"]:
         targets=target_names,
         representation=representation,
         N=size_subset,
+        in_database=config["in_database"],
     )
     t = time.time() - t
     dump["time_sml_subset"] = t
@@ -104,7 +103,7 @@ if config["learning_curves"]:
         targets=target_names,
         representation=representation,
         config=config,
-        algorithms=algorithms,
+        algorithms = ["fragments", "sml"],
     )
     t = time.time() - t
     dump["time_learning_curves"] = t
@@ -139,7 +138,7 @@ if config["plots_individual"]:
         representation=representation,
         pen=config["penalty"],
         learning_curve_ticks=config["learning_curve_ticks"],
-        curves=algorithms,
+        curves=["algo", "sml", "random"],
     )
     t = time.time() - t
     dump["time_plots_individual"] = t

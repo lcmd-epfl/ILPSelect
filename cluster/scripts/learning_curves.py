@@ -164,7 +164,7 @@ def learning_curves(repository_path, database, targets, representation, config, 
                 RANKING_PATH = f"{repository_path}cluster/rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
             elif algorithm == "sml":
                 RANKING_PATH = f"{repository_path}cluster/rankings/sml_{representation}_{database}_{target_name}.npy"
-
+                
             opt_ranking = np.load(RANKING_PATH)
 
             maes = []

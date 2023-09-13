@@ -27,7 +27,7 @@ def get_ranking(X, X_target):
     return sorted_indices
 
 
-def sml_subset(parent_folder, database, targets, representation, N):
+def sml_subset(parent_folder, database, targets, representation, N, in_database=True):
     """
     Generate SML subsets of size N for each target from the database.
 
@@ -59,7 +59,7 @@ def sml_subset(parent_folder, database, targets, representation, N):
         )[:N]
         """
         # closest point sampling
-        if config["in_database"]:
+        if in_database:
             # i don't just remove the first element because for some reason sometimes it's not?
             ranking = get_ranking(database_reps, target_rep)[:N+1]
             target_index = np.where(database_info["labels"]==target_name)[0][0]

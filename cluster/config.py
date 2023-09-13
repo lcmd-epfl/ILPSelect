@@ -29,13 +29,13 @@ config = {
         "96295",
     ],
     ###
-    "generate_database": True,
-    "generate_targets": True,
+    "generate_database": False,
+    "generate_targets": False,
     "sml_subset": True,
     "algo_model": False,
     "algo_subset": False,
     "learning_curves": True,
-    "learning_curves_random": True,
+    "learning_curves_random": False,
     "plots_individual": True,
     "plots_average": True,
     ###
@@ -54,7 +54,6 @@ config = {
 
 ############ for 2 targets inside qm7 ############
 
-"""
 import numpy as np
 import pandas as pd
 
@@ -64,9 +63,8 @@ qm7_df = pd.DataFrame({"ncharges": qm7["ncharges"], "labels": qm7["labels"]})
 num_heavy_atoms = qm7_df["ncharges"].map(lambda charges: sum(charges != 1))
 
 # take 2 with fixed random state (doesn't matter so much)
-target_sample = qm7_df[num_heavy_atoms >= 7]["labels"].sample(2, random_state=42).values
+target_sample = qm7_df[num_heavy_atoms >= 7]["labels"].sample(10, random_state=42).values
 
 config["target_names"] = target_sample
 config["plot_average_target_names"] = target_sample
 config["in_database"] = True
-"""
