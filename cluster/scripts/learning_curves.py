@@ -208,7 +208,7 @@ def learning_curves_random(
     repository_path, database, targets, representation, config, CV, add_onto_old=True
 ):
     """
-    Compute learning curves once for each prefix, and each target. For N-fold random learning curves, use `learning_curves_random`.
+    Compute for CV-fold random learning curves.
 
     Parameters:
         repository_path:cluster/ absolute path to cluster/ folder
@@ -217,6 +217,7 @@ def learning_curves_random(
         representation: name of representation (str) eg "FCHL"
         config: config dictionary. Must contain keys "learning_curve_ticks", "random_state"
         CV: number of iterations of random curve (int)
+        add_onto_old: if some random curves already exist, we will append onto them (bool)
     """
 
     if config["random_state"] != None:
@@ -227,6 +228,7 @@ def learning_curves_random(
     X = database_info["reps"]
     Q = database_info["ncharges"]
     database_labels = database_info["labels"]
+
 
     y = pd.read_csv(f"{repository_path}{database}/energies.csv")["energy / Ha"].values
 
@@ -246,12 +248,20 @@ def learning_curves_random(
         Q_target = target_info["ncharges"]
 
         if config["in_database"]:
+            # label of target
             Y_PATH=f"{repository_path}{database}/energies.csv"
             y_target = (
                 pd.read_csv(Y_PATH)
                 .query("file == @target_name")["energy / Ha"]
                 .iloc[0]
             )
+            
+            # removing target from database
+            mask = database_labels!=target_name
+            X = X[mask]
+            Q = Q[mask]
+            database_labels = database_info[mask]
+
         else:
             Y_PATH=f"{repository_path}cluster/targets/targets.csv"
             y_target = (
