@@ -48,7 +48,6 @@ def sml_subset(parent_folder, database, targets, representation, N):
         target_info = np.load(f"{DATA_PATH}{representation}_{target_name}.npz", allow_pickle=True)
         target_rep = target_info["rep"]
 
-        mask = database_info["labels"] != target_name
 
         # old ranking with kernels
         """
@@ -60,7 +59,13 @@ def sml_subset(parent_folder, database, targets, representation, N):
         )[:N]
         """
         # closest point sampling
-        ranking = get_ranking(database_reps[mask], target_rep)[:N]
+        if config["in_database"]:
+            # i don't just remove the first element because for some reason sometimes it's not?
+            ranking = get_ranking(database_reps, target_rep)[:N+1]
+            target_index = np.where(database_info["labels"]==target_name)[0][0]
+            ranking = ranking[ranking != target_index][:N]
+        else:
+            ranking = get_ranking(database_reps, target_rep)[:N]
 
         SAVE_PATH = f"{parent_folder}rankings/sml_{representation}_{database}_{target_name}.npy"
 
