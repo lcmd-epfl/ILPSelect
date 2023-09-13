@@ -260,7 +260,7 @@ def learning_curves_random(
             mask = database_labels!=target_name
             X = X[mask]
             Q = Q[mask]
-            database_labels = database_info[mask]
+            database_labels = database_labels[mask]
 
         else:
             Y_PATH=f"{repository_path}cluster/targets/targets.csv"
