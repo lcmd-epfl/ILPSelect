@@ -12,7 +12,13 @@ representations/qm7_aCM_data.npz
 .ipynb_checkpoints/
 algorithms/__pycache__/
 cluster/data/*.npz
-cluster/models/*
+cluster/models/*.mps
 cluster/__pycache__/
 cluster/scripts/__pycache__/
 cluster/run/*.out
+cluster/plots/*.png
+cluster/rankings/*.npy
+cluster/learning_curves/*.npz
+cluster/run/*.json
+cluster/run/*.out
+cluster/solutions/*.csv

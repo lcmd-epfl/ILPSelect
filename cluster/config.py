@@ -62,7 +62,7 @@ qm7_df = pd.DataFrame({"ncharges": qm7["ncharges"], "labels": qm7["labels"]})
 
 num_heavy_atoms = qm7_df["ncharges"].map(lambda charges: sum(charges != 1))
 
-# take 2 with fixed random state (doesn't matter so much)
+# take 10 with fixed random state (doesn't matter so much)
 target_sample = qm7_df[num_heavy_atoms >= 7]["labels"].sample(10, random_state=42).values
 
 config["target_names"] = target_sample
