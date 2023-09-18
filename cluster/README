@@ -24,3 +24,6 @@ TODO before first run:
 	>>> mkdir models
 
 	- verify that the folder molekuehl/{database} exists, that it contains .xyz files and their energy described in an energies.csv file.
+
+REQUIREMENTS:
+	- python3 modules: numpy, pandas, qml, sklearn, plotly, kaleido (to save figures of plotly), pickle, json, os

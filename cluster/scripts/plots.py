@@ -1,13 +1,18 @@
-import matplotlib.pyplot as plt
 import numpy as np
-
-# matplotlib font size
-plt.rcParams.update({"font.size": 18})
+import plotly.graph_objects as go
 
 Ha2kcal = 627.5
 
 
-def plots_individual(parent_directory, database, targets, representation, pen, learning_curve_ticks, curves=["algo", "sml", "random"]):
+def plots_individual(
+    parent_directory,
+    database,
+    targets,
+    representation,
+    pen,
+    learning_curve_ticks,
+    curves=["algo", "sml", "random"],
+):
     """
     Draw combined plots of the learning curves for each target and saves them to plots/.
 
@@ -23,25 +28,24 @@ def plots_individual(parent_directory, database, targets, representation, pen, l
     # individual plots
     for target_name in targets:
         # create figure and axis
-        fig, ax = plt.subplots(figsize=(11, 6))
         N = learning_curve_ticks
-        
+
+        fig = go.Figure()
+
         if "algo" in curves:
             ALGO_CURVE_PATH = f"{parent_directory}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
             ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
             ALGO = ALGO_CURVE["mae"] * Ha2kcal
             # plot learning curve ALGO
-            ax.plot(N, ALGO, "o-", label=f"Fragments algo pen {pen}")
-        
+            fig.add_trace(go.Scatter(x=N, y=ALGO, name="Frags"))
+
         if "sml" in curves:
-            SML_CURVE_PATH = (
-                f"{parent_directory}learning_curves/sml_{representation}_{database}_{target_name}.npz"
-            )
+            SML_CURVE_PATH = f"{parent_directory}learning_curves/sml_{representation}_{database}_{target_name}.npz"
             SML_LEARNING_CURVE = np.load(SML_CURVE_PATH, allow_pickle=True)
             SML = SML_LEARNING_CURVE["mae"] * Ha2kcal
             # plot learning curve SML
-            ax.plot(N, SML, "o-", label="SML")
-        
+            fig.add_trace(go.Scatter(x=N, y=SML, name="SML"))
+
         if "random" in curves:
             RANDOM_CURVE_PATH = f"{parent_directory}learning_curves/random_{representation}_{database}_{target_name}.npz"
             RANDOM_CURVE = np.load(RANDOM_CURVE_PATH, allow_pickle=True)
@@ -52,30 +56,34 @@ def plots_individual(parent_directory, database, targets, representation, pen, l
 
             # plot learning curve random with std as error bars
             CV = len(RANDOM_CURVE["all_maes_random"])
-            ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt="o-", label=f"Random ({CV}-fold)")
-        
-        # set axis labels
-        ax.set_xlabel("Training set size")
-        ax.set_ylabel("MAE [kcal/mol]")
-        # set log scale on x axis
-        ax.set_xscale("log")
-        # set log scale on y axis
-        ax.set_yscale("log")
-        # legend
-        ax.legend()
-        # title
-        plt.title(f"Learning curve on target {target_name}")
-        # turn minor ticks off
-        ax.minorticks_off()
-        # make x ticks as N
-        ax.set_xticks(N)
-        ax.set_xticklabels(N)
-        # grid on
-        ax.grid()
-        # save figure
+
+            fig.add_trace(
+                go.Scatter(
+                    x=N,
+                    y=MEAN_RANDOM,
+                    error_y=dict(
+                        type="data",  # value of error bar given in data coordinates
+                        array=STD_RANDOM,
+                        visible=True,
+                    ),
+                    name=f"Random ({CV}-fold)",
+                )
+            )
+
+        fig.update_layout(
+            yaxis=dict(tickmode="array", tickvals=[1, 10], type="log"),
+            xaxis=dict(tickmode="array", tickvals=N, type="log"),
+            xaxis_title="Training set size",
+            yaxis_title="MAE [kcal/mol]",
+            title=f"Learning curve on target {target_name}",
+        )
+
         SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_{target_name}_{pen}.png"
-        fig.savefig(SAVE_PATH, dpi=300)
+        fig.write_image(SAVE_PATH)
         print(f"Saved plot to {SAVE_PATH}")
+
+        fig.show()
+
     return 0
 
 
@@ -120,36 +128,33 @@ def plots_average(parent_directory, database, targets, representation, pen):
     SML = np.mean(SML, axis=0)
     ALGO = np.mean(ALGO, axis=0)
 
-    # create figure and axis
-    fig, ax = plt.subplots(figsize=(11, 6))
-    # plot learning curve random with std as error bars
-    # TODO: different targets have different CV!
-    ax.errorbar(N, MEAN_RANDOM, yerr=STD_RANDOM, fmt="o-", label=f"Average random")
-    # plot learning curve SML
-    ax.plot(N, SML, "o-", label="Average SML")
-    # plot learning curve ALGO
-    ax.plot(N, ALGO, "o-", label=f"Average frags")
-    # set axis labels
-    ax.set_xlabel("Training set size")
-    ax.set_ylabel("MAE [kcal/mol]")
-    # set log scale on x axis
-    ax.set_xscale("log")
-    # set log scale on y axis
-    ax.set_yscale("log")
-    # legend
-    ax.legend()
-    # title
-    plt.title(f"Average learning curves on {len(targets)} targets")
-    # turn minor ticks off
-    ax.minorticks_off()
-    # make x ticks as N
-    ax.set_xticks(N)
-    ax.set_xticklabels(N)
-    # grid on
-    ax.grid()
-    # save figure
-    SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_average_{pen}.png"
-    fig.savefig(SAVE_PATH, dpi=300)
-    print(f"Saved plot to {SAVE_PATH}")
+    fig = go.Figure()
 
+    fig.add_trace(
+        go.Scatter(
+            x=N,
+            y=MEAN_RANDOM,
+            error_y=dict(
+                type="data",  # value of error bar given in data coordinates
+                array=STD_RANDOM,
+                visible=True,
+            ),
+            name="Average random",
+        )
+    )
+
+    fig.add_trace(go.Scatter(x=N, y=SML, name="Average SML"))
+    fig.add_trace(go.Scatter(x=N, y=ALGO, name="Average frags"))
+
+    fig.update_layout(
+        yaxis=dict(tickmode="array", tickvals=[1, 10], type="log"),
+        xaxis=dict(tickmode="array", tickvals=N, type="log"),
+        xaxis_title="Training set size",
+        yaxis_title="MAE [kcal/mol]",
+        title=f"Average learning curves on {len(targets)} targets",
+    )
+
+    SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_average_{pen}.png"
+    fig.write_image(SAVE_PATH)
+    print(f"Saved plot to {SAVE_PATH}")
     return 0
