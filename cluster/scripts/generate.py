@@ -19,10 +19,6 @@ def get_representations(mols, max_natoms=None, elements=None, representation="FC
         )
         elements = np.unique(np.concatenate([(mol.nuclear_charges) for mol in mols]))
 
-    print(4)
-    for mol in mols:
-        print(mol.nuclear_charges, mol.coordinates, elements, False, max_natoms)
-    print(5)
     reps = np.array(
         [
             qml.representations.generate_fchl_acsf(
@@ -74,17 +70,14 @@ def generate_targets(targets, representation, repository_path, database, in_data
         else:
             TARGET_PATH = f"{repository_path}{database}/{target_name}.xyz"
 
-        print(1)
         target_mol = qml.Compound(TARGET_PATH)
 
-        print(2)
         X_target, Q_target = get_representations(
             [target_mol],
             max_natoms=len(target_mol.coordinates),
             elements=all_elements,
             representation=representation,
         )
-        print(3)
 
         # to use in the fragments algo
         SAVE_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
