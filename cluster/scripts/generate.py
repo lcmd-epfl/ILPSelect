@@ -9,10 +9,20 @@ def get_representations(mols, max_natoms=None, elements=None, representation="FC
     assert representation == "FCHL", "Only FCHL is implemented."
 
     if max_natoms is None:
+        print(
+            "[WARNING] using max natoms of database. This could create problems if the target is larger."
+        )
         max_natoms = max([len(mol.nuclear_charges) for mol in mols])
     if elements is None:
+        print(
+            "[WARNING] using ncharges of database. This could create a segmentation fault if new ncharges are in the target."
+        )
         elements = np.unique(np.concatenate([(mol.nuclear_charges) for mol in mols]))
 
+    print(4)
+    for mol in mols:
+        print(mol.nuclear_charges, mol.coordinates, elements, False, max_natoms)
+    print(5)
     reps = np.array(
         [
             qml.representations.generate_fchl_acsf(
@@ -46,8 +56,17 @@ def generate_targets(targets, representation, repository_path, database, in_data
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
 
-    # very important to keep structure of representation
-    elements_database = np.unique(np.concatenate([(x) for x in database_info["ncharges"]]))
+    # only used to not miss some new ncharges in targets, and natoms
+    TARGETS_PATH = f"{repository_path}cluster/targets/"
+    target_xyzs = pd.read_csv(f"{TARGETS_PATH}targets.csv")
+    target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["xyz"].to_list()
+    target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
+    all_elements = np.unique(
+        np.concatenate(
+            [(x) for x in database_info["ncharges"]]
+            + [(mol.nuclear_charges) for mol in target_mols]
+        )
+    )
 
     for target_name in targets:
         if not in_database:
@@ -55,14 +74,17 @@ def generate_targets(targets, representation, repository_path, database, in_data
         else:
             TARGET_PATH = f"{repository_path}{database}/{target_name}.xyz"
 
+        print(1)
         target_mol = qml.Compound(TARGET_PATH)
 
+        print(2)
         X_target, Q_target = get_representations(
             [target_mol],
             max_natoms=len(target_mol.coordinates),
-            elements=elements_database,
+            elements=all_elements,
             representation=representation,
         )
+        print(3)
 
         # to use in the fragments algo
         SAVE_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
@@ -73,7 +95,7 @@ def generate_targets(targets, representation, repository_path, database, in_data
     return 0
 
 
-def generate_database(database, representation, repository_folder):
+def generate_database(database, representation, repository_folder, targets, in_database):
     """
     Generate representation of full databases in repository_folder/cluster/data/ from xyz files in /repository_folder/{database}
     There must be a `energies.csv` in the database folder with columns "file" and "energy / Ha".
@@ -87,14 +109,24 @@ def generate_database(database, representation, repository_folder):
     FRAGMENTS_PATH = f"{repository_folder}{database}/"
 
     fragments = pd.read_csv(f"{FRAGMENTS_PATH}energies.csv")
-
     file_names = fragments["file"].to_list()
-
     xyzs = fragments["file"].map(lambda x: x + ".xyz").to_list()
-
     mols = np.array([qml.Compound(f"{FRAGMENTS_PATH}{x}") for x in xyzs])
 
-    X, Q = get_representations(mols, representation=representation)
+    # only used to not miss some new ncharges in targets
+    TARGETS_PATH = f"{repository_folder}cluster/targets/"
+    target_xyzs = pd.read_csv(f"{TARGETS_PATH}targets.csv")
+    target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["xyz"].to_list()
+    target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
+
+    all_elements = np.unique(
+        np.concatenate(
+            [(mol.nuclear_charges) for mol in mols]
+            + [(mol.nuclear_charges) for mol in target_mols]
+        )
+    )
+
+    X, Q = get_representations(mols, representation=representation, elements=all_elements)
 
     SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{database}.npz"
 

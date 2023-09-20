@@ -23,7 +23,13 @@ from scripts.generate import generate_database, generate_targets
 
 if config["generate_database"]:
     t = time.time()
-    generate_database(database, representation, repository_folder)
+    generate_database(
+        database,
+        representation,
+        repository_folder,
+        targets=target_names,
+        in_database=config["in_database"],
+    )
     t = time.time() - t
     dump["time_generate_database"] = t
 
