@@ -103,7 +103,7 @@ if config["learning_curves"]:
         targets=target_names,
         representation=representation,
         config=config,
-        algorithms = ["fragments", "sml"],
+        algorithms=["fragments", "sml"],
     )
     t = time.time() - t
     dump["time_learning_curves"] = t
@@ -160,8 +160,8 @@ if config["plots_average"]:
 import json
 from datetime import datetime
 
-time = datetime.now().strftime("%Y-%m-%d")
-DUMP_PATH = f"{repository_folder}cluster/run/dump-{time}.json"
+current_time = datetime.now().strftime("%Y-%m-%d")
+DUMP_PATH = f"{repository_folder}cluster/run/dump-{current_time}.json"
 with open(DUMP_PATH, "w") as f:
     json.dump(dump, f, indent=2)
 
