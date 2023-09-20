@@ -8,14 +8,26 @@ config = {
     ###
     # corresponding names must be in targets/targets.csv
     "target_names": [
-        "sildenafil",
-        "penicillin",
-        "troglitazone",
-        "121259",
-        "12351",
-        "35811",
-        "85759",
-        "96295",
+        # "sildenafil",
+        # "penicillin",
+        # "troglitazone",
+        # "121259",
+        # "12351",
+        # "35811",
+        # "85759",
+        # "96295",
+        "5696",
+        "31476",
+        "55607",
+        "68076",
+        "120425",
+        "imatinib",
+        "pemetrexed",
+        "raltegravir",
+        "sitagliptin",
+        "oxycodone",
+        "pregabalin",
+        "pixaban",
     ],
     "in_database": False,
     "plot_average_target_names": [
@@ -27,17 +39,29 @@ config = {
         "35811",
         "85759",
         "96295",
+        "5696",
+        "31476",
+        "55607",
+        "68076",
+        "120425",
+        "imatinib",
+        "pemetrexed",
+        "raltegravir",
+        "sitagliptin",
+        "oxycodone",
+        "pregabalin",
+        "pixaban",
     ],
     ###
     "generate_database": False,
-    "generate_targets": False,
+    "generate_targets": True,
     "sml_subset": True,
-    "algo_model": False,
-    "algo_subset": False,
+    "algo_model": True,
+    "algo_subset": True,
     "learning_curves": True,
-    "learning_curves_random": False,
+    "learning_curves_random": True,
     "plots_individual": True,
-    "plots_average": True,
+    "plots_average": False,
     ###
     "scope": "local_vector",
     "penalty": 0,
@@ -52,8 +76,9 @@ config = {
     "random_state": None,  # for multiple random subset selection, don't use a fixed state!
 }
 
-############ for 2 targets inside qm7 ############
+############ for 10 targets inside qm7 ############
 
+"""
 import numpy as np
 import pandas as pd
 
@@ -68,3 +93,4 @@ target_sample = qm7_df[num_heavy_atoms >= 7]["labels"].sample(10, random_state=4
 config["target_names"] = target_sample
 config["plot_average_target_names"] = target_sample
 config["in_database"] = True
+"""
