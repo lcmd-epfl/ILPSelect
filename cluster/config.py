@@ -8,7 +8,7 @@ config = {
     ###
     # corresponding names must be in targets/targets.csv
     "target_names": [
-        # "sildenafil",
+        "sildenafil",
         # "penicillin",
         # "troglitazone",
         # "121259",
@@ -27,7 +27,7 @@ config = {
         "sitagliptin",
         "oxycodone",
         "pregabalin",
-        "pixaban",
+        "apixaban",
     ],
     "in_database": False,
     "plot_average_target_names": [
@@ -53,7 +53,7 @@ config = {
         "pixaban",
     ],
     ###
-    "generate_database": False,
+    "generate_database": True,
     "generate_targets": True,
     "sml_subset": True,
     "algo_model": True,
