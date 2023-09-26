@@ -54,8 +54,9 @@ def generate_targets(targets, representation, repository_path, database, in_data
 
     # only used to not miss some new ncharges in targets, and natoms
     TARGETS_PATH = f"{repository_path}cluster/targets/"
-    target_xyzs = pd.read_csv(f"{TARGETS_PATH}targets.csv")
-    target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["xyz"].to_list()
+    target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
+    target_xyzs["name"] = target_xyzs["name"].map(lambda x: x.split(".")[0])
+    target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
     target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
     all_elements = np.unique(
         np.concatenate(
@@ -108,8 +109,9 @@ def generate_database(database, representation, repository_folder, targets, in_d
 
     # only used to not miss some new ncharges in targets
     TARGETS_PATH = f"{repository_folder}cluster/targets/"
-    target_xyzs = pd.read_csv(f"{TARGETS_PATH}targets.csv")
-    target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["xyz"].to_list()
+    target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
+    target_xyzs["name"] = target_xyzs["name"].map(lambda x: x.split(".")[0])
+    target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
     target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
 
     all_elements = np.unique(
