@@ -1,19 +1,4 @@
 import numpy as np
-from algorithms import fragments
-
-# import qml
-
-# old ranking with kernels
-"""
-def get_kernel(X1, X2, charges1, charges2, sigma=1):
-    K = qml.kernels.get_local_kernel(X1, X2, charges1, charges2, sigma)
-    return K
-
-
-def get_ranking(X, X_target, Q, Q_target):
-    K = get_kernel(X, X_target, Q, Q_target, sigma=1)
-    return np.argsort(K[0])[::-1]
-"""
 
 
 # new ranking as closest point sampling
@@ -37,6 +22,7 @@ def sml_subset(parent_folder, database, targets, representation, N, in_database=
         targets: array of names (array(str))
         representation: name of rep (str) eg. "FCHL"
         N: size of each subset
+        in_database: whether the targets are in the database and should be removed from the ranking or not (bool)
     """
     DATA_PATH = f"{parent_folder}data/"
     database_info = np.load(f"{DATA_PATH}{representation}_{database}.npz", allow_pickle=True)
@@ -48,21 +34,11 @@ def sml_subset(parent_folder, database, targets, representation, N, in_database=
         target_info = np.load(f"{DATA_PATH}{representation}_{target_name}.npz", allow_pickle=True)
         target_rep = target_info["rep"]
 
-
-        # old ranking with kernels
-        """
-        ranking = get_ranking(
-            database_reps[mask],
-            np.array([target_info["rep"]]),
-            database_ncharges[mask],
-            np.array([target_info["ncharges"]]),
-        )[:N]
-        """
         # closest point sampling
         if in_database:
             # i don't just remove the first element because for some reason sometimes it's not?
-            ranking = get_ranking(database_reps, target_rep)[:N+1]
-            target_index = np.where(database_info["labels"]==target_name)[0][0]
+            ranking = get_ranking(database_reps, target_rep)[: N + 1]
+            target_index = np.where(database_info["labels"] == target_name)[0][0]
             ranking = ranking[ranking != target_index][:N]
         else:
             ranking = get_ranking(database_reps, target_rep)[:N]

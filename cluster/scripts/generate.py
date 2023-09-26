@@ -119,7 +119,14 @@ def generate_database(database, representation, repository_folder, targets, in_d
         )
     )
 
-    X, Q = get_representations(mols, representation=representation, elements=all_elements)
+    max_natoms = np.max(
+        [len(mol.nuclear_charges) for mol in mols]
+        + [len(mol.nuclear_charges) for mol in target_mols]
+    )
+
+    X, Q = get_representations(
+        mols, max_natoms=max_natoms, representation=representation, elements=all_elements
+    )
 
     SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{database}.npz"
 

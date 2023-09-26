@@ -11,7 +11,8 @@ def plots_individual(
     representation,
     pen,
     learning_curve_ticks,
-    curves=["algo", "sml", "random"],
+    curves=["algo", "sml", "fps", "cur", "random"],
+    in_database=False,
 ):
     """
     Draw combined plots of the learning curves for each target and saves them to plots/.
@@ -23,6 +24,7 @@ def plots_individual(
         representation: representation (str) eg "FCHL"
         pen: penalty of the solutions for the file names (int, float or str)
         curves: list of curves to compute plots for
+        in_database: whether the targets are in the database or not (bool). CUR and FPS rankings have different file names if this is the case.
     """
 
     # individual plots
@@ -45,6 +47,32 @@ def plots_individual(
             SML = SML_LEARNING_CURVE["mae"] * Ha2kcal
             # plot learning curve SML
             fig.add_trace(go.Scatter(x=N, y=SML, name="SML"))
+
+        if "fps" in curves:
+            if in_database:
+                FPS_CURVE_PATH = f"{parent_directory}learning_curves/fps_{representation}_{database}_{target_name}.npz"
+            else:
+                FPS_CURVE_PATH = (
+                    f"{parent_directory}learning_curves/fps_{representation}_{database}.npz"
+                )
+
+            FPS_LEARNING_CURVE = np.load(FPS_CURVE_PATH, allow_pickle=True)
+            FPS = FPS_LEARNING_CURVE["mae"] * Ha2kcal
+            # plot learning curve FPS
+            fig.add_trace(go.Scatter(x=N, y=FPS, name="fps"))
+
+        if "cur" in curves:
+            if in_database:
+                CUR_CURVE_PATH = f"{parent_directory}learning_curves/cur_{representation}_{database}_{target_name}.npz"
+            else:
+                CUR_CURVE_PATH = (
+                    f"{parent_directory}learning_curves/cur_{representation}_{database}.npz"
+                )
+
+            CUR_LEARNING_CURVE = np.load(CUR_CURVE_PATH, allow_pickle=True)
+            CUR = CUR_LEARNING_CURVE["mae"] * Ha2kcal
+            # plot learning curve CUR
+            fig.add_trace(go.Scatter(x=N, y=CUR, name="CUR"))
 
         if "random" in curves:
             RANDOM_CURVE_PATH = f"{parent_directory}learning_curves/random_{representation}_{database}_{target_name}.npz"
@@ -87,7 +115,7 @@ def plots_individual(
     return 0
 
 
-def plots_average(parent_directory, database, targets, representation, pen):
+def plots_average(parent_directory, database, targets, representation, pen, in_database=False):
     """
     Draw average plots of the learning curves and saves them to plots/.
 
@@ -97,12 +125,15 @@ def plots_average(parent_directory, database, targets, representation, pen):
         targets: array of target names (array(str))
         representation: representation (str) eg "FCHL"
         pen: same as config["penatly"]
+        in_database: whether the targets are in the database or not (bool). CUR and FPS rankings have different file names if this is the case.
     """
     MEAN_RANDOM = []
     STD_RANDOM = []
 
     SML = []
     ALGO = []
+    CUR = []
+    FPS = []
     N = np.array([2**i for i in range(4, 11)])
 
     for target_name in targets:
@@ -111,15 +142,29 @@ def plots_average(parent_directory, database, targets, representation, pen):
             f"{parent_directory}learning_curves/sml_{representation}_{database}_{target_name}.npz"
         )
         RANDOM_CURVE_PATH = f"{parent_directory}learning_curves/random_{representation}_{database}_{target_name}.npz"
+        if in_database:
+            FPS_CURVE_PATH = f"{parent_directory}learning_curves/fps_{representation}_{database}_{target_name}.npz"
+            CUR_CURVE_PATH = f"{parent_directory}learning_curves/cur_{representation}_{database}_{target_name}.npz"
+        else:
+            FPS_CURVE_PATH = (
+                f"{parent_directory}learning_curves/fps_{representation}_{database}.npz"
+            )
+            CUR_CURVE_PATH = (
+                f"{parent_directory}learning_curves/cur_{representation}_{database}.npz"
+            )
 
         SML_LEARNING_CURVE = np.load(SML_CURVE_PATH, allow_pickle=True)
         ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
         RANDOM_CURVE = np.load(RANDOM_CURVE_PATH, allow_pickle=True)
+        FPS_LEARNING_CURVE = np.load(FPS_CURVE_PATH, allow_pickle=True)
+        CUR_LEARNING_CURVE = np.load(CUR_CURVE_PATH, allow_pickle=True)
 
         MEAN_RANDOM.append(np.mean(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal)
         STD_RANDOM.append(np.std(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal)
         SML.append(SML_LEARNING_CURVE["mae"] * Ha2kcal)
         ALGO.append(ALGO_CURVE["mae"] * Ha2kcal)
+        FPS.append(FPS_LEARNING_CURVE["mae"] * Ha2kcal)
+        CUR.append(CUR_LEARNING_CURVE["mae"] * Ha2kcal)
 
     # TODO: not sure average of STDs makes sense
     MEAN_RANDOM = np.mean(MEAN_RANDOM, axis=0)
@@ -127,6 +172,8 @@ def plots_average(parent_directory, database, targets, representation, pen):
 
     SML = np.mean(SML, axis=0)
     ALGO = np.mean(ALGO, axis=0)
+    FPS = np.mean(SML, axis=0)
+    CUR = np.mean(ALGO, axis=0)
 
     fig = go.Figure()
 
@@ -145,6 +192,8 @@ def plots_average(parent_directory, database, targets, representation, pen):
 
     fig.add_trace(go.Scatter(x=N, y=SML, name="Average SML"))
     fig.add_trace(go.Scatter(x=N, y=ALGO, name="Average frags"))
+    fig.add_trace(go.Scatter(x=N, y=CUR, name="Average CUR"))
+    fig.add_trace(go.Scatter(x=N, y=FPS, name="Average FPS"))
 
     fig.update_layout(
         yaxis=dict(tickmode="array", tickvals=[1, 10], type="log"),

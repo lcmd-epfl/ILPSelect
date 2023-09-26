@@ -131,6 +131,11 @@ def learning_curves(repository_path, database, targets, representation, config, 
                 RANKING_PATH = f"{repository_path}cluster/rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
             elif algorithm == "sml":
                 RANKING_PATH = f"{repository_path}cluster/rankings/sml_{representation}_{database}_{target_name}.npy"
+            elif algorithm in ["fps", "cur"]:
+                if config["in_database"]:
+                    RANKING_PATH = f"{repository_path}cluster/rankings/{algorithm}_{representation}_{database}_{target_name}.npy"
+                else:
+                    RANKING_PATH = f"{repository_path}cluster/rankings/{algorithm}_{representation}_{database}.npy"
 
             opt_ranking = np.load(RANKING_PATH)
 
@@ -156,8 +161,8 @@ def learning_curves(repository_path, database, targets, representation, config, 
 
             if algorithm == "fragments":
                 SAVE_PATH = f"{repository_path}cluster/learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
-            elif algorithm == "sml":
-                SAVE_PATH = f"{repository_path}cluster/learning_curves/sml_{representation}_{database}_{target_name}.npz"
+            else:
+                SAVE_PATH = f"{repository_path}cluster/learning_curves/{algorithm}_{representation}_{database}_{target_name}.npz"
 
             np.savez(
                 SAVE_PATH,

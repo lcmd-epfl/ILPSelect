@@ -63,6 +63,36 @@ if config["sml_subset"]:
     )
     t = time.time() - t
     dump["time_sml_subset"] = t
+# %%
+# generate fps, cur subset
+
+from scripts.fps_cur_subset import cur_subset, fps_subset
+
+if config["cur_subset"]:
+    t = time.time()
+    cur_subset(
+        parent_folder=current_folder,
+        database=database,
+        targets=target_names,
+        representation=representation,
+        N=size_subset,
+        in_database=config["in_database"],
+    )
+    t = time.time() - t
+    dump["time_cur_subset"] = t
+
+if config["fps_subset"]:
+    t = time.time()
+    fps_subset(
+        parent_folder=current_folder,
+        database=database,
+        targets=target_names,
+        representation=representation,
+        N=size_subset,
+        in_database=config["in_database"],
+    )
+    t = time.time() - t
+    dump["time_fps_subset"] = t
 
 # %%
 # generate algo model
@@ -109,7 +139,7 @@ if config["learning_curves"]:
         targets=target_names,
         representation=representation,
         config=config,
-        algorithms=["fragments", "sml"],
+        algorithms=["fragments", "sml", "fps", "cur"],
     )
     t = time.time() - t
     dump["time_learning_curves"] = t
@@ -144,7 +174,8 @@ if config["plots_individual"]:
         representation=representation,
         pen=config["penalty"],
         learning_curve_ticks=config["learning_curve_ticks"],
-        curves=["algo", "sml", "random"],
+        curves=["algo", "sml", "cur", "fps", "random"],
+        in_database=config["in_database"],
     )
     t = time.time() - t
     dump["time_plots_individual"] = t
@@ -157,6 +188,7 @@ if config["plots_average"]:
         targets=config["plot_average_target_names"],
         representation=representation,
         pen=config["penalty"],
+        in_database=config["in_database"],
     )
     t = time.time() - t
     dump["time_plots_average"] = t
