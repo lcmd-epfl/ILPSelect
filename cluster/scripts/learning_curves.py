@@ -120,7 +120,7 @@ def learning_curves(repository_path, database, targets, representation, config, 
                 y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
             else:
                 Y_PATH = f"{repository_path}cluster/targets/targets.csv"
-                y_target = pd.read_csv(Y_PATH).query("name == @target_name")["energies"].iloc[0]
+                y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energies"].iloc[0]
 
             # y energies offset
             for ncharge in Q_target:
@@ -231,7 +231,7 @@ def learning_curves_random(
 
         else:
             Y_PATH = f"{repository_path}cluster/targets/targets.csv"
-            y_target = pd.read_csv(Y_PATH).query("name == @target_name")["energies"].iloc[0]
+            y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energies"].iloc[0]
 
         # y energies offset
         for ncharge in Q_target:

@@ -8,9 +8,6 @@ config = {
     ###
     # corresponding names must be in targets/targets.csv
     "target_names": [
-        # "sildenafil",
-        # "penicillin",
-        # "troglitazone",
         # "121259",
         # "12351",
         # "35811",
@@ -21,19 +18,20 @@ config = {
         # "55607",
         # "68076",
         # "120425",
+        # "sildenafil",
+        # "penicillin",
+        # "troglitazone",
         # "imatinib",
         # "pemetrexed",
-        # "raltegravir",
+        # # "raltegravir", # outcommented until fluor is present in pickle file
         # "sitagliptin",
         "oxycodone",
         "pregabalin",
         "apixaban",
+        "salbutamol",
     ],
     "in_database": False,
     "plot_average_target_names": [
-        "sildenafil",
-        "penicillin",
-        "troglitazone",
         "121259",
         "12351",
         "35811",
@@ -44,13 +42,17 @@ config = {
         "55607",
         "68076",
         "120425",
+        "sildenafil",
+        "penicillin",
+        "troglitazone",
         "imatinib",
         "pemetrexed",
-        "raltegravir",
+        # "raltegravir", # outcommented until fluor is present in pickle file
         "sitagliptin",
         "oxycodone",
         "pregabalin",
         "pixaban",
+        "salbutamol",
     ],
     ###
     "generate_database": False,
