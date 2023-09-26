@@ -76,31 +76,6 @@ def opt_hypers(X_train, atoms_train, y_train):
     return min_sigma, min_l2reg
 
 
-def get_representations(mols, params):
-    max_natoms = max([len(mol.nuclear_charges) for mol in mols])
-    elements = np.unique(np.concatenate([(mol.nuclear_charges) for mol in mols]))
-
-    reps = np.array(
-        [
-            qml.representations.generate_fchl_acsf(
-                mol.nuclear_charges,
-                mol.coordinates,
-                elements=elements,
-                gradients=False,
-                pad=max_natoms,
-            )
-            for mol in mols
-        ]
-    )
-    nuclear_charges = np.array([mol.nuclear_charges for mol in mols])
-    return reps, nuclear_charges
-
-
-def get_ranking(X, X_target, Q, Q_target):
-    K = get_kernel(X, X_target, Q, Q_target, sigma=1)
-    return np.argsort(K)[::-1]
-
-
 def learning_curves(repository_path, database, targets, representation, config, algorithms):
     """
     Compute learning curves once for each prefix, and each target. For N-fold random learning curves, use `learning_curves_random`.
@@ -139,21 +114,13 @@ def learning_curves(repository_path, database, targets, representation, config, 
             target_info = np.load(TARGET_PATH, allow_pickle=True)
             X_target = target_info["rep"]
             Q_target = target_info["ncharges"]
-            
+
             if config["in_database"]:
-                Y_PATH=f"{repository_path}{database}/energies.csv"
-                y_target = (
-                    pd.read_csv(Y_PATH)
-                    .query("file == @target_name")["energy / Ha"]
-                    .iloc[0]
-                )
+                Y_PATH = f"{repository_path}{database}/energies.csv"
+                y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
             else:
-                Y_PATH=f"{repository_path}cluster/targets/targets.csv"
-                y_target = (
-                    pd.read_csv(Y_PATH)
-                    .query("name == @target_name")["energies"]
-                    .iloc[0]
-                )
+                Y_PATH = f"{repository_path}cluster/targets/targets.csv"
+                y_target = pd.read_csv(Y_PATH).query("name == @target_name")["energies"].iloc[0]
 
             # y energies offset
             for ncharge in Q_target:
@@ -164,7 +131,7 @@ def learning_curves(repository_path, database, targets, representation, config, 
                 RANKING_PATH = f"{repository_path}cluster/rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
             elif algorithm == "sml":
                 RANKING_PATH = f"{repository_path}cluster/rankings/sml_{representation}_{database}_{target_name}.npy"
-                
+
             opt_ranking = np.load(RANKING_PATH)
 
             maes = []
@@ -229,7 +196,6 @@ def learning_curves_random(
     Q = database_info["ncharges"]
     database_labels = database_info["labels"]
 
-
     y = pd.read_csv(f"{repository_path}{database}/energies.csv")["energy / Ha"].values
 
     # y energies offset
@@ -249,25 +215,18 @@ def learning_curves_random(
 
         if config["in_database"]:
             # label of target
-            Y_PATH=f"{repository_path}{database}/energies.csv"
-            y_target = (
-                pd.read_csv(Y_PATH)
-                .query("file == @target_name")["energy / Ha"]
-                .iloc[0]
-            )
-            
+            Y_PATH = f"{repository_path}{database}/energies.csv"
+            y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
+
             # removing target from database
-            mask = database_labels!=target_name
+            mask = database_labels != target_name
             X = X[mask]
             Q = Q[mask]
             database_labels = database_labels[mask]
 
         else:
-            Y_PATH=f"{repository_path}cluster/targets/targets.csv"
-            y_target = (
-                pd.read_csv(Y_PATH)
-                .query("name == @target_name")["energies"]
-            )
+            Y_PATH = f"{repository_path}cluster/targets/targets.csv"
+            y_target = pd.read_csv(Y_PATH).query("name == @target_name")["energies"].iloc[0]
 
         # y energies offset
         for ncharge in Q_target:
