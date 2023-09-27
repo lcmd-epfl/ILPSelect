@@ -49,12 +49,7 @@ def plots_individual(
             fig.add_trace(go.Scatter(x=N, y=SML, name="SML"))
 
         if "fps" in curves:
-            if in_database:
-                FPS_CURVE_PATH = f"{parent_directory}learning_curves/fps_{representation}_{database}_{target_name}.npz"
-            else:
-                FPS_CURVE_PATH = (
-                    f"{parent_directory}learning_curves/fps_{representation}_{database}.npz"
-                )
+            FPS_CURVE_PATH = f"{parent_directory}learning_curves/fps_{representation}_{database}_{target_name}.npz"
 
             FPS_LEARNING_CURVE = np.load(FPS_CURVE_PATH, allow_pickle=True)
             FPS = FPS_LEARNING_CURVE["mae"] * Ha2kcal
@@ -62,12 +57,7 @@ def plots_individual(
             fig.add_trace(go.Scatter(x=N, y=FPS, name="fps"))
 
         if "cur" in curves:
-            if in_database:
-                CUR_CURVE_PATH = f"{parent_directory}learning_curves/cur_{representation}_{database}_{target_name}.npz"
-            else:
-                CUR_CURVE_PATH = (
-                    f"{parent_directory}learning_curves/cur_{representation}_{database}.npz"
-                )
+            CUR_CURVE_PATH = f"{parent_directory}learning_curves/cur_{representation}_{database}_{target_name}.npz"
 
             CUR_LEARNING_CURVE = np.load(CUR_CURVE_PATH, allow_pickle=True)
             CUR = CUR_LEARNING_CURVE["mae"] * Ha2kcal
