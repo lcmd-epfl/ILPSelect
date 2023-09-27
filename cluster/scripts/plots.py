@@ -156,14 +156,14 @@ def plots_average(parent_directory, database, targets, representation, pen, in_d
         SML_LEARNING_CURVE = np.load(SML_CURVE_PATH, allow_pickle=True)
         ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
         RANDOM_CURVE = np.load(RANDOM_CURVE_PATH, allow_pickle=True)
-        FPS_LEARNING_CURVE = np.load(FPS_CURVE_PATH, allow_pickle=True)
+        #FPS_LEARNING_CURVE = np.load(FPS_CURVE_PATH, allow_pickle=True)
         CUR_LEARNING_CURVE = np.load(CUR_CURVE_PATH, allow_pickle=True)
 
         MEAN_RANDOM.append(np.mean(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal)
         STD_RANDOM.append(np.std(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal)
         SML.append(SML_LEARNING_CURVE["mae"] * Ha2kcal)
         ALGO.append(ALGO_CURVE["mae"] * Ha2kcal)
-        FPS.append(FPS_LEARNING_CURVE["mae"] * Ha2kcal)
+        #FPS.append(FPS_LEARNING_CURVE["mae"] * Ha2kcal)
         CUR.append(CUR_LEARNING_CURVE["mae"] * Ha2kcal)
 
     # TODO: not sure average of STDs makes sense
@@ -172,7 +172,7 @@ def plots_average(parent_directory, database, targets, representation, pen, in_d
 
     SML = np.mean(SML, axis=0)
     ALGO = np.mean(ALGO, axis=0)
-    FPS = np.mean(SML, axis=0)
+    #FPS = np.mean(SML, axis=0)
     CUR = np.mean(ALGO, axis=0)
 
     fig = go.Figure()
@@ -193,7 +193,7 @@ def plots_average(parent_directory, database, targets, representation, pen, in_d
     fig.add_trace(go.Scatter(x=N, y=SML, name="Average SML"))
     fig.add_trace(go.Scatter(x=N, y=ALGO, name="Average frags"))
     fig.add_trace(go.Scatter(x=N, y=CUR, name="Average CUR"))
-    fig.add_trace(go.Scatter(x=N, y=FPS, name="Average FPS"))
+    #fig.add_trace(go.Scatter(x=N, y=FPS, name="Average FPS"))
 
     fig.update_layout(
         yaxis=dict(tickmode="array", tickvals=[1, 10], type="log"),

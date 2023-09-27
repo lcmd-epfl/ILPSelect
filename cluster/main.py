@@ -139,7 +139,7 @@ if config["learning_curves"]:
         targets=target_names,
         representation=representation,
         config=config,
-        algorithms=["fragments", "sml", "fps", "cur"],
+        algorithms=["fragments", "sml", "cur"], #TODO: add fps when implemented
     )
     t = time.time() - t
     dump["time_learning_curves"] = t
@@ -156,7 +156,7 @@ if config["learning_curves_random"]:
         representation=representation,
         config=config,
         CV=CV,
-        add_onto_old=True,
+        add_onto_old=False,
     )
     t = time.time() - t
     dump["time_learning_curves_random"] = t
@@ -174,7 +174,7 @@ if config["plots_individual"]:
         representation=representation,
         pen=config["penalty"],
         learning_curve_ticks=config["learning_curve_ticks"],
-        curves=["algo", "sml", "cur", "fps", "random"],
+        curves=["algo", "sml", "cur", "random"], #TODO: add fps when implemented
         in_database=config["in_database"],
     )
     t = time.time() - t
