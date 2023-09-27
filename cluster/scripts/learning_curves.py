@@ -89,7 +89,8 @@ def learning_curves(repository_path, database, targets, representation, config, 
         algorithms: list of algorithms to test (array(str)). WARNING only ["fragments", "sml"] is handled.
     """
     for algorithm in algorithms:
-        assert algorithm in ["fragments", "sml"], "only fragments and sml algorithms are handled"
+        assert algorithm in ["fragments", "sml", "cur"], "only fragments, sml and cur algorithms are handled"
+        #TODO: add fps when implemented
 
     pen = config["penalty"]
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
