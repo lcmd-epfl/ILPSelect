@@ -27,6 +27,7 @@ def cur_subset(parent_folder, database, targets, representation, N, in_database=
 
     selector = CUR(n_to_select=N + 1)
     # transpose matrix to select samples instead of features
+    print(database_global_rep.T.shape)
     selector.fit(database_global_rep.T)
     ranking = selector.selected_idx_
 
@@ -74,6 +75,7 @@ def fps_subset(parent_folder, database, targets, representation, N, in_database=
         raise
 
     selector = FPS(n_to_select=N + 1)
+    print(database_global_rep.shape)
     selector.fit(database_global_rep)
     ranking = selector.selected_idx_
 
