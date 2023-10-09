@@ -79,11 +79,10 @@ def fps_subset(parent_folder, database, targets, representation, N, in_database=
     selector.fit(database_global_rep)
     ranking = selector.selected_idx_
 
-    SAVE_PATH = f"{parent_folder}rankings/fps_{representation}_{database}.npy"
-    np.save(SAVE_PATH, ranking[:N])
-    print(f"Saved FPS ranking of {N} fragments of database {database} to {SAVE_PATH}.")
-
     if not in_database:
+        SAVE_PATH = f"{parent_folder}rankings/fps_{representation}_{database}.npy"
+        np.save(SAVE_PATH, ranking[:N])
+        print(f"Saved FPS ranking of {N} fragments of database {database} to {SAVE_PATH}.")
         return 0
 
     for target_name in targets:
