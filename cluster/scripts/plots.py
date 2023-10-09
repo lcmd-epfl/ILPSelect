@@ -89,7 +89,7 @@ def plots_individual(
             )
 
         fig.update_layout(
-            yaxis=dict(tickmode="array", tickvals=[1, 10], type="log"),
+            yaxis=dict(tickmode="array", type="log"),
             xaxis=dict(tickmode="array", tickvals=N, type="log"),
             xaxis_title="Training set size",
             yaxis_title="MAE [kcal/mol]",
@@ -182,7 +182,7 @@ def plots_average(parent_directory, database, targets, representation, pen, in_d
     # fig.add_trace(go.Scatter(x=N, y=FPS, name="Average FPS"))
 
     fig.update_layout(
-        yaxis=dict(tickmode="array", tickvals=[1, 10], type="log"),
+        yaxis=dict(tickmode="array", type="log"),
         xaxis=dict(tickmode="array", tickvals=N, type="log"),
         xaxis_title="Training set size",
         yaxis_title="MAE [kcal/mol]",
