@@ -24,7 +24,7 @@ config = {
         "imatinib",
         "pemetrexed",
         # # "raltegravir", # outcommented until fluor is present in pickle file
-        # "sitagliptin",
+        # "sitagliptin", # outcommented until fluor is present in pickle file
         "oxycodone",
         "pregabalin",
         "apixaban",
@@ -48,7 +48,7 @@ config = {
         "imatinib",
         "pemetrexed",
         # "raltegravir", # outcommented until fluor is present in pickle file
-        # "sitagliptin",
+        # "sitagliptin", # outcommented until fluor is present in pickle file
         "oxycodone",
         "pregabalin",
         "apixaban",
@@ -64,13 +64,13 @@ config = {
     "algo_subset": False,
     "learning_curves": False,
     "learning_curves_random": False,
-    "plots_individual": False,
+    "plots_individual": True,
     "plots_average": True,
     ###
     "scope": "local_vector",
     "penalty": 0,
     "duplicates": 1,
-    "timelimit": 4 * 3600,  # 4 hours
+    "timelimit": 1 * 3600,  # 1 hours
     "PoolSearchMode": 2,
     "number_of_fragments": 1024,  # size of subset selected
     "verbose": False,
