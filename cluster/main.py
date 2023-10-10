@@ -1,5 +1,8 @@
 # %%
 import time
+from datetime import datetime
+
+import pandas as pd
 
 from config import config
 
@@ -15,7 +18,12 @@ current_folder = config["current_folder"]
 
 size_subset = config["learning_curve_ticks"][-1]
 
-dump = {"num_targets": len(target_names)}
+# timings dump
+current_time = datetime.now().strftime("%Y-%m-%d")
+DUMP_PATH = f"{repository_folder}cluster/run/dump-{current_time}.csv"
+
+dump = pd.DataFrame({"Property": ["num_targets"], "Value": [len(target_names)]})
+dump.to_csv(DUMP_PATH)
 
 # %%
 # generate representations
@@ -31,7 +39,8 @@ if config["generate_database"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump["time_generate_database"] = t
+    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_generate_database"], "Value": [t]})])
+    dump.to_csv(DUMP_PATH)
 
 if config["generate_targets"]:
     t = time.time()
@@ -43,7 +52,8 @@ if config["generate_targets"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump["time_generate_targets"] = t
+    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_generate_targets"], "Value": [t]})])
+    dump.to_csv(DUMP_PATH)
 
 
 # %%
@@ -62,7 +72,8 @@ if config["sml_subset"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump["time_sml_subset"] = t
+    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_sml_subset"], "Value": [t]})])
+    dump.to_csv(DUMP_PATH)
 # %%
 # generate fps, cur subset
 
@@ -79,7 +90,8 @@ if config["cur_subset"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump["time_cur_subset"] = t
+    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_cur_subset"], "Value": [t]})])
+    dump.to_csv(DUMP_PATH)
 
 if config["fps_subset"]:
     t = time.time()
@@ -92,7 +104,8 @@ if config["fps_subset"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump["time_fps_subset"] = t
+    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_fps_subset"], "Value": [t]})])
+    dump.to_csv(DUMP_PATH)
 
 # %%
 # generate algo model
@@ -109,7 +122,8 @@ if config["algo_model"]:
         config=config,
     )
     t = time.time() - t
-    dump["time_algo_model"] = t
+    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_algo_model"], "Value": [t]})])
+    dump.to_csv(DUMP_PATH)
 
 # %% generate algo subset
 from scripts.algo_subset import algo_subset
@@ -125,7 +139,8 @@ if config["algo_subset"]:
         config=config,
     )
     t = time.time() - t
-    dump["time_algo_subset"] = t
+    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_algo_subset"], "Value": [t]})])
+    dump.to_csv(DUMP_PATH)
 
 # %%
 # generate learning curves
@@ -139,10 +154,11 @@ if config["learning_curves"]:
         targets=target_names,
         representation=representation,
         config=config,
-        algorithms=["fragments", "sml", "cur"], #TODO: add fps when implemented
+        algorithms=["fragments", "sml", "cur"],  # TODO: add fps when implemented
     )
     t = time.time() - t
-    dump["time_learning_curves"] = t
+    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_learning_curves"], "Value": [t]})])
+    dump.to_csv(DUMP_PATH)
 # %%
 from scripts.learning_curves import learning_curves_random
 
@@ -159,7 +175,10 @@ if config["learning_curves_random"]:
         add_onto_old=False,
     )
     t = time.time() - t
-    dump["time_learning_curves_random"] = t
+    dump = pd.concat(
+        [dump, pd.DataFrame({"Property": ["time_learning_curves_random"], "Value": [t]})]
+    )
+    dump.to_csv(DUMP_PATH)
 
 # %%
 # draw learning curves
@@ -174,11 +193,12 @@ if config["plots_individual"]:
         representation=representation,
         pen=config["penalty"],
         learning_curve_ticks=config["learning_curve_ticks"],
-        curves=["algo", "sml", "cur", "random"], #TODO: add fps when implemented
+        curves=["algo", "sml", "cur", "random"],  # TODO: add fps when implemented
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump["time_plots_individual"] = t
+    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_plots_individual"], "Value": [t]})])
+    dump.to_csv(DUMP_PATH)
 
 if config["plots_average"]:
     t = time.time()
@@ -191,18 +211,8 @@ if config["plots_average"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump["time_plots_average"] = t
+    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_plots_average"], "Value": [t]})])
+    dump.to_csv(DUMP_PATH)
 
-
-# %%
-import json
-from datetime import datetime
-
-current_time = datetime.now().strftime("%Y-%m-%d")
-DUMP_PATH = f"{repository_folder}cluster/run/dump-{current_time}.json"
-with open(DUMP_PATH, "w") as f:
-    json.dump(dump, f, indent=2)
-
-print(f"Dumped timings to {DUMP_PATH}")
 
 # %%
