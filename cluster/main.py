@@ -146,7 +146,7 @@ if config["algo_subset"]:
 # generate learning curves
 from scripts.learning_curves import learning_curves
 
-if config["learning_curves"]:
+if len(config["learning_curves"])>0:
     t = time.time()
     learning_curves(
         repository_path=repository_folder,
@@ -154,8 +154,7 @@ if config["learning_curves"]:
         targets=target_names,
         representation=representation,
         config=config,
-        #algorithms=["fragments", "sml", "cur"], #TODO: add fps when implemented
-        algorithms=["cur"], #TODO: add fps when implemented
+        algorithms=config["learning_curves"], #TODO: add fps when implemented
     )
     t = time.time() - t
     dump = pd.concat([dump, pd.DataFrame({"Property": ["time_learning_curves"], "Value": [t]})])
