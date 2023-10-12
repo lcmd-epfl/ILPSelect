@@ -10,12 +10,12 @@ def get_representations(mols, max_natoms=None, elements=None, representation="FC
 
     if max_natoms is None:
         print(
-            "[WARNING] using max natoms of database. This could create problems if the target is larger."
+            "[WARNING] using max natoms of input molecules. This could create problems if the target is smaller than database."
         )
         max_natoms = max([len(mol.nuclear_charges) for mol in mols])
     if elements is None:
         print(
-            "[WARNING] using ncharges of database. This could create a segmentation fault if new ncharges are in the target."
+            "[WARNING] using ncharges of input molecules. This could create a segmentation fault if new ncharges are in the target."
         )
         elements = np.unique(np.concatenate([(mol.nuclear_charges) for mol in mols]))
 
@@ -51,6 +51,7 @@ def generate_targets(targets, representation, repository_path, database, in_data
 
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
+    database_ncharges = database_info["ncharges"]
 
     # only used to not miss some new ncharges in targets, and natoms
     if not in_database:
@@ -61,12 +62,15 @@ def generate_targets(targets, representation, repository_path, database, in_data
         target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
         all_elements = np.unique(
             np.concatenate(
-                [(x) for x in database_info["ncharges"]]
-                + [(mol.nuclear_charges) for mol in target_mols]
+                [(x) for x in database_ncharges] + [(mol.nuclear_charges) for mol in target_mols]
             )
         )
+        max_natoms = max(
+            [len(x) for x in database_ncharges] + [len(mol.nuclear_charges) for mol in target_mols]
+        )
     else:
-        all_elements = None
+        all_elements = np.unique(np.concatenate([(x) for x in database_ncharges]))
+        max_natoms = max([len(x) for x in database_ncharges])
 
     for target_name in targets:
         if not in_database:
@@ -78,7 +82,7 @@ def generate_targets(targets, representation, repository_path, database, in_data
 
         X_target, Q_target = get_representations(
             [target_mol],
-            max_natoms=len(target_mol.coordinates),
+            max_natoms=max_natoms,
             elements=all_elements,
             representation=representation,
         )

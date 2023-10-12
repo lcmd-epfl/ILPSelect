@@ -76,7 +76,7 @@ def opt_hypers(X_train, atoms_train, y_train):
     return min_sigma, min_l2reg
 
 
-def learning_curves(repository_path, database, targets, representation, config, algorithms):
+def learning_curves(repository_path, database, targets, representation, config, curves):
     """
     Compute learning curves once for each prefix, and each target. For N-fold random learning curves, use `learning_curves_random`.
 
@@ -86,11 +86,15 @@ def learning_curves(repository_path, database, targets, representation, config, 
         targets: array of target names (array(str))
         representation: name of representation (str) eg "FCHL"
         config: config dictionary. Must contain keys "penalty", "learning_curve_ticks"
-        algorithms: list of algorithms to test (array(str)). WARNING only ["fragments", "sml"] is handled.
+        curves: list of curves to test (array(str)). WARNING only ["fragments", "sml"] is handled.
     """
-    for algorithm in algorithms:
-        assert algorithm in ["fragments", "sml", "cur"], "only fragments, sml and cur algorithms are handled"
-        #TODO: add fps when implemented
+    for curve in curves:
+        assert curve in [
+            "fragments",
+            "sml",
+            "cur",
+        ], "only fragments, sml and cur algorithms are handled"
+        # TODO: add fps when implemented
 
     pen = config["penalty"]
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
@@ -108,7 +112,7 @@ def learning_curves(repository_path, database, targets, representation, config, 
         for ncharge in mol_ncharges:
             y[i] -= atom_energy_coeffs[ncharge]
 
-    for algorithm in algorithms:
+    for curve in curves:
         for target_name in targets:
             TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
 
@@ -118,9 +122,7 @@ def learning_curves(repository_path, database, targets, representation, config, 
 
             if config["in_database"]:
                 Y_PATH = f"{repository_path}{database}/energies.csv"
-                y_target = (
-                    pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
-                )
+                y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
             else:
                 Y_PATH = f"{repository_path}cluster/targets/energies.csv"
                 y_target = (
@@ -131,16 +133,16 @@ def learning_curves(repository_path, database, targets, representation, config, 
             for ncharge in Q_target:
                 y_target -= atom_energy_coeffs[ncharge]
 
-            # fragments algorithm ranking
-            if algorithm == "fragments":
+            # fragments curve ranking
+            if curve == "fragments":
                 RANKING_PATH = f"{repository_path}cluster/rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
-            elif algorithm == "sml":
+            elif curve == "sml":
                 RANKING_PATH = f"{repository_path}cluster/rankings/sml_{representation}_{database}_{target_name}.npy"
-            elif algorithm in ["fps", "cur"]:
+            elif curve in ["fps", "cur"]:
                 if config["in_database"]:
-                    RANKING_PATH = f"{repository_path}cluster/rankings/{algorithm}_{representation}_{database}_{target_name}.npy"
+                    RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}_{target_name}.npy"
                 else:
-                    RANKING_PATH = f"{repository_path}cluster/rankings/{algorithm}_{representation}_{database}.npy"
+                    RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}.npy"
 
             opt_ranking = np.load(RANKING_PATH)
 
@@ -164,10 +166,10 @@ def learning_curves(repository_path, database, targets, representation, config, 
 
             maes = np.array(maes)
 
-            if algorithm == "fragments":
+            if curve == "fragments":
                 SAVE_PATH = f"{repository_path}cluster/learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
             else:
-                SAVE_PATH = f"{repository_path}cluster/learning_curves/{algorithm}_{representation}_{database}_{target_name}.npz"
+                SAVE_PATH = f"{repository_path}cluster/learning_curves/{curve}_{representation}_{database}_{target_name}.npz"
 
             np.savez(
                 SAVE_PATH,

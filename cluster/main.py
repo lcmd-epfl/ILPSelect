@@ -154,7 +154,7 @@ if len([e for e in config["learning_curves"] if e != "random"]) != 0:
         targets=target_names,
         representation=representation,
         config=config,
-        algorithms=config["learning_curves"],  # TODO: add fps when implemented
+        curves=config["learning_curves"],  # TODO: add fps when implemented
     )
     t = time.time() - t
     dump = pd.concat([dump, pd.DataFrame({"Property": ["time_learning_curves"], "Value": [t]})])
