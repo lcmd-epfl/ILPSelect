@@ -146,7 +146,7 @@ if config["algo_subset"]:
 # generate learning curves
 from scripts.learning_curves import learning_curves
 
-if len(config["learning_curves"])>0:
+if len([e for e in config["learning_curves"] if e != "random"]) != 0:
     t = time.time()
     learning_curves(
         repository_path=repository_folder,
@@ -154,7 +154,7 @@ if len(config["learning_curves"])>0:
         targets=target_names,
         representation=representation,
         config=config,
-        algorithms=config["learning_curves"], #TODO: add fps when implemented
+        algorithms=config["learning_curves"],  # TODO: add fps when implemented
     )
     t = time.time() - t
     dump = pd.concat([dump, pd.DataFrame({"Property": ["time_learning_curves"], "Value": [t]})])
@@ -162,8 +162,7 @@ if len(config["learning_curves"])>0:
 # %%
 from scripts.learning_curves import learning_curves_random
 
-CV = 5
-if config["learning_curves_random"]:
+if "random" in config["learning_curves"]:
     t = time.time()
     learning_curves_random(
         repository_path=repository_folder,
@@ -171,7 +170,7 @@ if config["learning_curves_random"]:
         targets=target_names,
         representation=representation,
         config=config,
-        CV=CV,
+        CV=config["CV"],
         add_onto_old=False,
     )
     t = time.time() - t
@@ -184,7 +183,7 @@ if config["learning_curves_random"]:
 # draw learning curves
 from scripts.plots import plots_average, plots_individual
 
-if config["plots_individual"]:
+if len(config["plots_individual"]) != 0:
     t = time.time()
     plots_individual(
         parent_directory=current_folder,
@@ -193,14 +192,13 @@ if config["plots_individual"]:
         representation=representation,
         pen=config["penalty"],
         learning_curve_ticks=config["learning_curve_ticks"],
-        curves=["algo", "sml", "cur", "random"],  # TODO: add fps when implemented
-        in_database=config["in_database"],
+        curves=config["plots_individual"],  # TODO: add fps when implemented
     )
     t = time.time() - t
     dump = pd.concat([dump, pd.DataFrame({"Property": ["time_plots_individual"], "Value": [t]})])
     dump.to_csv(DUMP_PATH)
 
-if config["plots_average"]:
+if len(config["plots_average"]) != 0:
     t = time.time()
     plots_average(
         parent_directory=current_folder,
@@ -208,7 +206,8 @@ if config["plots_average"]:
         targets=config["plot_average_target_names"],
         representation=representation,
         pen=config["penalty"],
-        in_database=config["in_database"],
+        learning_curve_ticks=config["learning_curve_ticks"],
+        curves=config["plots_average"],
     )
     t = time.time() - t
     dump = pd.concat([dump, pd.DataFrame({"Property": ["time_plots_average"], "Value": [t]})])

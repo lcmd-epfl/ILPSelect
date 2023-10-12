@@ -62,11 +62,10 @@ config = {
     "sml_subset": False,
     "algo_model": True,
     "algo_subset": True,
-    #"learning_curves": ["fragments", "sml", "cur"],
+    # "learning_curves": ["fragments", "sml", "cur", "random"],
     "learning_curves": ["fragments", "cur"],
-    "learning_curves_random": False,
-    "plots_individual": True,
-    "plots_average": True,
+    "plots_individual": ["fragments", "sml", "cur", "random"],
+    "plots_average": ["fragments", "sml", "cur", "random"],
     ###
     "scope": "local_vector",
     "penalty": 1,
@@ -79,6 +78,7 @@ config = {
     "learning_curve_ticks": [2**k for k in range(4, 11)],
     ###
     "random_state": None,  # for multiple random subset selection, don't use a fixed state!
+    "CV": 5,  # number of cross-validation for random learning curves
 }
 
 ############ for 10 targets inside qm7 ############

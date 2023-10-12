@@ -53,17 +53,20 @@ def generate_targets(targets, representation, repository_path, database, in_data
     database_info = np.load(DATA_PATH, allow_pickle=True)
 
     # only used to not miss some new ncharges in targets, and natoms
-    TARGETS_PATH = f"{repository_path}cluster/targets/"
-    target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
-    target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
-    target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
-    target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
-    all_elements = np.unique(
-        np.concatenate(
-            [(x) for x in database_info["ncharges"]]
-            + [(mol.nuclear_charges) for mol in target_mols]
+    if not in_database:
+        TARGETS_PATH = f"{repository_path}cluster/targets/"
+        target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
+        target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
+        target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
+        target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
+        all_elements = np.unique(
+            np.concatenate(
+                [(x) for x in database_info["ncharges"]]
+                + [(mol.nuclear_charges) for mol in target_mols]
+            )
         )
-    )
+    else:
+        all_elements = None
 
     for target_name in targets:
         if not in_database:
@@ -107,12 +110,15 @@ def generate_database(database, representation, repository_folder, targets, in_d
     xyzs = fragments["file"].map(lambda x: x + ".xyz").to_list()
     mols = np.array([qml.Compound(f"{FRAGMENTS_PATH}{x}") for x in xyzs])
 
-    # only used to not miss some new ncharges in targets
-    TARGETS_PATH = f"{repository_folder}cluster/targets/"
-    target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
-    target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
-    target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
-    target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
+    # only used to not miss some new ncharges in targets outside database
+    if not in_database:
+        TARGETS_PATH = f"{repository_folder}cluster/targets/"
+        target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
+        target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
+        target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
+        target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
+    else:
+        target_mols = []
 
     all_elements = np.unique(
         np.concatenate(
