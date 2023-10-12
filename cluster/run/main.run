@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --chdir /home/haeberle/molekuehl/cluster/run
-#SBATCH --mem=65536
-#SBATCH --time=16:00:00
+#SBATCH --mem=131072
+#SBATCH --time=32:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=24
-#SBATCH --job-name=FCHL-qm7-sildenafil-0
+#SBATCH --cpus-per-task=48
+#SBATCH --job-name=FCHL-qm7-10_qm7_cur-0
 
 echo STARTING AT `date`
 

@@ -119,7 +119,7 @@ def learning_curves(repository_path, database, targets, representation, config, 
             if config["in_database"]:
                 Y_PATH = f"{repository_path}{database}/energies.csv"
                 y_target = (
-                    pd.read_csv(Y_PATH).query("file == @target_name+'.xyz'")["energy / Ha"].iloc[0]
+                    pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
                 )
             else:
                 Y_PATH = f"{repository_path}cluster/targets/energies.csv"

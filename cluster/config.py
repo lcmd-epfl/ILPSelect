@@ -62,9 +62,9 @@ config = {
     "sml_subset": False,
     "algo_model": False,
     "algo_subset": False,
-    "learning_curves": False,
+    "learning_curves": True,
     "learning_curves_random": False,
-    "plots_individual": False,
+    "plots_individual": True,
     "plots_average": True,
     ###
     "scope": "local_vector",
@@ -82,7 +82,6 @@ config = {
 
 ############ for 10 targets inside qm7 ############
 
-"""
 import numpy as np
 import pandas as pd
 
@@ -97,4 +96,3 @@ target_sample = qm7_df[num_heavy_atoms >= 7]["labels"].sample(10, random_state=4
 config["target_names"] = target_sample
 config["plot_average_target_names"] = target_sample
 config["in_database"] = True
-"""

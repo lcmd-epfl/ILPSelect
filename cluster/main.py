@@ -139,7 +139,8 @@ if config["learning_curves"]:
         targets=target_names,
         representation=representation,
         config=config,
-        algorithms=["fragments", "sml", "cur"], #TODO: add fps when implemented
+        #algorithms=["fragments", "sml", "cur"], #TODO: add fps when implemented
+        algorithms=["cur"], #TODO: add fps when implemented
     )
     t = time.time() - t
     dump["time_learning_curves"] = t
