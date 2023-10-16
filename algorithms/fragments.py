@@ -191,8 +191,8 @@ class model:
         self.y = y
 
         # finding penalty constant
-        Mol = self.database_ncharges[0]
-        m = len(Mol)
+        Mcharges = self.database_ncharges[0]
+        m = len(Mcharges)
         # z = indicator variable for fragments
         if self.scope == "global_vector":
             z = x
@@ -205,8 +205,8 @@ class model:
 
     def changepenalty(self, newpenalty):
         self.penalty_constant = newpenalty
-        Mol = self.database_ncharges[0]
-        m = len(Mol)
+        Mcharges = self.database_ncharges[0]
+        m = len(Mcharges)
 
         # z = indicator variable for fragments
         if self.scope == "global_vector":
@@ -263,7 +263,7 @@ class model:
 
     def remove_fragment_name(self, fragment_name):
         # remove lone fragment by name
-        fragment_id = np.where(self.database_labels==fragment_name)[0][0]
+        fragment_id = np.where(self.database_labels == fragment_name)[0][0]
 
         self.remove_fragments([[fragment_id]])
         return 0
@@ -391,11 +391,11 @@ class model:
             I = [
                 (M, G) for M in self.database_indices for G in range(self.duplicates)
             ]  # indices of variable x
-            x = Z.addVars(I, vtype=GRB.BINARY)
+            x = Z.addVars(I, vtype=GRB.BINARY, name="x")
             # for M in [0,1,16,28,29,53,92]:
             #    x[M,0].start = 1
             y = Z.addVars(
-                len(np.unique(self.target_ncharges)), vtype="C"
+                len(np.unique(self.target_ncharges)), vtype="C", name="y"
             )  # variable for each atom type in target
         print("Variables added.")
         return x, y
@@ -467,8 +467,9 @@ class model:
                 count += 1
                 if self.verbose:
                     print(count, "  /  ", self.size_database)
+                Mcharges = self.database_ncharges[M]
                 Mol = self.database_reps[M]
-                m = len(Mol)
+                m = len(Mcharges)
                 for G in range(self.duplicates):
                     for i, k in [v[:2] for v in I if v[2:] == (M, G)]:
                         for j, l in [v[:2] for v in I if v[2:] == (M, G)]:
@@ -479,6 +480,7 @@ class model:
                             )
                     expr += y[M, G] * m * self.penalty_constant
             expr = expr - n * self.penalty_constant
+
         elif self.scope == "local_vector":
             expr = gp.LinExpr()
             I = x.keys()
@@ -488,8 +490,9 @@ class model:
                 count += 1
                 if self.verbose:
                     print(count, "  /  ", self.size_database)
+                Mcharges = self.database_ncharges[M]
                 Mol = self.database_reps[M]
-                m = len(Mol)
+                m = len(Mcharges)
                 for i, j, G in [(v[0], v[1], v[3]) for v in I if v[2] == M]:
                     C = np.linalg.norm(Mol[i] - T[j]) ** 2
                     expr += C * x[i, j, M, G]
