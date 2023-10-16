@@ -22,7 +22,9 @@ size_subset = config["learning_curve_ticks"][-1]
 current_time = datetime.now().strftime("%Y-%m-%d")
 DUMP_PATH = f"{repository_folder}cluster/run/dump-{current_time}.csv"
 
-dump = pd.DataFrame({"Property": ["num_targets"], "Value": [len(target_names)]})
+dump = pd.DataFrame(
+    {"Property": ["num_targets", "targets"], "Value": [len(target_names), target_names]}
+)
 dump.to_csv(DUMP_PATH)
 
 # %%

@@ -53,17 +53,17 @@ config = {
         "pregabalin",
         "apixaban",
         "salbutamol",
+        "oseltamivir",
     ],
     ###
     "generate_database": True,
     "generate_targets": True,
     "cur_subset": True,
-    "fps_subset": False,
-    "sml_subset": False,
+    "fps_subset": True,
+    "sml_subset": True,
     "algo_model": True,
     "algo_subset": True,
-    # "learning_curves": ["fragments", "sml", "cur", "random"],
-    "learning_curves": ["fragments", "cur"],
+    "learning_curves": ["fragments", "sml", "cur", "random"],
     "plots_individual": ["fragments", "sml", "cur", "random"],
     "plots_average": ["fragments", "sml", "cur", "random"],
     ###
@@ -83,6 +83,7 @@ config = {
 
 ############ for 10 targets inside qm7 ############
 
+"""
 import numpy as np
 import pandas as pd
 
@@ -97,3 +98,4 @@ target_sample = qm7_df[num_heavy_atoms >= 7]["labels"].sample(10, random_state=4
 config["target_names"] = target_sample
 config["plot_average_target_names"] = target_sample
 config["in_database"] = True
+"""
