@@ -29,6 +29,7 @@ config = {
         "pregabalin",
         "apixaban",
         "salbutamol",
+        "oseltamivir",
     ],
     "in_database": False,
     "plot_average_target_names": [
