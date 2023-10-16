@@ -60,7 +60,7 @@ config = {
     "generate_database": True,
     "generate_targets": True,
     "cur_subset": True,
-    "fps_subset": True,
+    # "fps_subset": True, # FPS not implemented yet
     "sml_subset": True,
     "algo_model": True,
     "algo_subset": True,
