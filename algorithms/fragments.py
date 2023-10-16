@@ -404,8 +404,10 @@ class model:
         print("Adding constraints...")
         if self.scope == "local_matrix" or self.scope == "local_vector":
             n = len(self.target_ncharges)  # size of target
-            # bijection into [n]
-            Z.addConstrs((x.sum("*", j, "*", "*") == 1 for j in range(n)), name="bij")
+            # injection into [n]
+            Z.addConstrs((x.sum("*", j, "*", "*") <= 1 for j in range(n)), name="inj")
+            # # bijection into [n]
+            # Z.addConstrs((x.sum("*", j, "*", "*") == 1 for j in range(n)), name="bij")
             I = x.keys()
 
             for M in self.database_indices:

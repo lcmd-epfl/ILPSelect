@@ -148,7 +148,9 @@ if config["algo_subset"]:
 # generate learning curves
 from scripts.learning_curves import learning_curves
 
-if len([e for e in config["learning_curves"] if e != "random"]) != 0:
+no_random_curves = [e for e in config["learning_curves"] if e != "random"]
+
+if len(no_random_curves) != 0:
     t = time.time()
     learning_curves(
         repository_path=repository_folder,
@@ -156,7 +158,7 @@ if len([e for e in config["learning_curves"] if e != "random"]) != 0:
         targets=target_names,
         representation=representation,
         config=config,
-        curves=config["learning_curves"],  # TODO: add fps when implemented
+        curves=no_random_curves,  # TODO: add fps when implemented
     )
     t = time.time() - t
     dump = pd.concat([dump, pd.DataFrame({"Property": ["time_learning_curves"], "Value": [t]})])
