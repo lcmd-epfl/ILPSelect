@@ -228,9 +228,7 @@ def learning_curves_random(
         if config["in_database"]:
             # label of target
             Y_PATH = f"{repository_path}{database}/energies.csv"
-            y_target = (
-                pd.read_csv(Y_PATH).query("file == @target_name+'.xyz'")["energy / Ha"].iloc[0]
-            )
+            y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
 
             # removing target from database
             mask = database_labels != target_name
