@@ -6,9 +6,9 @@ from datetime import datetime
 import pandas as pd
 
 # read config
-if len(sys.argv)!=0:
+if len(sys.argv) > 1:
     # argument gives special config name, eg config-drugs or config-qm7fragments, ..
-    config == __import__(sys.argv[0]).config
+    config = __import__(sys.argv[1]).config
 else:
     # default file config.py
     from config import config
@@ -35,11 +35,13 @@ dump = pd.DataFrame(
 )
 dump.to_csv(DUMP_PATH)
 
+
 # concat and save function
 def add_onto_and_save(df, prop, value):
     df = pd.concat([df, pd.DataFrame({"Property": [prop], "Value": [value]})])
     global DUMP_PATH
     df.to_csv(DUMP_PATH)
+
 
 # %%
 # generate representations

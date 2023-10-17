@@ -3,6 +3,7 @@ config = {
     "current_folder": "/home/haeberle/molekuehl/cluster/",
     "repository_folder": "/home/haeberle/molekuehl/",
     ###
+    "config_name": "template",
     "database": "qm7",
     "representation": "FCHL",
     ###
