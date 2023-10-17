@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
-#SBATCH --job-name=FCHL-qm7-10_qm7_cur-0
+#SBATCH --job-name=FCHL-qm7-10_drugs-1
 
 echo STARTING AT `date`
 
@@ -16,6 +16,6 @@ module load gcc/11.3.0 python/3.10.4 intel-mkl/2020.4.304 gurobi
 export GRB_LICENSE_FILE=/ssoft/spack/external/gurobi/gurobi.lic
 export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"
 
-python /home/haeberle/molekuehl/cluster/main.py
+python /home/haeberle/molekuehl/cluster/main.py "config-drugs"
 
 echo FINISHED AT `date`

@@ -1,13 +1,21 @@
 # %%
+import sys
 import time
 from datetime import datetime
 
 import pandas as pd
 
-from config import config
-
 # read config
+if len(sys.argv)!=0:
+    # argument gives special config name, eg config-drugs or config-qm7fragments, ..
+    config == __import__(sys.argv[0]).config
+else:
+    # default file config.py
+    from config import config
+
 target_names = config["target_names"]
+config_name = config["config_name"]
+print(f"Config name {config_name}")
 print(f"Read {len(target_names)} target(s): {target_names}")
 
 database = config["database"]
@@ -20,12 +28,18 @@ size_subset = config["learning_curve_ticks"][-1]
 
 # timings dump
 current_time = datetime.now().strftime("%Y-%m-%d")
-DUMP_PATH = f"{repository_folder}cluster/run/dump-{current_time}.csv"
+DUMP_PATH = f"{repository_folder}cluster/run/dump-{config_name}-{current_time}.csv"
 
 dump = pd.DataFrame(
     {"Property": ["num_targets", "targets"], "Value": [len(target_names), target_names]}
 )
 dump.to_csv(DUMP_PATH)
+
+# concat and save function
+def add_onto_and_save(df, prop, value):
+    df = pd.concat([df, pd.DataFrame({"Property": [prop], "Value": [value]})])
+    global DUMP_PATH
+    df.to_csv(DUMP_PATH)
 
 # %%
 # generate representations
@@ -41,8 +55,7 @@ if config["generate_database"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_generate_database"], "Value": [t]})])
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_generate_database", t)
 
 if config["generate_targets"]:
     t = time.time()
@@ -54,8 +67,7 @@ if config["generate_targets"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_generate_targets"], "Value": [t]})])
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_generate_targets", t)
 
 
 # %%
@@ -74,8 +86,7 @@ if config["sml_subset"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_sml_subset"], "Value": [t]})])
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_sml_subset", t)
 # %%
 # generate fps, cur subset
 
@@ -92,8 +103,7 @@ if config["cur_subset"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_cur_subset"], "Value": [t]})])
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_cur_subset", t)
 
 if config["fps_subset"]:
     t = time.time()
@@ -106,8 +116,7 @@ if config["fps_subset"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_fps_subset"], "Value": [t]})])
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_fps_subset", t)
 
 # %%
 # generate algo model
@@ -124,8 +133,7 @@ if config["algo_model"]:
         config=config,
     )
     t = time.time() - t
-    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_algo_model"], "Value": [t]})])
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_algo_model", t)
 
 # %% generate algo subset
 from scripts.algo_subset import algo_subset
@@ -141,8 +149,7 @@ if config["algo_subset"]:
         config=config,
     )
     t = time.time() - t
-    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_algo_subset"], "Value": [t]})])
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_algo_subset", t)
 
 # %%
 # generate learning curves
@@ -161,8 +168,7 @@ if len(no_random_curves) != 0:
         curves=no_random_curves,  # TODO: add fps when implemented
     )
     t = time.time() - t
-    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_learning_curves"], "Value": [t]})])
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_learning_curves", t)
 # %%
 from scripts.learning_curves import learning_curves_random
 
@@ -178,10 +184,7 @@ if "random" in config["learning_curves"]:
         add_onto_old=False,
     )
     t = time.time() - t
-    dump = pd.concat(
-        [dump, pd.DataFrame({"Property": ["time_learning_curves_random"], "Value": [t]})]
-    )
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_learning_curves_random", t)
 
 # %%
 # draw learning curves
@@ -199,8 +202,7 @@ if len(config["plots_individual"]) != 0:
         curves=config["plots_individual"],  # TODO: add fps when implemented
     )
     t = time.time() - t
-    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_plots_individual"], "Value": [t]})])
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_plots_individual", t)
 
 if len(config["plots_average"]) != 0:
     t = time.time()
@@ -214,8 +216,7 @@ if len(config["plots_average"]) != 0:
         curves=config["plots_average"],
     )
     t = time.time() - t
-    dump = pd.concat([dump, pd.DataFrame({"Property": ["time_plots_average"], "Value": [t]})])
-    dump.to_csv(DUMP_PATH)
+    add_onto_and_save(dump, "time_plots_average", t)
 
 
 # %%

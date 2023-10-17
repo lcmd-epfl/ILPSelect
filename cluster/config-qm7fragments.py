@@ -3,67 +3,22 @@ config = {
     "current_folder": "/home/haeberle/molekuehl/cluster/",
     "repository_folder": "/home/haeberle/molekuehl/",
     ###
+    "config_name": "qm7fragments",
     "database": "qm7",
     "representation": "FCHL",
     ###
-    # corresponding names must be in targets/targets.csv
-    "target_names": [
-        # "121259",
-        # "12351",
-        # "35811",
-        # "85759",
-        # "96295",
-        # "5696",
-        # "31476",
-        # "55607",
-        # "68076",
-        # "120425",
-        "sildenafil",
-        "penicillin",
-        "troglitazone",
-        "imatinib",
-        "pemetrexed",
-        # # "raltegravir", # outcommented until fluor is present in pickle file
-        # "sitagliptin", # outcommented until fluor is present in pickle file
-        "oxycodone",
-        "pregabalin",
-        "apixaban",
-        "salbutamol",
-        "oseltamivir",
-    ],
-    "in_database": False,
-    "plot_average_target_names": [
-        # "121259",
-        # "12351",
-        # "35811",
-        # "85759",
-        # "96295",
-        # "5696",
-        # "31476",
-        # "55607",
-        # "68076",
-        # "120425",
-        "sildenafil",
-        "penicillin",
-        "troglitazone",
-        "imatinib",
-        "pemetrexed",
-        # "raltegravir", # outcommented until fluor is present in pickle file
-        # "sitagliptin", # outcommented until fluor is present in pickle file
-        "oxycodone",
-        "pregabalin",
-        "apixaban",
-        "salbutamol",
-        "oseltamivir",
-    ],
+    # filled in below
+    "target_names": [],
+    "in_database": True,
+    "plot_average_target_names": [],
     ###
-    "generate_database": False,
-    "generate_targets": False,
-    "cur_subset": False,
+    "generate_database": True,
+    "generate_targets": True,
+    "cur_subset": True,
     "fps_subset": False,  # FPS not implemented yet
-    "sml_subset": False,
-    "algo_model": False,
-    "algo_subset": False,
+    "sml_subset": True,
+    "algo_model": True,
+    "algo_subset": True,
     "learning_curves": ["fragments", "sml", "cur", "random"],
     "plots_individual": ["fragments", "sml", "cur", "random"],
     "plots_average": ["fragments", "sml", "cur", "random"],
@@ -83,7 +38,6 @@ config = {
 }
 
 ############ for 10 targets inside qm7 ############
-"""
 import numpy as np
 import pandas as pd
 
@@ -98,4 +52,3 @@ target_sample = qm7_df[num_heavy_atoms >= 7]["labels"].sample(10, random_state=4
 config["target_names"] = target_sample
 config["plot_average_target_names"] = target_sample
 config["in_database"] = True
-"""
