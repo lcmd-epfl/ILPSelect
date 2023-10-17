@@ -57,14 +57,14 @@ config = {
         "oseltamivir",
     ],
     ###
-    "generate_database": True,
-    "generate_targets": True,
-    "cur_subset": True,
-    # "fps_subset": True, # FPS not implemented yet
-    "sml_subset": True,
-    "algo_model": True,
-    "algo_subset": True,
-    "learning_curves": ["fragments", "sml", "cur", "random"],
+    "generate_database": False,
+    "generate_targets": False,
+    "cur_subset": False,
+    "fps_subset": False,  # FPS not implemented yet
+    "sml_subset": False,
+    "algo_model": False,
+    "algo_subset": False,
+    "learning_curves": ["random"],
     "plots_individual": ["fragments", "sml", "cur", "random"],
     "plots_average": ["fragments", "sml", "cur", "random"],
     ###
