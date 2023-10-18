@@ -41,7 +41,8 @@ config = {
 import numpy as np
 import pandas as pd
 
-qm7 = np.load("/home/haeberle/molekuehl/cluster/data/FCHL_qm7.npz", allow_pickle=True)
+DATA_PATH = f"{config['current_folder']}data/{config['representation']}_{config['database']}.npz"
+qm7 = np.load(DATA_PATH, allow_pickle=True)
 qm7_df = pd.DataFrame({"ncharges": qm7["ncharges"], "labels": qm7["labels"]})
 
 num_heavy_atoms = qm7_df["ncharges"].map(lambda charges: sum(charges != 1))
