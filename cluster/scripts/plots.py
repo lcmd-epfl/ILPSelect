@@ -89,7 +89,7 @@ def plots_individual(
             )
 
         fig.update_layout(
-            yaxis=dict(tickmode="array", type="log"),
+            yaxis=dict(type="log"),
             xaxis=dict(tickmode="array", tickvals=N, type="log"),
             xaxis_title="Training set size",
             yaxis_title="MAE [kcal/mol]",
@@ -130,6 +130,7 @@ def plots_average(
             ALGO_CURVE_PATH = f"{parent_directory}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
             ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
             ALGO.append(ALGO_CURVE["mae"] * Ha2kcal)
+        ALGO = np.mean(ALGO, axis=0)
 
         fig.add_trace(go.Scatter(x=N, y=ALGO, name="Average frags"))
 
@@ -139,6 +140,7 @@ def plots_average(
             SML_CURVE_PATH = f"{parent_directory}learning_curves/sml_{representation}_{database}_{target_name}.npz"
             SML_LEARNING_CURVE = np.load(SML_CURVE_PATH, allow_pickle=True)
             SML.append(SML_LEARNING_CURVE["mae"] * Ha2kcal)
+        SML = np.mean(SML, axis=0)
 
         fig.add_trace(go.Scatter(x=N, y=SML, name="Average SML"))
 
@@ -148,6 +150,7 @@ def plots_average(
             FPS_CURVE_PATH = f"{parent_directory}learning_curves/fps_{representation}_{database}_{target_name}.npz"
             FPS_LEARNING_CURVE = np.load(FPS_CURVE_PATH, allow_pickle=True)
             FPS.append(FPS_LEARNING_CURVE["mae"] * Ha2kcal)
+        FPS = np.mean(FPS, axis=0)
 
         fig.add_trace(go.Scatter(x=N, y=FPS, name="Average FPS"))
 
@@ -157,6 +160,7 @@ def plots_average(
             CUR_CURVE_PATH = f"{parent_directory}learning_curves/cur_{representation}_{database}_{target_name}.npz"
             CUR_LEARNING_CURVE = np.load(CUR_CURVE_PATH, allow_pickle=True)
             CUR.append(CUR_LEARNING_CURVE["mae"] * Ha2kcal)
+        CUR = np.mean(CUR, axis=0)
 
         fig.add_trace(go.Scatter(x=N, y=CUR, name="Average CUR"))
 
@@ -168,6 +172,8 @@ def plots_average(
             RANDOM_CURVE = np.load(RANDOM_CURVE_PATH, allow_pickle=True)
             MEAN_RANDOM.append(np.mean(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal)
             STD_RANDOM.append(np.std(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal)
+        MEAN_RANDOM = np.mean(MEAN_RANDOM, axis=0)
+        STD_RANDOM = np.mean(STD_RANDOM, axis=0)
 
         fig.add_trace(
             go.Scatter(
@@ -183,7 +189,7 @@ def plots_average(
         )
 
     fig.update_layout(
-        yaxis=dict(tickmode="array", type="log"),
+        yaxis=dict(type="log"),
         xaxis=dict(tickmode="array", tickvals=N, type="log"),
         xaxis_title="Training set size",
         yaxis_title="MAE [kcal/mol]",
