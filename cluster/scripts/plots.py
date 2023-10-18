@@ -11,7 +11,8 @@ def plots_individual(
     representation,
     pen,
     learning_curve_ticks,
-    curves=["algo", "sml", "fps", "cur", "random"],
+    curves=["algo", "sml", "cur", "random"],
+    #curves=["algo", "sml", "fps", "cur", "random"],
 ):
     """
     Draw combined plots of the learning curves for each target and saves them to plots/.

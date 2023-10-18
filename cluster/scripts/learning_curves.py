@@ -86,7 +86,7 @@ def learning_curves(repository_path, database, targets, representation, config, 
         targets: array of target names (array(str))
         representation: name of representation (str) eg "FCHL"
         config: config dictionary. Must contain keys "penalty", "learning_curve_ticks"
-        curves: list of curves to test (array(str)). WARNING only ["fragments", "sml"] is handled.
+        curves: list of curves to test (array(str)). WARNING only ["fragments", "sml", "cur"] are handled.
     """
     for curve in curves:
         assert curve in [
