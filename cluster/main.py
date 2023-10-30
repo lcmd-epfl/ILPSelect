@@ -41,6 +41,7 @@ def add_onto_and_save(df, prop, value):
     df = pd.concat([df, pd.DataFrame({"Property": [prop], "Value": [value]})])
     global DUMP_PATH
     df.to_csv(DUMP_PATH)
+    return df
 
 
 # %%
@@ -57,7 +58,7 @@ if config["generate_database"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_generate_database", t)
+    dump = add_onto_and_save(dump, "time_generate_database", t)
 
 if config["generate_targets"]:
     t = time.time()
@@ -69,7 +70,7 @@ if config["generate_targets"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_generate_targets", t)
+    dump = add_onto_and_save(dump, "time_generate_targets", t)
 
 
 # %%
@@ -88,7 +89,7 @@ if config["sml_subset"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_sml_subset", t)
+    dump = add_onto_and_save(dump, "time_sml_subset", t)
 # %%
 # generate fps, cur subset
 
@@ -105,7 +106,7 @@ if config["cur_subset"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_cur_subset", t)
+    dump = add_onto_and_save(dump, "time_cur_subset", t)
 
 if config["fps_subset"]:
     t = time.time()
@@ -118,7 +119,7 @@ if config["fps_subset"]:
         in_database=config["in_database"],
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_fps_subset", t)
+    dump = add_onto_and_save(dump, "time_fps_subset", t)
 
 # %%
 # generate algo model
@@ -135,7 +136,7 @@ if config["algo_model"]:
         config=config,
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_algo_model", t)
+    dump = add_onto_and_save(dump, "time_algo_model", t)
 
 # %% generate algo subset
 from scripts.algo_subset import algo_subset
@@ -151,7 +152,7 @@ if config["algo_subset"]:
         config=config,
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_algo_subset", t)
+    dump = add_onto_and_save(dump, "time_algo_subset", t)
 
 # %%
 # generate learning curves
@@ -170,7 +171,7 @@ if len(no_random_curves) != 0:
         curves=no_random_curves,  # TODO: add fps when implemented
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_learning_curves", t)
+    dump = add_onto_and_save(dump, "time_learning_curves", t)
 # %%
 from scripts.learning_curves import learning_curves_random
 
@@ -186,7 +187,7 @@ if "random" in config["learning_curves"]:
         add_onto_old=False,
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_learning_curves_random", t)
+    dump = add_onto_and_save(dump, "time_learning_curves_random", t)
 
 # %%
 # draw learning curves
@@ -204,7 +205,7 @@ if len(config["plots_individual"]) != 0:
         curves=config["plots_individual"],  # TODO: add fps when implemented
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_plots_individual", t)
+    dump = add_onto_and_save(dump, "time_plots_individual", t)
 
 if len(config["plots_average"]) != 0:
     t = time.time()
@@ -218,7 +219,7 @@ if len(config["plots_average"]) != 0:
         curves=config["plots_average"],
     )
     t = time.time() - t
-    add_onto_and_save(dump, "time_plots_average", t)
+    dump = add_onto_and_save(dump, "time_plots_average", t)
 
 
 # %%
