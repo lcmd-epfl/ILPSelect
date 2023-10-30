@@ -17,7 +17,7 @@ def plots_individual(config):
 
     learning_curve_ticks = config["learning_curve_ticks"]
     parent_directory = config["current_folder"]
-    repository_path = config["repository_path"]
+    repository_path = config["repository_folder"]
     pen = config["penalty"]
     representation = config["representation"]
     targets = config["target_names"]

@@ -14,7 +14,7 @@ def algo_model(config):
         config: config dictionary. Must contain keys "penalty" and "scope".
     """
 
-    repository_path = config["repository_path"]
+    repository_path = config["repository_folder"]
     pen = config["penalty"]
     representation = config["representation"]
     targets = config["target_names"]

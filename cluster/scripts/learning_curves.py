@@ -84,12 +84,12 @@ def learning_curves(config):
         config: TODO
     """
 
-    repository_path = config["repository_path"]
+    repository_path = config["repository_folder"]
     pen = config["penalty"]
     representation = config["representation"]
     targets = config["target_names"]
     database = config["database"]
-    curves = config["plots_individual"]
+    curves = [e for e in config["learning_curves"] if e != "random"]
 
     for curve in curves:
         assert curve in [
@@ -194,7 +194,7 @@ def learning_curves_random(config, add_onto_old=True):
         add_onto_old: if some random curves already exist, we will append onto them (bool)
     """
 
-    repository_path = config["repository_path"]
+    repository_path = config["repository_folder"]
     representation = config["representation"]
     targets = config["target_names"]
     database = config["database"]
