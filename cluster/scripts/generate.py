@@ -36,26 +36,28 @@ def get_representations(mols, max_natoms=None, elements=None, representation="FC
     return reps, nuclear_charges
 
 
-def generate_targets(targets, representation, repository_path, database, in_database=False):
+def generate_targets(config):
     """
     Generate representation of targets in parent_folder/data/.
     The database must already be generated in order to keep the same parameters!
 
     Parameters:
-        targets: array of names (array(strings))
-        representaion: representation name (string)
-        repository_path: absolute path to repository which contains {database}/ and cluster/ (str)
-        database: name of database (str) eg. "FCHL"
-        in_database: whether the targets are inside the database or not.
+        config: TODO
     """
 
-    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
+    repository_folder = config["repository_folder"]
+    database = config["database"]
+    targets = config["target_names"]
+    representation = config["representation"]
+    in_database = config["in_database"]
+
+    DATA_PATH = f"{repository_folder}cluster/data/{representation}_{database}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
     database_ncharges = database_info["ncharges"]
 
     # only used to not miss some new ncharges in targets, and natoms
     if not in_database:
-        TARGETS_PATH = f"{repository_path}cluster/targets/"
+        TARGETS_PATH = f"{repository_folder}cluster/targets/"
         target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
         target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
         target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
@@ -74,9 +76,9 @@ def generate_targets(targets, representation, repository_path, database, in_data
 
     for target_name in targets:
         if not in_database:
-            TARGET_PATH = f"{repository_path}cluster/targets/{target_name}.xyz"
+            TARGET_PATH = f"{repository_folder}cluster/targets/{target_name}.xyz"
         else:
-            TARGET_PATH = f"{repository_path}{database}/{target_name}.xyz"
+            TARGET_PATH = f"{repository_folder}{database}/{target_name}.xyz"
 
         target_mol = qml.Compound(TARGET_PATH)
 
@@ -88,7 +90,7 @@ def generate_targets(targets, representation, repository_path, database, in_data
         )
 
         # to use in the fragments algo
-        SAVE_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+        SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{target_name}.npz"
         np.savez(SAVE_PATH, ncharges=Q_target[0], rep=X_target[0])
 
         print(f"Generated representation {representation} of target {target_name} in {SAVE_PATH}.")
@@ -96,16 +98,20 @@ def generate_targets(targets, representation, repository_path, database, in_data
     return 0
 
 
-def generate_database(database, representation, repository_folder, targets, in_database):
+def generate_database(config):
     """
     Generate representation of full databases in repository_folder/cluster/data/ from xyz files in /repository_folder/{database}
     There must be a `energies.csv` in the database folder with columns "file" and "energy / Ha".
 
     Parameters:
-        database: name of database (str) eg "qm7"
-        representation: name of representation (str) eg "FCHL"
-        repository_folder: absolute path of rep folder
+        config:TODO
     """
+
+    repository_folder = config["repository_folder"]
+    database = config["database"]
+    targets = config["target_names"]
+    representation = config["representation"]
+    in_database = config["in_database"]
 
     FRAGMENTS_PATH = f"{repository_folder}{database}/"
 

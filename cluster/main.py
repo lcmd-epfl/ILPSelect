@@ -50,25 +50,13 @@ from scripts.generate import generate_database, generate_targets
 
 if config["generate_database"]:
     t = time.time()
-    generate_database(
-        database,
-        representation,
-        repository_folder,
-        targets=target_names,
-        in_database=config["in_database"],
-    )
+    generate_database(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_generate_database", t)
 
 if config["generate_targets"]:
     t = time.time()
-    generate_targets(
-        targets=target_names,
-        representation=representation,
-        repository_path=repository_folder,
-        database=database,
-        in_database=config["in_database"],
-    )
+    generate_targets(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_generate_targets", t)
 
@@ -80,14 +68,7 @@ from scripts.sml_subset import sml_subset
 
 if config["sml_subset"]:
     t = time.time()
-    sml_subset(
-        parent_folder=current_folder,
-        database=database,
-        targets=target_names,
-        representation=representation,
-        N=size_subset,
-        in_database=config["in_database"],
-    )
+    sml_subset(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_sml_subset", t)
 # %%
@@ -97,27 +78,13 @@ from scripts.fps_cur_subset import cur_subset, fps_subset
 
 if config["cur_subset"]:
     t = time.time()
-    cur_subset(
-        parent_folder=current_folder,
-        database=database,
-        targets=target_names,
-        representation=representation,
-        N=size_subset,
-        in_database=config["in_database"],
-    )
+    cur_subset(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_cur_subset", t)
 
 if config["fps_subset"]:
     t = time.time()
-    fps_subset(
-        parent_folder=current_folder,
-        database=database,
-        targets=target_names,
-        representation=representation,
-        N=size_subset,
-        in_database=config["in_database"],
-    )
+    fps_subset(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_fps_subset", t)
 
@@ -128,13 +95,7 @@ from scripts.algo_model import algo_model
 
 if config["algo_model"]:
     t = time.time()
-    algo_model(
-        repository_path=repository_folder,
-        database=database,
-        targets=target_names,
-        representation=representation,
-        config=config,
-    )
+    algo_model(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_algo_model", t)
 
@@ -143,14 +104,7 @@ from scripts.algo_subset import algo_subset
 
 if config["algo_subset"]:
     t = time.time()
-    algo_subset(
-        repository_path=repository_folder,
-        database=database,
-        targets=target_names,
-        representation=representation,
-        N=size_subset,
-        config=config,
-    )
+    algo_subset(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_algo_subset", t)
 
@@ -162,14 +116,7 @@ no_random_curves = [e for e in config["learning_curves"] if e != "random"]
 
 if len(no_random_curves) != 0:
     t = time.time()
-    learning_curves(
-        repository_path=repository_folder,
-        database=database,
-        targets=target_names,
-        representation=representation,
-        config=config,
-        curves=no_random_curves,  # TODO: add fps when implemented
-    )
+    learning_curves(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_learning_curves", t)
 # %%
@@ -177,15 +124,7 @@ from scripts.learning_curves import learning_curves_random
 
 if "random" in config["learning_curves"]:
     t = time.time()
-    learning_curves_random(
-        repository_path=repository_folder,
-        database=database,
-        targets=target_names,
-        representation=representation,
-        config=config,
-        CV=config["CV"],
-        add_onto_old=False,
-    )
+    learning_curves_random(config, add_onto_old=False)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_learning_curves_random", t)
 
@@ -195,29 +134,13 @@ from scripts.plots import plots_average, plots_individual
 
 if len(config["plots_individual"]) != 0:
     t = time.time()
-    plots_individual(
-        parent_directory=current_folder,
-        database=database,
-        targets=target_names,
-        representation=representation,
-        pen=config["penalty"],
-        learning_curve_ticks=config["learning_curve_ticks"],
-        curves=config["plots_individual"],  # TODO: add fps when implemented
-    )
+    plots_individual(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_plots_individual", t)
 
 if len(config["plots_average"]) != 0:
     t = time.time()
-    plots_average(
-        parent_directory=current_folder,
-        database=database,
-        targets=config["plot_average_target_names"],
-        representation=representation,
-        pen=config["penalty"],
-        learning_curve_ticks=config["learning_curve_ticks"],
-        curves=config["plots_average"],
-    )
+    plots_average(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_plots_average", t)
 

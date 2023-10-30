@@ -3,19 +3,21 @@ import pandas as pd
 from algorithms import fragments
 
 
-def algo_subset(repository_path, database, targets, representation, N, config):
+def algo_subset(config):
     """
     Generates size N subset of database indices.
 
     Parameters:
-        repository_path: absolution path to repo
-        database: name of database (str) eg "qm7"
-        targets: array of target names (array(str))
-        representation: name of representation (str) eg "FCHL"
-        N: size of subset to generate
-        config: config dictionary. Must contain keys "penalty", "scope", "verbose", "PoolSearchMode", "timelimit"
+        config: config dictionary. Must contain keys "penalty", "scope", "verbose", "PoolSearchMode", "timelimit" TODO
     """
+
+    repository_path = config["repository_path"]
     pen = config["penalty"]
+    representation = config["representation"]
+    targets = config["target_names"]
+    database = config["database"]
+    N = config["learning_curve_ticks"][-1]
+
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
 
     for target_name in targets:

@@ -1,7 +1,7 @@
 from algorithms import fragments
 
 
-def algo_model(repository_path, database, targets, representation, config):
+def algo_model(config):
     """
     Generates ILP model to a .mps file in models/ folder.
     Warning: the data of the database and targets must already be generated in the data/ folder!
@@ -13,9 +13,14 @@ def algo_model(repository_path, database, targets, representation, config):
         representation: name of representation (str) eg. "FCHL"
         config: config dictionary. Must contain keys "penalty" and "scope".
     """
-    for target_name in targets:
-        pen = config["penalty"]
 
+    repository_path = config["repository_path"]
+    pen = config["penalty"]
+    representation = config["representation"]
+    targets = config["target_names"]
+    database = config["database"]
+
+    for target_name in targets:
         DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
         TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
         M = fragments.model(

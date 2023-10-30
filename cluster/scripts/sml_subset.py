@@ -12,18 +12,21 @@ def get_ranking(X, X_target):
     return sorted_indices
 
 
-def sml_subset(parent_folder, database, targets, representation, N, in_database=True):
+def sml_subset(config):
     """
     Generate SML subsets of size N for each target from the database.
 
     Parameters:
-        parent_folder: absolute path of folder containing data/ folder with needed representations
-        database: name of database (str) eg. "qm7"
-        targets: array of names (array(str))
-        representation: name of rep (str) eg. "FCHL"
-        N: size of each subset
-        in_database: whether the targets are in the database and should be removed from the ranking or not (bool)
+        config: TODO
     """
+
+    parent_folder = config["current_folder"]
+    database = config["database"]
+    targets = config["target_names"]
+    representation = config["representation"]
+    N = config["learning_curve_ticks"][-1]
+    in_database = config["in_database"]
+
     DATA_PATH = f"{parent_folder}data/"
     database_info = np.load(f"{DATA_PATH}{representation}_{database}.npz", allow_pickle=True)
 

@@ -2,18 +2,20 @@ import numpy as np
 from skmatter.feature_selection import CUR, FPS
 
 
-def cur_subset(parent_folder, database, targets, representation, N, in_database=False):
+def cur_subset(config):
     """
     Generate CUR subsets of size N for each target from the database.
 
     Parameters:
-        parent_folder: absolute path of folder containing data/ folder with needed representations
-        database: name of database (str) eg. "qm7"
-        targets: array of names (array(str))
-        representation: name of rep (str) eg. "FCHL"
-        N: size of each subset (int)
-        in_database: whether the targets are in the database and should be removed from the ranking or not (bool)
+        config: TODO
     """
+
+    parent_folder = config["current_folder"]
+    database = config["database"]
+    targets = config["target_names"]
+    representation = config["representation"]
+    N = config["learning_curve_ticks"][-1]
+    in_database = config["in_database"]
 
     DATABASE_PATH = f"{parent_folder}data/{representation}_{database}.npz"
     database_info = np.load(DATABASE_PATH, allow_pickle=True)
@@ -50,7 +52,7 @@ def cur_subset(parent_folder, database, targets, representation, N, in_database=
     return 0
 
 
-def fps_subset(parent_folder, database, targets, representation, N, in_database=False):
+def fps_subset(config):
     """
     Generate FPS subsets of size N for each target from the database.
 
@@ -62,6 +64,13 @@ def fps_subset(parent_folder, database, targets, representation, N, in_database=
         N: size of each subset
         in_database: whether the targets are in the database and should be removed from the ranking or not (bool)
     """
+
+    parent_folder = config["current_folder"]
+    representation = config["representation"]
+    targets = config["target_names"]
+    database = config["database"]
+    N = config["learning_curve_ticks"][-1]
+    in_database = config["in_database"]
 
     DATABASE_PATH = f"{parent_folder}data/{representation}_{database}.npz"
     database_info = np.load(DATABASE_PATH, allow_pickle=True)

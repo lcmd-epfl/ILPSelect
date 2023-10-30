@@ -1,34 +1,68 @@
+import pickle
+
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 Ha2kcal = 627.5
 
 
-def plots_individual(
-    parent_directory,
-    database,
-    targets,
-    representation,
-    pen,
-    learning_curve_ticks,
-    curves=["algo", "sml", "cur", "random"],
-    #curves=["algo", "sml", "fps", "cur", "random"],
-):
+def plots_individual(config):
     """
     Draw combined plots of the learning curves for each target and saves them to plots/.
 
     Parameters:
-        parent_directory: cluster/ absolute path
-        database: name of database (str) eg "qm7"
-        targets: array of target names (array(str))
-        representation: representation (str) eg "FCHL"
-        pen: penalty of the solutions for the file names (int, float or str)
-        curves: list of curves to compute plots for
-        in_database: whether the targets are in the database or not (bool). CUR and FPS rankings have different file names if this is the case.
+        config: config dictionary. Must contain keys "learning_curve_ticks", "random_state", "in_database" TODO
     """
+
+    learning_curve_ticks = config["learning_curve_ticks"]
+    parent_directory = config["current_folder"]
+    repository_path = config["repository_path"]
+    pen = config["penalty"]
+    representation = config["representation"]
+    targets = config["target_names"]
+    database = config["database"]
+    curves = config["plots_individual"]
 
     # individual plots
     for target_name in targets:
+        # normalization constant is energy of target
+        if False:
+            normalization = 1
+        else:
+            with open(f"{repository_path}cluster/data/atom_energy_coeffs.pickle", "rb") as f:
+                atom_energy_coeffs = pickle.load(f)
+
+            TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+
+            target_info = np.load(TARGET_PATH, allow_pickle=True)
+            Q_target = target_info["ncharges"]
+
+            if config["in_database"]:
+                # label of target
+                Y_PATH = f"{repository_path}{database}/energies.csv"
+                y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
+
+                # removing target from database
+                mask = database_labels != target_name
+                X = X[mask]
+                Q = Q[mask]
+                database_labels = database_labels[mask]
+
+            else:
+                Y_PATH = f"{repository_path}cluster/targets/energies.csv"
+                y_target = (
+                    pd.read_csv(Y_PATH).query("file == @target_name+'.xyz'")["energy / Ha"].iloc[0]
+                )
+
+            # y energies offset
+            for ncharge in Q_target:
+                y_target -= atom_energy_coeffs[ncharge]
+
+            normalization = y_target
+
+        print("Normalizing constant:", normalization)
+
         # create figure and axis
         N = learning_curve_ticks
 
@@ -37,14 +71,14 @@ def plots_individual(
         if "algo" in curves:
             ALGO_CURVE_PATH = f"{parent_directory}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
             ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
-            ALGO = ALGO_CURVE["mae"] * Ha2kcal
+            ALGO = ALGO_CURVE["mae"] * Ha2kcal / normalization
             # plot learning curve ALGO
             fig.add_trace(go.Scatter(x=N, y=ALGO, name="Frags"))
 
         if "sml" in curves:
             SML_CURVE_PATH = f"{parent_directory}learning_curves/sml_{representation}_{database}_{target_name}.npz"
             SML_LEARNING_CURVE = np.load(SML_CURVE_PATH, allow_pickle=True)
-            SML = SML_LEARNING_CURVE["mae"] * Ha2kcal
+            SML = SML_LEARNING_CURVE["mae"] * Ha2kcal / normalization
             # plot learning curve SML
             fig.add_trace(go.Scatter(x=N, y=SML, name="SML"))
 
@@ -52,7 +86,7 @@ def plots_individual(
             FPS_CURVE_PATH = f"{parent_directory}learning_curves/fps_{representation}_{database}_{target_name}.npz"
 
             FPS_LEARNING_CURVE = np.load(FPS_CURVE_PATH, allow_pickle=True)
-            FPS = FPS_LEARNING_CURVE["mae"] * Ha2kcal
+            FPS = FPS_LEARNING_CURVE["mae"] * Ha2kcal / normalization
             # plot learning curve FPS
             fig.add_trace(go.Scatter(x=N, y=FPS, name="fps"))
 
@@ -60,7 +94,7 @@ def plots_individual(
             CUR_CURVE_PATH = f"{parent_directory}learning_curves/cur_{representation}_{database}_{target_name}.npz"
 
             CUR_LEARNING_CURVE = np.load(CUR_CURVE_PATH, allow_pickle=True)
-            CUR = CUR_LEARNING_CURVE["mae"] * Ha2kcal
+            CUR = CUR_LEARNING_CURVE["mae"] * Ha2kcal / normalization
             # plot learning curve CUR
             fig.add_trace(go.Scatter(x=N, y=CUR, name="CUR"))
 
@@ -68,8 +102,8 @@ def plots_individual(
             RANDOM_CURVE_PATH = f"{parent_directory}learning_curves/random_{representation}_{database}_{target_name}.npz"
             RANDOM_CURVE = np.load(RANDOM_CURVE_PATH, allow_pickle=True)
             MEAN_RANDOM, STD_RANDOM = (
-                np.mean(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal,
-                np.std(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal,
+                np.mean(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal / normalization,
+                np.std(RANDOM_CURVE["all_maes_random"], axis=0) * Ha2kcal / normalization,
             )
 
             # plot learning curve random with std as error bars
@@ -105,22 +139,21 @@ def plots_individual(
     return 0
 
 
-def plots_average(
-    parent_directory, database, targets, representation, pen, learning_curve_ticks, curves
-):
+def plots_average(config):
     """
     Draw average plots of the learning curves and saves them to plots/.
 
     Parameters:
-        parent_directory: cluster/ absolute path
-        database: name of database (str) eg "qm7"
-        targets: array of target names (array(str))
-        representation: representation (str) eg "FCHL"
-        pen: same as config["penatly"]
-        in_database: whether the targets are in the database or not (bool). CUR and FPS rankings have different file names if this is the case.
+        config: TODO
     """
 
-    N = learning_curve_ticks
+    N = config["learning_curve_ticks"]
+    parent_directory = config["current_folder"]
+    pen = config["penalty"]
+    representation = config["representation"]
+    targets = config["plot_average_target_names"]
+    database = config["database"]
+    curves = config["plots_average"]
 
     fig = go.Figure()
 

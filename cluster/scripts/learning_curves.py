@@ -76,18 +76,21 @@ def opt_hypers(X_train, atoms_train, y_train):
     return min_sigma, min_l2reg
 
 
-def learning_curves(repository_path, database, targets, representation, config, curves):
+def learning_curves(config):
     """
     Compute learning curves once for each prefix, and each target. For N-fold random learning curves, use `learning_curves_random`.
 
     Parameters:
-        parent_directory: absolute path to cluster/ folder
-        database: name of database (str) eg "qm7"
-        targets: array of target names (array(str))
-        representation: name of representation (str) eg "FCHL"
-        config: config dictionary. Must contain keys "penalty", "learning_curve_ticks"
-        curves: list of curves to test (array(str)). WARNING only ["fragments", "sml", "cur"] are handled.
+        config: TODO
     """
+
+    repository_path = config["repository_path"]
+    pen = config["penalty"]
+    representation = config["representation"]
+    targets = config["target_names"]
+    database = config["database"]
+    curves = config["plots_individual"]
+
     for curve in curves:
         assert curve in [
             "fragments",
@@ -96,7 +99,6 @@ def learning_curves(repository_path, database, targets, representation, config, 
         ], "only fragments, sml and cur algorithms are handled"
         # TODO: add fps when implemented
 
-    pen = config["penalty"]
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
     X = database_info["reps"]
@@ -183,21 +185,20 @@ def learning_curves(repository_path, database, targets, representation, config, 
     return 0
 
 
-def learning_curves_random(
-    repository_path, database, targets, representation, config, CV, add_onto_old=True
-):
+def learning_curves_random(config, add_onto_old=True):
     """
     Compute for CV-fold random learning curves.
 
     Parameters:
-        repository_path:cluster/ absolute path to cluster/ folder
-        database: name of database (str) eg "qm7"
-        targets: array of target names (array(str))
-        representation: name of representation (str) eg "FCHL"
-        config: config dictionary. Must contain keys "learning_curve_ticks", "random_state"
-        CV: number of iterations of random curve (int)
+        config: TODO
         add_onto_old: if some random curves already exist, we will append onto them (bool)
     """
+
+    repository_path = config["repository_path"]
+    representation = config["representation"]
+    targets = config["target_names"]
+    database = config["database"]
+    CV = config["CV"]
 
     if config["random_state"] != None:
         print("WARNING: random_state is fixed -- all random subsets are identical!")
