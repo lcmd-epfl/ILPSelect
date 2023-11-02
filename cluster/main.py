@@ -74,13 +74,15 @@ if config["sml_subset"]:
 # %%
 # generate fps, cur subset
 
-from scripts.fps_cur_subset import cur_subset, fps_subset
+from scripts.cur_subset import cur_subset
 
 if config["cur_subset"]:
     t = time.time()
     cur_subset(config)
     t = time.time() - t
     dump = add_onto_and_save(dump, "time_cur_subset", t)
+
+from scripts.fps_subset import fps_subset
 
 if config["fps_subset"]:
     t = time.time()

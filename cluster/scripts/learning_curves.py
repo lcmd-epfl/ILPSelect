@@ -95,8 +95,9 @@ def learning_curves(config):
         assert curve in [
             "fragments",
             "sml",
+            "fps",
             "cur",
-        ], "only fragments, sml and cur algorithms are handled"
+        ], "only fragments, sml, fps and cur algorithms are handled"
         # TODO: add fps when implemented
 
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
