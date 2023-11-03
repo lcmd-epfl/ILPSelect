@@ -23,26 +23,11 @@ def reset_temp_constr(M, constr):
     return 0
 
 
-def set_objective1(M, points, x):
-    n = len(points)
-    expr = gp.QuadExpr()
-    for i in range(n):
-        for j in range(i + 1, n):
-            norm = np.linalg.norm(points[i] - points[j])
-            expr += norm * x[i] * x[j]
-    M.setObjective(expr, GRB.MAXIMIZE)
-    return 0
-
-
-def set_objective2(M, points, x):
+def set_objective(M, points, x):
     n = len(points)
     obj = M.addVar(vtype="C")
-    print(1)
     maxnorm = np.max(cdist(points, points, metric='euclidean'))
-    print(2)
-    # maxnorm = 43
     for i in range(n):
-        print(f"{i} / {n}")
         for j in range(i + 1, n):
             norm = np.linalg.norm(points[i] - points[j])
             M.addConstr(obj <= norm + maxnorm * (1 - x[i] + 1 - x[j]))
@@ -64,12 +49,7 @@ def fps_subset(config):
     Generate FPS subsets of size N for each target from the database.
 
     Parameters:
-        parent_folder: absolute path of folder containing data/ folder with needed representations
-        database: name of database (str) eg. "qm7"
-        targets: array of names (array(str))
-        representation: name of rep (str) eg. "FCHL"
-        N: size of each subset
-        in_database: whether the targets are in the database and should be removed from the ranking or not (bool)
+        config: TODO
     """
 
     parent_folder = config["current_folder"]
@@ -101,7 +81,7 @@ def fps_subset(config):
     add_constraints(M, N, x)
 
     print("Constructing objective...")
-    set_objective2(M, database_global_rep, x)
+    set_objective(M, database_global_rep, x)
     print("Objective set.")
 
     M.update()
@@ -122,19 +102,24 @@ def fps_subset(config):
     # if in database, points need to be removed.
     # I don't take a subset of size N+1 and then remove, because FPS on N points is not a subset of FPS on N+1 points!
     constr = None
+    ranking = None
     for target_name in targets:
         reset_temp_constr(M, constr)
         M.update()
 
         target_index = np.where(database_info["labels"] == target_name)[0][0]
-        if target_index <=1023:
+
+        # if the ranking includes the target, recompute!
+        if (ranking is None) or (target_index in ranking):
             constr = remove_variable(M, x, target_index)
 
-        M.optimize()
-        assert M.status != 3, "Model is infeasible."
+            M.optimize()
+            assert M.status != 3, "Model is infeasible."
 
-        ranking = read_solution(M, n, x)
-        assert len(ranking)==N
+            ranking = read_solution(M, n, x)
+            assert len(ranking)==N
+        else:
+            constr = None
 
         SAVE_PATH = f"{parent_folder}rankings/fps_{representation}_{database}_{target_name}.npy"
         np.save(SAVE_PATH, ranking)
