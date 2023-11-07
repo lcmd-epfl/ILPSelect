@@ -38,7 +38,6 @@ def set_objective(M, points, x):
 def read_solution(M, n, x):
     chosen_indices = []
     for i in range(n):
-        print(i)
         if x[i].X == 1:
             chosen_indices.append(i)
     return np.array(chosen_indices)
@@ -75,6 +74,7 @@ def fps_subset(config):
     assert N <= n, "Number of points is smaller than size of subset."
 
     M = gp.Model()
+    M.setParam("TimeLimit", 3600)
 
     x = add_variables(M, n)
 
