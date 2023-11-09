@@ -4,7 +4,7 @@ config = {
     "repository_folder": "/home/haeberle/molekuehl/",
     ###
     "config_name": "drugs",
-    "database": "qm7",
+    "database": "qm9",
     "representation": "FCHL",
     ###
     # corresponding names must be in targets/targets.csv
@@ -34,19 +34,19 @@ config = {
         "oseltamivir",
     ],
     ###
-    "generate_database": False,
-    "generate_targets": False,
+    "generate_database": True,
+    "generate_targets": True,
     "cur_subset": False,
-    "fps_subset": False,  # FPS not implemented yet
+    "fps_subset": False,
     "sml_subset": False,
     "algo_model": False,
     "algo_subset": False,
-    "learning_curves": [],#["fragments", "sml", "cur", "random"],
-    "plots_individual": ["algo", "sml", "cur", "random"],
-    "plots_average": ["algo", "sml", "cur", "random"],
+    "learning_curves": ["fragments", "sml", "fps", "cur", "random"],
+    "plots_individual": ["algo", "sml", "fps", "cur", "random"],
+    "plots_average": ["algo", "sml", "fps", "cur", "random"],
     ###
     "scope": "local_vector",
-    "penalty": 1,
+    "penalty": 0,
     "duplicates": 1,
     "timelimit": 1 * 3600,  # 1 hours
     "PoolSearchMode": 2,
@@ -58,4 +58,3 @@ config = {
     "random_state": None,  # for multiple random subset selection, don't use a fixed state!
     "CV": 5,  # number of cross-validation for random learning curves
 }
-

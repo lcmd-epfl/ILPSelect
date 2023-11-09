@@ -65,9 +65,9 @@ config = {
     "sml_subset": False,
     "algo_model": False,
     "algo_subset": False,
-    "learning_curves": ["fragments", "sml", "cur", "random"],
-    "plots_individual": ["fragments", "sml", "cur", "random"],
-    "plots_average": ["fragments", "sml", "cur", "random"],
+    "learning_curves": ["algo", "sml", "cur", "random"],
+    "plots_individual": ["algo", "sml", "cur", "random"],
+    "plots_average": ["algo", "sml", "cur", "random"],
     ###
     "scope": "local_vector",
     "penalty": 1,

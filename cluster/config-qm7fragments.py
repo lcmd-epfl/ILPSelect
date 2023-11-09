@@ -15,13 +15,13 @@ config = {
     "generate_database": False,
     "generate_targets": False,
     "cur_subset": False,
-    "fps_subset": False,  # FPS not implemented yet
+    "fps_subset": True,  # FPS not implemented yet
     "sml_subset": False,
     "algo_model": False,
     "algo_subset": False,
-    "learning_curves": [], #["fragments", "sml", "cur", "random"],
-    "plots_individual": ["algo", "sml", "cur", "random"],
-    "plots_average": ["algo", "sml", "cur", "random"],
+    "learning_curves": [],  # ["fragments", "sml", "cur", "random"],
+    "plots_individual": [], #["algo", "sml", "cur", "random"],
+    "plots_average": [], #["algo", "sml", "cur", "random"],
     ###
     "scope": "local_vector",
     "penalty": 1,

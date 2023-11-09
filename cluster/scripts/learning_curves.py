@@ -98,7 +98,6 @@ def learning_curves(config):
             "fps",
             "cur",
         ], "only fragments, sml, fps and cur algorithms are handled"
-        # TODO: add fps when implemented
 
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
@@ -112,8 +111,10 @@ def learning_curves(config):
         atom_energy_coeffs = pickle.load(f)
 
     for i, mol_ncharges in enumerate(Q):
+        print(i, y[i])
         for ncharge in mol_ncharges:
             y[i] -= atom_energy_coeffs[ncharge]
+        print(i, y[i])
 
     for curve in curves:
         for target_name in targets:
