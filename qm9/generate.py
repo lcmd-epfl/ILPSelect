@@ -28,5 +28,5 @@ for i in data_indices:
 df = pd.DataFrame({"file": data_indices, "energy / Ha":data_u0})
 df["file"] = df["file"].apply(lambda x: "qm9_"+str(x))
 
-df.to_csv("energy.csv")
+df.to_csv("energies.csv")
 # %%
