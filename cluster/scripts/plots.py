@@ -132,15 +132,23 @@ def plots_individual(config):
             )
 
         fig.update_layout(
-            yaxis=dict(type="log"),
-            xaxis=dict(tickmode="array", tickvals=N, type="log"),
-            xaxis_title="Training set size",
+            yaxis=dict(type="log",rangemode='tozero', ticks='outside', gridcolor='lightgrey'),
+            xaxis=dict(tickmode="array", tickvals=N, type="log", rangemode='tozero', ticks='outside', 
+                    gridcolor='lightgrey'),
+            xaxis_title="<i>N</i>",
             yaxis_title="MAE [kcal/mol]",
-            title=f"Learning curve on target {target_name}",
+            title=f"Average learning curves on {len(targets)} targets",
+            plot_bgcolor='white',
         )
 
+        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
+
         if PERCENTAGE_ERROR:
-            fig.update_layout(yaxis=dict(type="linear"), yaxis_title="MAPE [%]")
+            fig.update_layout(yaxis_title="MAPE [%]", 
+                            yaxis_tickformat = '.1e',
+                            )
+
 
         SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_{target_name}_{pen}.png"
         fig.write_image(SAVE_PATH)
@@ -272,15 +280,22 @@ def plots_average(config):
         )
 
     fig.update_layout(
-        yaxis=dict(type="log"),
-        xaxis=dict(tickmode="array", tickvals=N, type="log"),
-        xaxis_title="Training set size",
+        yaxis=dict(type="log",rangemode='tozero', ticks='outside', gridcolor='lightgrey'),
+        xaxis=dict(tickmode="array", tickvals=N, type="log", rangemode='tozero', ticks='outside', 
+                   gridcolor='lightgrey'),
+        xaxis_title="<i>N</i>",
         yaxis_title="MAE [kcal/mol]",
         title=f"Average learning curves on {len(targets)} targets",
+        plot_bgcolor='white',
     )
 
+    fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
+    fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
+
     if PERCENTAGE_ERROR:
-        fig.update_layout(yaxis=dict(type="linear"), yaxis_title="MAPE [%]")
+        fig.update_layout(yaxis_title="MAPE [%]", 
+                          yaxis_tickformat = '.1e',
+                          )
 
     SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_average_{pen}.png"
     fig.write_image(SAVE_PATH)
