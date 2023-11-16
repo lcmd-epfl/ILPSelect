@@ -68,7 +68,7 @@ def plots_individual(config):
         normalization = 1
         if PERCENTAGE_ERROR:
             y_target = target_energy(config, target_name)
-            normalization = np.abs(y_target * Ha2kcal) / 100
+            normalization = np.abs(y_target * Ha2kcal) / 100 / 100 # divide by another 100 since the graph yaxis is e-2
 
         print("Normalizing constant:", normalization)
 
@@ -126,29 +126,62 @@ def plots_individual(config):
                         type="data",  # value of error bar given in data coordinates
                         array=STD_RANDOM,
                         visible=True,
+                        width=5,
+                        thickness=3,
                     ),
                     name=f"Random ({CV}-fold)",
                 )
             )
 
+        # Update layout to make the plot more aesthetically pleasing
         fig.update_layout(
-            yaxis=dict(type="log",rangemode='tozero', ticks='outside', gridcolor='lightgrey'),
-            xaxis=dict(tickmode="array", tickvals=N, type="log", rangemode='tozero', ticks='outside', 
-                    gridcolor='lightgrey'),
-            xaxis_title="<i>N</i>",
-            yaxis_title="MAE [kcal/mol]",
-            title=f"Average learning curves on {len(targets)} targets",
+            yaxis=dict(
+                type="log",
+                rangemode='tozero',
+                ticks='outside',
+                tickformat=".1f",
+                gridcolor='lightgrey',
+                title_text="MAE [kcal/mol]" if not PERCENTAGE_ERROR else "MAPE [%] &times; 10<sup>-2</sup>",
+                title_standoff=25,
+                title_font=dict(size=38, color="black", family="Arial, bold"),
+            ),
+            xaxis=dict(
+                tickmode="array",
+                tickvals=N,
+                type="log",
+                rangemode='tozero',
+                ticks='outside',
+                gridcolor='lightgrey',
+                title_text="<i>N</i>",
+                title_font=dict(size=38, color="black", family="Arial, bold"),
+            ),
+            # title=f"Average learning curves on {len(targets)} targets",
+            
+            margin=dict(t=5, r=5),  # Adjust top margin to provide space for y-axis title
             plot_bgcolor='white',
+            font=dict(size=30), # ticks font size
+            height=800,  # Adjust height to make the plot less wide
+            width=600,  # Adjust width to make the plot taller
+            legend=dict(
+                x=0.1,
+                y=0.05,
+                traceorder="normal",
+                font=dict(
+                    family="Arial, bold",
+                    size=30,
+                    color="black"
+                ),
+                bgcolor='rgba(0,0,0,0)',
+            ),
         )
 
-        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
-        fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
+        # Update x and y axes to make lines and labels bolder
+        fig.update_xaxes(showline=True, linewidth=2, linecolor='black', mirror=True)
+        fig.update_yaxes(showline=True, linewidth=2, linecolor='black', mirror=True)
 
-        if PERCENTAGE_ERROR:
-            fig.update_layout(yaxis_title="MAPE [%]", 
-                            yaxis_tickformat = '.1e',
-                            )
-
+        for _, trace in enumerate(fig.data):
+            # trace.line.color = f'rgba({30*i}, {30*i}, {255 - 30*i}, 1)'
+            trace.line.width = 3.5
 
         SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_{target_name}_{pen}.png"
         fig.write_image(SAVE_PATH)
@@ -185,14 +218,14 @@ def plots_average(config):
             normalization = 1
             if PERCENTAGE_ERROR:
                 y_target = target_energy(config, target_name)
-                normalization = np.abs(y_target * Ha2kcal) / 100
+                normalization = np.abs(y_target * Ha2kcal) / 100 / 100 # divide by another 100 since the graph yaxis is e-2
 
             ALGO_CURVE_PATH = f"{parent_directory}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
             ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
             ALGO.append(ALGO_CURVE["mae"] * Ha2kcal / normalization)
         ALGO = np.mean(ALGO, axis=0)
 
-        fig.add_trace(go.Scatter(x=N, y=ALGO, name="Average algorithm"))
+        fig.add_trace(go.Scatter(x=N, y=ALGO, name="Algorithm"))
 
     if "sml" in curves:
         SML = []
@@ -201,14 +234,14 @@ def plots_average(config):
             normalization = 1
             if PERCENTAGE_ERROR:
                 y_target = target_energy(config, target_name)
-                normalization = np.abs(y_target * Ha2kcal) / 100
+                normalization = np.abs(y_target * Ha2kcal) / 100 / 100 # divide by another 100 since the graph yaxis is e-2
 
             SML_CURVE_PATH = f"{parent_directory}learning_curves/sml_{representation}_{database}_{target_name}.npz"
             SML_LEARNING_CURVE = np.load(SML_CURVE_PATH, allow_pickle=True)
             SML.append(SML_LEARNING_CURVE["mae"] * Ha2kcal / normalization)
         SML = np.mean(SML, axis=0)
 
-        fig.add_trace(go.Scatter(x=N, y=SML, name="Average SML"))
+        fig.add_trace(go.Scatter(x=N, y=SML, name="SML"))
 
     if "fps" in curves:
         FPS = []
@@ -217,14 +250,14 @@ def plots_average(config):
             normalization = 1
             if PERCENTAGE_ERROR:
                 y_target = target_energy(config, target_name)
-                normalization = np.abs(y_target * Ha2kcal) / 100
+                normalization = np.abs(y_target * Ha2kcal) / 100 / 100 # divide by another 100 since the graph yaxis is e-2
 
             FPS_CURVE_PATH = f"{parent_directory}learning_curves/fps_{representation}_{database}_{target_name}.npz"
             FPS_LEARNING_CURVE = np.load(FPS_CURVE_PATH, allow_pickle=True)
             FPS.append(FPS_LEARNING_CURVE["mae"] * Ha2kcal / normalization)
         FPS = np.mean(FPS, axis=0)
 
-        fig.add_trace(go.Scatter(x=N, y=FPS, name="Average FPS"))
+        fig.add_trace(go.Scatter(x=N, y=FPS, name="FPS"))
 
     if "cur" in curves:
         CUR = []
@@ -233,14 +266,14 @@ def plots_average(config):
             normalization = 1
             if PERCENTAGE_ERROR:
                 y_target = target_energy(config, target_name)
-                normalization = np.abs(y_target * Ha2kcal) / 100
+                normalization = np.abs(y_target * Ha2kcal) / 100 / 100 # divide by another 100 since the graph yaxis is e-2
 
             CUR_CURVE_PATH = f"{parent_directory}learning_curves/cur_{representation}_{database}_{target_name}.npz"
             CUR_LEARNING_CURVE = np.load(CUR_CURVE_PATH, allow_pickle=True)
             CUR.append(CUR_LEARNING_CURVE["mae"] * Ha2kcal / normalization)
         CUR = np.mean(CUR, axis=0)
 
-        fig.add_trace(go.Scatter(x=N, y=CUR, name="Average CUR"))
+        fig.add_trace(go.Scatter(x=N, y=CUR, name="CUR"))
 
     if "random" in curves:
         MEAN_RANDOM = []
@@ -250,7 +283,7 @@ def plots_average(config):
             normalization = 1
             if PERCENTAGE_ERROR:
                 y_target = target_energy(config, target_name)
-                normalization = np.abs(y_target * Ha2kcal) / 100
+                normalization = np.abs(y_target * Ha2kcal) / 100 / 100 # divide by another 100 since the graph yaxis is e-2
 
             RANDOM_CURVE_PATH = f"{parent_directory}learning_curves/random_{representation}_{database}_{target_name}.npz"
             RANDOM_CURVE = np.load(RANDOM_CURVE_PATH, allow_pickle=True)
@@ -263,7 +296,7 @@ def plots_average(config):
         MEAN_RANDOM = np.mean(MEAN_RANDOM, axis=0)
         # square std to get variance, sum because of independence, and sqrt again to get back std.
         # Var((X + Y)/2) = (Var(X) + Var(Y))/4 for X, Y independent (no covariance)
-        # STD_RANDOM = np.mean(STD_RANDOM, axis=0)
+        # STD_RANDOM = np.mean(STD_RANDOM, axis=0) # wrong
         STD_RANDOM = np.sqrt(np.sum(np.array(STD_RANDOM) ** 2, axis=0)) / len(STD_RANDOM)
 
         fig.add_trace(
@@ -274,28 +307,63 @@ def plots_average(config):
                     type="data",  # value of error bar given in data coordinates
                     array=STD_RANDOM,
                     visible=True,
+                    width=5,
+                    thickness=3,
                 ),
-                name="Average random",
+                name="Random",
             )
         )
 
+    # Update layout to make the plot more aesthetically pleasing
     fig.update_layout(
-        yaxis=dict(type="log",rangemode='tozero', ticks='outside', gridcolor='lightgrey'),
-        xaxis=dict(tickmode="array", tickvals=N, type="log", rangemode='tozero', ticks='outside', 
-                   gridcolor='lightgrey'),
-        xaxis_title="<i>N</i>",
-        yaxis_title="MAE [kcal/mol]",
-        title=f"Average learning curves on {len(targets)} targets",
+        yaxis=dict(
+            type="log",
+            rangemode='tozero',
+            ticks='outside',
+            tickformat=".1f",
+            gridcolor='lightgrey',
+            title_text="MAE [kcal/mol]" if not PERCENTAGE_ERROR else "MAPE [%] &times; 10<sup>-2</sup>",
+            title_standoff=25,
+            title_font=dict(size=38, color="black", family="Arial, bold"),
+        ),
+        xaxis=dict(
+            tickmode="array",
+            tickvals=N,
+            type="log",
+            rangemode='tozero',
+            ticks='outside',
+            gridcolor='lightgrey',
+            title_text="<i>N</i>",
+            title_font=dict(size=38, color="black", family="Arial, bold"),
+        ),
+        # title=f"Average learning curves on {len(targets)} targets",
+        
+        margin=dict(t=5, r=5),  # Adjust top margin to provide space for y-axis title
         plot_bgcolor='white',
+        font=dict(size=30), # ticks font size
+        height=800,  # Adjust height to make the plot less wide
+        width=600,  # Adjust width to make the plot taller
+        legend=dict(
+            x=0.1,
+            y=0.05,
+            traceorder="normal",
+            font=dict(
+                family="Arial, bold",
+                size=30,
+                color="black"
+            ),
+            bgcolor='rgba(0,0,0,0)',
+        ),
     )
 
-    fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
-    fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
+    # Update x and y axes to make lines and labels bolder
+    fig.update_xaxes(showline=True, linewidth=2, linecolor='black', mirror=True)
+    fig.update_yaxes(showline=True, linewidth=2, linecolor='black', mirror=True)
 
-    if PERCENTAGE_ERROR:
-        fig.update_layout(yaxis_title="MAPE [%]", 
-                          yaxis_tickformat = '.1e',
-                          )
+    for _, trace in enumerate(fig.data):
+        # trace.line.color = f'rgba({30*i}, {30*i}, {255 - 30*i}, 1)'
+        trace.line.width = 3.5
+
 
     SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_average_{pen}.png"
     fig.write_image(SAVE_PATH)
