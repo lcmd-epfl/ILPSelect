@@ -9,33 +9,27 @@ Ha2kcal = 627.5
 
 def target_energy(config, target_name):
     repository_path = config["repository_folder"]
-    representation = config["representation"]
     database = config["database"]
 
-    with open(f"{repository_path}cluster/data/atom_energy_coeffs.pickle", "rb") as f:
-        atom_energy_coeffs = pickle.load(f)
-
-    TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
-
-    target_info = np.load(TARGET_PATH, allow_pickle=True)
-    Q_target = target_info["ncharges"]
 
     if config["in_database"]:
         # label of target
         Y_PATH = f"{repository_path}{database}/energies.csv"
         y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
 
-        # removing target from database
-        mask = database_labels != target_name
-        X = X[mask]
-        Q = Q[mask]
-        database_labels = database_labels[mask]
-
     else:
         Y_PATH = f"{repository_path}cluster/targets/energies.csv"
         y_target = pd.read_csv(Y_PATH).query("file == @target_name+'.xyz'")["energy / Ha"].iloc[0]
 
+
     # REMOVED AS PER RUBEN'S COMMENTS
+    # representation = config["representation"]
+    # TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+    # target_info = np.load(TARGET_PATH, allow_pickle=True)
+    # Q_target = target_info["ncharges"]
+    # with open(f"{repository_path}cluster/data/atom_energy_coeffs.pickle", "rb") as f:
+    #     atom_energy_coeffs = pickle.load(f)
+    # 
     # # y energies offset
     # for ncharge in Q_target:
     #     y_target -= atom_energy_coeffs[ncharge]
