@@ -115,10 +115,8 @@ def learning_curves(config):
     else:
         y = frame["energy / Ha"].values
         for i, mol_ncharges in enumerate(Q):
-            print(i, y[i])
             for ncharge in mol_ncharges:
                 y[i] -= atom_energy_coeffs[ncharge]
-            print(i, y[i])
 
     for curve in curves:
         for target_name in targets:
@@ -215,15 +213,19 @@ def learning_curves_random(config, add_onto_old=True):
     Q = database_info["ncharges"]
     database_labels = database_info["labels"]
 
-    y = pd.read_csv(f"{repository_path}{database}/energies.csv")["energy / Ha"].values
+    frame = pd.read_csv(f"{repository_path}{database}/energies.csv")
 
     # y energies offset
     with open(f"{repository_path}cluster/data/atom_energy_coeffs.pickle", "rb") as f:
         atom_energy_coeffs = pickle.load(f)
 
-    for i, mol_ncharges in enumerate(Q):
-        for ncharge in mol_ncharges:
-            y[i] -= atom_energy_coeffs[ncharge]
+    if "atomization energy / Ha" in frame.columns:
+        y = frame["atomization energy / Ha"].values
+    else:
+        y = frame["energy / Ha"].values
+        for i, mol_ncharges in enumerate(Q):
+            for ncharge in mol_ncharges:
+                y[i] -= atom_energy_coeffs[ncharge]
 
     for target_name in targets:
         TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"

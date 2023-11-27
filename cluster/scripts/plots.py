@@ -305,6 +305,7 @@ def plots_average(config):
                     thickness=3,
                 ),
                 name="Random",
+                line=dict(color="maroon")
             )
         )
 
@@ -338,8 +339,8 @@ def plots_average(config):
         height=800,  # Adjust height to make the plot less wide
         width=600,  # Adjust width to make the plot taller
         legend=dict(
-            x=0.1,
-            y=0.05,
+            x=1.1,
+            y=1.1,
             traceorder="normal",
             font=dict(
                 family="Arial, bold",
@@ -348,14 +349,28 @@ def plots_average(config):
             ),
             bgcolor='rgba(0,0,0,0)',
         ),
+        # showlegend=False
     )
 
     # Update x and y axes to make lines and labels bolder
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black', mirror=True)
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black', mirror=True)
 
-    for _, trace in enumerate(fig.data):
-        # trace.line.color = f'rgba({30*i}, {30*i}, {255 - 30*i}, 1)'
+    colours = [
+        '#1f77b4',  # muted blue
+        '#ff7f0e',  # safety orange
+        '#2ca02c',  # cooked asparagus green
+        '#d62728',  # brick red
+        '#9467bd',  # muted purple
+        '#8c564b',  # chestnut brown
+        '#e377c2',  # raspberry yogurt pink
+        '#7f7f7f',  # middle gray
+        '#bcbd22',  # curry yellow-green
+        '#17becf'   # blue-teal
+    ]
+
+    for i, trace in enumerate(fig.data):
+        trace.line.color = colours[i]
         trace.line.width = 3.5
 
 
