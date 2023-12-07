@@ -14,14 +14,14 @@ config = {
     ###
     "generate_database": True,
     "generate_targets": True,
-    "cur_subset": True,
+    "cur_subset": False,
     "fps_subset": False, # FPS seg fault on qm9 for now.. 
-    "sml_subset": True,
-    "algo_model": True,
-    "algo_subset": True,
-    "learning_curves": ["fragments", "sml", "cur", "random"],
-    "plots_individual": ["algo", "sml", "cur", "random"],
-    "plots_average": ["algo", "sml", "cur", "random"],
+    "sml_subset": False,
+    "algo_model": False,
+    "algo_subset": False,
+    "learning_curves": [], #["fragments", "sml", "cur", "random"],
+    "plots_individual": [], #["algo", "sml", "cur", "random"],
+    "plots_average": [], #["algo", "sml", "cur", "random"],
     ###
     "scope": "local_vector",
     "penalty": 0,
@@ -43,7 +43,7 @@ import pandas as pd
 
 DATA_PATH = f"{config['current_folder']}data/qm9_data.npz"
 qm9 = np.load(DATA_PATH, allow_pickle=True)
-qm9_df = pd.DataFrame({"ncharges": qm9["ncharges"]}).reset_index()
+qm9_df = pd.DataFrame({"ncharges": qm9["nuclear_charges"]}).reset_index()
 
 num_heavy_atoms = qm9_df["ncharges"].map(lambda charges: sum(charges != 1))
 
