@@ -46,7 +46,10 @@ def add_onto_and_save(df, prop, value):
 
 # %%
 # generate representations
-from scripts.generate import generate_database, generate_targets
+if database=="qm7":
+    from scripts.generate import generate_database, generate_targets
+elif database=="qm9":
+    from sciprts.generate_qm9 import generate_database, generate_targets
 
 if config["generate_database"]:
     t = time.time()
