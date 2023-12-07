@@ -106,7 +106,7 @@ def generate_database(config):
 
     assert len(database_coordinates) == len(database_nuclear_charges)
 
-    mols = np.array([Mol(database_nuclear_charges[i], database_coordinates[i])] for i in range(len(database_coordinates)))
+    mols = [Mol(database_nuclear_charges[i], database_coordinates[i]) for i in range(len(database_coordinates))]
 
     # only used to not miss some new ncharges in targets outside database
     target_mols = []
@@ -129,7 +129,7 @@ def generate_database(config):
 
     SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{database}.npz"
 
-    np.savez(SAVE_PATH, reps=X, labels=file_names, ncharges=Q)
+    np.savez(SAVE_PATH, reps=X, labels=database_info["index"], ncharges=Q)
 
     print(f"Generated representation {representation} of database {database} in {SAVE_PATH}.")
 
