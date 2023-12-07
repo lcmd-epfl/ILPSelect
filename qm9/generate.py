@@ -10,22 +10,11 @@ data_coordinates=data["coordinates"]
 data_elements = data["elements"]
 data_charges = data["charges"]
 data_u0 = data["U0"]
+data_h_atomization = data["H_atomization"]
 
 # %%
 
-for i in range(len(data_indices)):
-    charges = data_charges[i]
-    coordinates = data_coordinates[i]
-    elements = data_elements[i]
-    with open(f"qm9_{i}.xyz", 'w') as xyz_file:
-        xyz_file.write("%d\n%s\n" % (len(charges), ""))
-        for j in range(len(charges)):
-            xyz_file.write("{:4} {:11.6f} {:11.6f} {:11.6f}\n".format(
-                elements[j], coordinates[j][0], coordinates[j][1], coordinates[j][2]))
-            
-#%%
-
-df = pd.DataFrame({"file": data_indices, "energy / Ha":data_u0})
+df = pd.DataFrame({"file": data_indices, "energy / Ha":data_u0, "atomization energy / Ha": data_h_atomization})
 #df["file"] = df["file"].apply(lambda x: "qm9_"+str(x))
 
 df.to_csv("energies.csv")
