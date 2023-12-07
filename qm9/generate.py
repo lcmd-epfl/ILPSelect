@@ -4,8 +4,8 @@
 import numpy as np
 import pandas as pd
 
-data=np.load("qm9_data.npz", allow_pickle=True)
-data_indices=range(len(data["index"])) # data["index"] has holes
+data=np.load("../cluster/data/qm9_data.npz", allow_pickle=True)
+data_indices=data["index"] # data["index"] has holes
 data_coordinates=data["coordinates"]
 data_elements = data["elements"]
 data_charges = data["charges"]
@@ -26,7 +26,7 @@ for i in data_indices:
 #%%
 
 df = pd.DataFrame({"file": data_indices, "energy / Ha":data_u0})
-df["file"] = df["file"].apply(lambda x: "qm9_"+str(x))
+#df["file"] = df["file"].apply(lambda x: "qm9_"+str(x))
 
 df.to_csv("energies.csv")
 # %%
