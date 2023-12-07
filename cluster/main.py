@@ -43,13 +43,12 @@ def add_onto_and_save(df, prop, value):
     df.to_csv(DUMP_PATH)
     return df
 
-
 # %%
 # generate representations
 if database=="qm7":
     from scripts.generate import generate_database, generate_targets
 elif database=="qm9":
-    from sciprts.generate_qm9 import generate_database, generate_targets
+    from scripts.generate_qm9 import generate_database, generate_targets
 
 if config["generate_database"]:
     t = time.time()

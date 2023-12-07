@@ -43,7 +43,7 @@ import pandas as pd
 
 DATA_PATH = f"{config['current_folder']}data/qm9_data.npz"
 qm9 = np.load(DATA_PATH, allow_pickle=True)
-qm9_df = pd.DataFrame({"ncharges": qm9["nuclear_charges"]}).reset_index()
+qm9_df = pd.DataFrame({"ncharges": qm9["charges"]}).reset_index()
 
 num_heavy_atoms = qm9_df["ncharges"].map(lambda charges: sum(charges != 1))
 
