@@ -58,7 +58,7 @@ def generate_targets(config):
     DATA_PATH = f"{repository_folder}cluster/data/qm9_data.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
     database_coordinates = database_info["coordinates"]
-    database_nuclear_charges = database_info["nuclear_charges"]
+    database_nuclear_charges = database_info["charges"]
 
     # only used to not miss some new ncharges in targets, and natoms
     all_elements = np.unique(np.concatenate([(x) for x in database_nuclear_charges]))
@@ -102,11 +102,11 @@ def generate_database(config):
     DATA_PATH = f"{repository_folder}cluster/data/qm9_data.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
     database_coordinates = database_info["coordinates"]
-    database_nuclear_charges = database_info["nuclear_charges"]
+    database_nuclear_charges = database_info["charges"]
 
     assert len(database_coordinates) == len(database_nuclear_charges)
 
-    mols = np.array([Mol(database_nuclear_charges[i], database_coordinates[i]] for i in range(len(database_coordinates)))
+    mols = np.array([Mol(database_nuclear_charges[i], database_coordinates[i])] for i in range(len(database_coordinates)))
 
     # only used to not miss some new ncharges in targets outside database
     target_mols = []
