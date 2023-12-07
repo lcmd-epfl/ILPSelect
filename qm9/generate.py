@@ -13,7 +13,7 @@ data_u0 = data["U0"]
 
 # %%
 
-for i in data_indices:
+for i in range(len(data_indices)):
     charges = data_charges[i]
     coordinates = data_coordinates[i]
     elements = data_elements[i]
