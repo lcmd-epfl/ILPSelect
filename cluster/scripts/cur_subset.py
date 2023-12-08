@@ -43,7 +43,9 @@ def cur_subset(config):
         target_index = np.where(database_info["labels"] == target_name)[0][0]
         ranking = ranking[ranking != target_index][:N]
 
-        SAVE_PATH = f"{parent_folder}rankings/cur_{representation}_{database}_{target_name}.npy"
+        SAVE_PATH = (
+            f"{parent_folder}rankings/cur_{representation}_{database}_{target_name}.npy"
+        )
         np.save(SAVE_PATH, ranking)
         print(
             f"Saved CUR ranking of {N} fragments of database {database} without {target_name} to {SAVE_PATH}."

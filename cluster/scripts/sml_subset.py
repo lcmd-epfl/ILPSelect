@@ -5,7 +5,9 @@ import numpy as np
 def get_ranking(X, X_target):
     database_global_rep = np.array([np.sum(rep, axis=0) for rep in X])
     target_global_rep = np.sum(X_target, axis=0)
-    distances = np.linalg.norm((database_global_rep - target_global_rep).astype(float), axis=1)
+    distances = np.linalg.norm(
+        (database_global_rep - target_global_rep).astype(float), axis=1
+    )
     # Sort the indices by the distances
     sorted_indices = np.argsort(distances)
 
@@ -28,13 +30,17 @@ def sml_subset(config):
     in_database = config["in_database"]
 
     DATA_PATH = f"{parent_folder}data/"
-    database_info = np.load(f"{DATA_PATH}{representation}_{database}.npz", allow_pickle=True)
+    database_info = np.load(
+        f"{DATA_PATH}{representation}_{database}.npz", allow_pickle=True
+    )
 
     database_reps = database_info["reps"]
     # database_ncharges = database_info["ncharges"]
 
     for target_name in targets:
-        target_info = np.load(f"{DATA_PATH}{representation}_{target_name}.npz", allow_pickle=True)
+        target_info = np.load(
+            f"{DATA_PATH}{representation}_{target_name}.npz", allow_pickle=True
+        )
         target_rep = target_info["rep"]
 
         # closest point sampling
@@ -46,7 +52,9 @@ def sml_subset(config):
         else:
             ranking = get_ranking(database_reps, target_rep)[:N]
 
-        SAVE_PATH = f"{parent_folder}rankings/sml_{representation}_{database}_{target_name}.npy"
+        SAVE_PATH = (
+            f"{parent_folder}rankings/sml_{representation}_{database}_{target_name}.npy"
+        )
 
         np.save(SAVE_PATH, ranking)
 

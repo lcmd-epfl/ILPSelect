@@ -13,12 +13,14 @@ def add_constraints(M, subsetsize, x):
     M.addConstr(x.sum() == subsetsize)
     return 0
 
+
 def remove_variable(M, x, i):
-    constr = M.addConstr(x[i]==0, name="TEMP")
+    constr = M.addConstr(x[i] == 0, name="TEMP")
     return constr
 
+
 def reset_temp_constr(M, constr):
-    if not constr is None: 
+    if not constr is None:
         M.remove(constr)
     return 0
 
@@ -26,7 +28,7 @@ def reset_temp_constr(M, constr):
 def set_objective(M, points, x):
     n = len(points)
     obj = M.addVar(vtype="C")
-    maxnorm = np.max(cdist(points, points, metric='euclidean'))
+    maxnorm = np.max(cdist(points, points, metric="euclidean"))
     for i in range(n):
         for j in range(i + 1, n):
             norm = np.linalg.norm(points[i] - points[j])
@@ -85,18 +87,20 @@ def fps_subset(config):
     print("Objective set.")
 
     M.update()
-    
+
     # if not in database, need only N points
     if not in_database:
         M.optimize()
         assert M.status != 3, "Model is infeasible."
 
         ranking = read_solution(M, n, x)
-        assert len(ranking)==N
+        assert len(ranking) == N
 
         SAVE_PATH = f"{parent_folder}rankings/fps_{representation}_{database}.npy"
         np.save(SAVE_PATH, ranking)
-        print(f"Saved FPS ranking of {N} fragments of database {database} to {SAVE_PATH}.")
+        print(
+            f"Saved FPS ranking of {N} fragments of database {database} to {SAVE_PATH}."
+        )
         return 0
 
     # if in database, points need to be removed.
@@ -117,11 +121,13 @@ def fps_subset(config):
             assert M.status != 3, "Model is infeasible."
 
             ranking = read_solution(M, n, x)
-            assert len(ranking)==N
+            assert len(ranking) == N
         else:
             constr = None
 
-        SAVE_PATH = f"{parent_folder}rankings/fps_{representation}_{database}_{target_name}.npy"
+        SAVE_PATH = (
+            f"{parent_folder}rankings/fps_{representation}_{database}_{target_name}.npy"
+        )
         np.save(SAVE_PATH, ranking)
         print(
             f"Saved FPS ranking of {N} fragments of database {database} without {target_name} to {SAVE_PATH}."

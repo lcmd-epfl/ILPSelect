@@ -22,7 +22,9 @@ def algo_model(config):
 
     for target_name in targets:
         DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
-        TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+        TARGET_PATH = (
+            f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+        )
         M = fragments.model(
             DATA_PATH, TARGET_PATH, scope=config["scope"], verbose=config["verbose"]
         )
@@ -30,9 +32,7 @@ def algo_model(config):
         # sets up model and writes to a file. Only needed once.
         M.setup(penalty_constant=pen, duplicates=1)
 
-        SAVE_PATH = (
-            f"{repository_path}cluster/models/{representation}_{database}_{target_name}_{pen}.mps"
-        )
+        SAVE_PATH = f"{repository_path}cluster/models/{representation}_{database}_{target_name}_{pen}.mps"
 
         M.savemodel(SAVE_PATH)
 

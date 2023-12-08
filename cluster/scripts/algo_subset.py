@@ -21,14 +21,14 @@ def algo_subset(config):
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
 
     for target_name in targets:
-        TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+        TARGET_PATH = (
+            f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+        )
         M = fragments.model(
             DATA_PATH, TARGET_PATH, scope=config["scope"], verbose=config["verbose"]
         )
 
-        MODEL_PATH = (
-            f"{repository_path}cluster/models/{representation}_{database}_{target_name}_{pen}.mps"
-        )
+        MODEL_PATH = f"{repository_path}cluster/models/{representation}_{database}_{target_name}_{pen}.mps"
         M.readmodel(MODEL_PATH)
 
         # reads already found combinations to remove then (if we want to continue previous optimization for example)

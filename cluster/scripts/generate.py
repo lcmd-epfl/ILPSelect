@@ -61,14 +61,18 @@ def generate_targets(config):
         target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
         target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
         target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
-        target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
+        target_mols = np.array(
+            [qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs]
+        )
         all_elements = np.unique(
             np.concatenate(
-                [(x) for x in database_ncharges] + [(mol.nuclear_charges) for mol in target_mols]
+                [(x) for x in database_ncharges]
+                + [(mol.nuclear_charges) for mol in target_mols]
             )
         )
         max_natoms = max(
-            [len(x) for x in database_ncharges] + [len(mol.nuclear_charges) for mol in target_mols]
+            [len(x) for x in database_ncharges]
+            + [len(mol.nuclear_charges) for mol in target_mols]
         )
     else:
         all_elements = np.unique(np.concatenate([(x) for x in database_ncharges]))
@@ -90,10 +94,14 @@ def generate_targets(config):
         )
 
         # to use in the fragments algo
-        SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{target_name}.npz"
+        SAVE_PATH = (
+            f"{repository_folder}cluster/data/{representation}_{target_name}.npz"
+        )
         np.savez(SAVE_PATH, ncharges=Q_target[0], rep=X_target[0])
 
-        print(f"Generated representation {representation} of target {target_name} in {SAVE_PATH}.")
+        print(
+            f"Generated representation {representation} of target {target_name} in {SAVE_PATH}."
+        )
 
     return 0
 
@@ -126,7 +134,9 @@ def generate_database(config):
         target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
         target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
         target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
-        target_mols = np.array([qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs])
+        target_mols = np.array(
+            [qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs]
+        )
     else:
         target_mols = []
 
@@ -143,13 +153,18 @@ def generate_database(config):
     )
 
     X, Q = get_representations(
-        mols, max_natoms=max_natoms, representation=representation, elements=all_elements
+        mols,
+        max_natoms=max_natoms,
+        representation=representation,
+        elements=all_elements,
     )
 
     SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{database}.npz"
 
     np.savez(SAVE_PATH, reps=X, labels=file_names, ncharges=Q)
 
-    print(f"Generated representation {representation} of database {database} in {SAVE_PATH}.")
+    print(
+        f"Generated representation {representation} of database {database} in {SAVE_PATH}."
+    )
 
     return 0
