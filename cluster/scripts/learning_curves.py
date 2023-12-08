@@ -49,7 +49,10 @@ def opt_hypers(X_train, atoms_train, y_train):
             fold_maes = []
             for train_index, val_index in kf.split(X_train):
                 X_train_fold, X_val_fold = X_train[train_index], X_train[val_index]
-                atoms_train_fold, atoms_val_fold = atoms_train[train_index], atoms_train[val_index]
+                atoms_train_fold, atoms_val_fold = (
+                    atoms_train[train_index],
+                    atoms_train[val_index],
+                )
                 y_train_fold, y_val_fold = y_train[train_index], y_train[val_index]
 
                 mae, _ = train_predict_model(
@@ -71,7 +74,14 @@ def opt_hypers(X_train, atoms_train, y_train):
     min_j, min_k = np.unravel_index(np.argmin(maes, axis=None), maes.shape)
     min_sigma = sigmas[min_j]
     min_l2reg = l2regs[min_k]
-    print("min avg mae", maes[min_j, min_k], "for sigma=", min_sigma, "and l2reg=", min_l2reg)
+    print(
+        "min avg mae",
+        maes[min_j, min_k],
+        "for sigma=",
+        min_sigma,
+        "and l2reg=",
+        min_l2reg,
+    )
 
     return min_sigma, min_l2reg
 
@@ -120,7 +130,9 @@ def learning_curves(config):
 
     for curve in curves:
         for target_name in targets:
-            TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+            TARGET_PATH = (
+                f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+            )
 
             target_info = np.load(TARGET_PATH, allow_pickle=True)
             X_target = target_info["rep"]
@@ -128,11 +140,17 @@ def learning_curves(config):
 
             if config["in_database"]:
                 Y_PATH = f"{repository_path}{database}/energies.csv"
-                y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
+                y_target = (
+                    pd.read_csv(Y_PATH)
+                    .query("file == @target_name")["energy / Ha"]
+                    .iloc[0]
+                )
             else:
                 Y_PATH = f"{repository_path}cluster/targets/energies.csv"
                 y_target = (
-                    pd.read_csv(Y_PATH).query("file == @target_name+'.xyz'")["energy / Ha"].iloc[0]
+                    pd.read_csv(Y_PATH)
+                    .query("file == @target_name+'.xyz'")["energy / Ha"]
+                    .iloc[0]
                 )
 
             # y energies offset
@@ -213,31 +231,46 @@ def learning_curves_random(config, add_onto_old=True):
     Q = database_info["ncharges"]
     database_labels = database_info["labels"]
 
-    frame = pd.read_csv(f"{repository_path}{database}/energies.csv")
+    database_energies = pd.read_csv(f"{repository_path}{database}/energies.csv")
 
     # y energies offset
     with open(f"{repository_path}cluster/data/atom_energy_coeffs.pickle", "rb") as f:
         atom_energy_coeffs = pickle.load(f)
 
-    if "atomization energy / Ha" in frame.columns:
-        y = frame["atomization energy / Ha"].values
+    if "atomization energy / Ha" in database_energies.columns:
+        y = database_energies["atomization energy / Ha"].values
     else:
-        y = frame["energy / Ha"].values
+        y = database_energies["energy / Ha"].values
         for i, mol_ncharges in enumerate(Q):
             for ncharge in mol_ncharges:
                 y[i] -= atom_energy_coeffs[ncharge]
 
     for target_name in targets:
-        TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+        TARGET_PATH = (
+            f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+        )
 
         target_info = np.load(TARGET_PATH, allow_pickle=True)
+
         X_target = target_info["rep"]
         Q_target = target_info["ncharges"]
 
+        # y_target definition
         if config["in_database"]:
             # label of target
-            Y_PATH = f"{repository_path}{database}/energies.csv"
-            y_target = pd.read_csv(Y_PATH).query("file == @target_name")["energy / Ha"].iloc[0]
+            if "atomization energy / Ha" in database_energies.columns:
+                y = database_energies.query("file == @target_name")[
+                    "atomization energy / Ha"
+                ].iloc[0]
+            else:
+                y_target = (
+                    pd.read_csv(Y_PATH)
+                    .query("file == @target_name")["energy / Ha"]
+                    .iloc[0]
+                )
+                # y energies offset
+                for ncharge in Q_target:
+                    y_target -= atom_energy_coeffs[ncharge]
 
             # removing target from database
             mask = database_labels != target_name
@@ -248,14 +281,13 @@ def learning_curves_random(config, add_onto_old=True):
         else:
             Y_PATH = f"{repository_path}cluster/targets/energies.csv"
             y_target = (
-                pd.read_csv(Y_PATH).query("file == @target_name+'.xyz'")["energy / Ha"].iloc[0]
+                pd.read_csv(Y_PATH)
+                .query("file == @target_name+'.xyz'")["energy / Ha"]
+                .iloc[0]
             )
-
-        # y energies offset
-        for ncharge in Q_target:
-            y_target -= atom_energy_coeffs[ncharge]
-
-        SAVE_PATH = f"{repository_path}cluster/learning_curves/random_{representation}_{database}_{target_name}.npz"
+            # y energies offset
+            for ncharge in Q_target:
+                y_target -= atom_energy_coeffs[ncharge]
 
         all_maes_random = []
         opt_rankings = []
@@ -295,7 +327,9 @@ def learning_curves_random(config, add_onto_old=True):
             all_maes_random.append(maes_random)
             opt_rankings.append(database_labels[train_index])
 
-        # all_maes_random = np.array(all_maes_random)
+        print("All MAEs random", all_maes_random)
+
+        SAVE_PATH = f"{repository_path}cluster/learning_curves/random_{representation}_{database}_{target_name}.npz"
 
         np.savez(
             SAVE_PATH,
