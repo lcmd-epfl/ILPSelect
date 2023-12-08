@@ -259,7 +259,7 @@ def learning_curves_random(config, add_onto_old=True):
         if config["in_database"]:
             # label of target
             if "atomization energy / Ha" in database_energies.columns:
-                y = database_energies.query("file == @target_name")[
+                y_target = database_energies.query("file == @target_name")[
                     "atomization energy / Ha"
                 ].iloc[0]
             else:
