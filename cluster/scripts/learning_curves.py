@@ -263,11 +263,9 @@ def learning_curves_random(config, add_onto_old=True):
                     "atomization energy / Ha"
                 ].iloc[0]
             else:
-                y_target = (
-                    pd.read_csv(Y_PATH)
-                    .query("file == @target_name")["energy / Ha"]
-                    .iloc[0]
-                )
+                y_target = database_energies.query("file == @target_name")[
+                    "energy / Ha"
+                ].iloc[0]
                 # y energies offset
                 for ncharge in Q_target:
                     y_target -= atom_energy_coeffs[ncharge]
