@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import qml
 from qml.math import cho_solve
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 
 
 def krr(kernel, properties, l2reg=1e-9):
@@ -275,6 +275,7 @@ def learning_curves_random(config, add_onto_old=True):
             X = X[mask]
             Q = Q[mask]
             database_labels = database_labels[mask]
+            y=y[mask]
 
         else:
             Y_PATH = f"{repository_path}cluster/targets/energies.csv"
@@ -297,7 +298,7 @@ def learning_curves_random(config, add_onto_old=True):
 
         # five fold cross validation
         CV = 5
-        for i in CV:
+        for i in range(CV):
             # we don't use the test indices since we test on the target (label y_target)
             X_train, _, Q_train, _, database_labels_train, _, y_train, _ = train_test_split(X, Q, database_labels, y, test_size=.2, random_state=config["random_state"])
             maes_random = []
