@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import qml
 from qml.math import cho_solve
-from sklearn.model_selection import KFold
+from sklearn.model_selection import train_test_split
 
 
 def krr(kernel, properties, l2reg=1e-9):
@@ -288,30 +288,29 @@ def learning_curves_random(config, add_onto_old=True):
                 y_target -= atom_energy_coeffs[ncharge]
 
         all_maes_random = []
-        opt_rankings = []
+        ranking = []
 
         if add_onto_old and os.path.isfile(SAVE_PATH):
             old_random = np.load(SAVE_PATH, allow_pickle=True)
             all_maes_random = old_random["all_maes_random"].tolist()
-            opt_rankings = old_random["ranking_xyz"].tolist()
+            ranking = old_random["ranking_xyz"].tolist()
 
         # five fold cross validation
         CV = 5
-        kf = KFold(n_splits=CV, shuffle=True, random_state=130)
-
-        for i, (train_index, test_index) in enumerate(kf.split(X)):
+        for i in CV:
+            # we don't use the test indices since we test on the target (label y_target)
+            X_train, _, Q_train, _, database_labels_train, _, y_train, _ = train_test_split(X, Q, database_labels, y, test_size=.2, random_state=config["random_state"])
             maes_random = []
-
             for n in config["learning_curve_ticks"]:
                 min_sigma, min_l2reg = opt_hypers(
-                    X[train_index][:n], Q[train_index][:n], y[train_index][:n]
+                    X_train[:n], Q_train[:n], y_train[:n]
                 )
                 print(min_sigma, min_l2reg)
 
                 mae, y_pred = train_predict_model(
-                    X[train_index][:n],
-                    Q[train_index][:n],
-                    y[train_index][:n],
+                    X_train[:n],
+                    Q_train[:n],
+                    y_train[:n],
                     np.array([X_target]),
                     np.array([Q_target]),
                     y_target,
@@ -323,7 +322,7 @@ def learning_curves_random(config, add_onto_old=True):
                 print("Random", n, mae)
 
             all_maes_random.append(maes_random)
-            opt_rankings.append(database_labels[train_index])
+            ranking.append(database_labels_train)
 
         print("All MAEs random", all_maes_random)
 
@@ -333,7 +332,7 @@ def learning_curves_random(config, add_onto_old=True):
             SAVE_PATH,
             train_sizes=config["learning_curve_ticks"],
             all_maes_random=all_maes_random,
-            ranking_xyz=opt_rankings,
+            ranking_xyz=ranking,
         )
 
         print(f"Saved to file {SAVE_PATH}.")
