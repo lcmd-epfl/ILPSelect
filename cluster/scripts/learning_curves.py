@@ -227,6 +227,8 @@ def learning_curves_random(config, add_onto_old=True):
 
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
+
+
     X = database_info["reps"]
     Q = database_info["ncharges"]
     database_labels = database_info["labels"]
@@ -244,6 +246,15 @@ def learning_curves_random(config, add_onto_old=True):
         for i, mol_ncharges in enumerate(Q):
             for ncharge in mol_ncharges:
                 y[i] -= atom_energy_coeffs[ncharge]
+    
+    # shuffle
+    N = len(X)
+    inds = np.arange(N)
+    np.random.shuffle(inds)
+    X=X[inds]
+    Q=Q[inds]
+    database_labels=database_labels[inds]
+    y=y[inds]
 
     for target_name in targets:
         TARGET_PATH = (
@@ -254,6 +265,7 @@ def learning_curves_random(config, add_onto_old=True):
 
         X_target = target_info["rep"]
         Q_target = target_info["ncharges"]
+
 
         # y_target definition
         if config["in_database"]:
@@ -288,6 +300,7 @@ def learning_curves_random(config, add_onto_old=True):
             for ncharge in Q_target:
                 y_target -= atom_energy_coeffs[ncharge]
 
+        
         all_maes_random = []
         ranking = []
 
@@ -297,16 +310,19 @@ def learning_curves_random(config, add_onto_old=True):
             ranking = old_random["ranking_xyz"].tolist()
 
         # five fold cross validation
-        CV = 5
+        CV = config["CV"]
         for i in range(CV):
             # we don't use the test indices since we test on the target (label y_target)
             X_train, _, Q_train, _, database_labels_train, _, y_train, _ = train_test_split(X, Q, database_labels, y, test_size=.2, random_state=config["random_state"])
             maes_random = []
             for n in config["learning_curve_ticks"]:
+                """
                 min_sigma, min_l2reg = opt_hypers(
                     X_train[:n], Q_train[:n], y_train[:n]
-                )
+                ) 
                 print(min_sigma, min_l2reg)
+                """
+                min_sigma, min_l2reg = 1, 1e-7
 
                 mae, y_pred = train_predict_model(
                     X_train[:n],

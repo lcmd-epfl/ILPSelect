@@ -61,15 +61,18 @@ def generate_targets(config):
     database_info = np.load(DATA_PATH, allow_pickle=True)
     database_coordinates = database_info["coordinates"]
     database_nuclear_charges = database_info["charges"]
+    database_labels = database_info["index"]
 
     # only used to not miss some new ncharges in targets, and natoms
     all_elements = np.unique(np.concatenate([(x) for x in database_nuclear_charges]))
     max_natoms = max([len(x) for x in database_nuclear_charges])
 
     for target_name in targets:
-        # target_name is an index here
+
+        target_index = np.where(database_labels == target_name)[0][0]
+
         target_mol = Mol(
-            database_nuclear_charges[target_name], database_coordinates[target_name]
+            database_nuclear_charges[target_index], database_coordinates[target_index]
         )
 
         X_target, Q_target = get_representations(
