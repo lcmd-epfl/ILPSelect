@@ -64,16 +64,38 @@ def generate_targets(config):
     database_labels = database_info["index"]
 
     # only used to not miss some new ncharges in targets, and natoms
-    all_elements = np.unique(np.concatenate([(x) for x in database_nuclear_charges]))
-    max_natoms = max([len(x) for x in database_nuclear_charges])
+    if not in_database:
+        TARGETS_PATH = f"{repository_folder}cluster/targets/"
+        target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
+        target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
+        target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
+        target_mols = np.array(
+            [qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs]
+        )
+        all_elements = np.unique(
+            np.concatenate(
+                [(x) for x in database_nuclear_charges]
+                + [(mol.nuclear_charges) for mol in target_mols]
+            )
+        )
+        max_natoms = max(
+            [len(x) for x in database_nuclear_charges]
+            + [len(mol.nuclear_charges) for mol in target_mols]
+        )
+    else:
+        all_elements = np.unique(np.concatenate([(x) for x in database_nuclear_charges]))
+        max_natoms = max([len(x) for x in database_nuclear_charges])
 
     for target_name in targets:
-
-        target_index = np.where(database_labels == target_name)[0][0]
-
-        target_mol = Mol(
-            database_nuclear_charges[target_index], database_coordinates[target_index]
-        )
+        if not in_database:
+            TARGET_PATH = f"{repository_folder}cluster/targets/{target_name}.xyz"
+            target_mol = qml.Compound(TARGET_PATH)
+        else:
+            TARGET_PATH = f"{repository_folder}{database}/{target_name}.xyz"
+            target_index = np.where(database_labels == target_name)[0][0]
+            target_mol = Mol(
+                database_nuclear_charges[target_index], database_coordinates[target_index]
+            )
 
         X_target, Q_target = get_representations(
             [target_mol],
@@ -123,7 +145,16 @@ def generate_database(config):
     ]
 
     # only used to not miss some new ncharges in targets outside database
-    target_mols = []
+    if not in_database:
+        TARGETS_PATH = f"{repository_folder}cluster/targets/"
+        target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
+        target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
+        target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
+        target_mols = np.array(
+            [qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs]
+        )
+    else:
+        target_mols = []
 
     all_elements = np.unique(
         np.concatenate(

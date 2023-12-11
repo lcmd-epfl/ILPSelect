@@ -316,13 +316,13 @@ def learning_curves_random(config, add_onto_old=True):
             X_train, _, Q_train, _, database_labels_train, _, y_train, _ = train_test_split(X, Q, database_labels, y, test_size=.2, random_state=config["random_state"])
             maes_random = []
             for n in config["learning_curve_ticks"]:
-                """
+                
                 min_sigma, min_l2reg = opt_hypers(
                     X_train[:n], Q_train[:n], y_train[:n]
                 ) 
                 print(min_sigma, min_l2reg)
-                """
-                min_sigma, min_l2reg = 1, 1e-7
+                
+                # min_sigma, min_l2reg = 1, 1e-7
 
                 mae, y_pred = train_predict_model(
                     X_train[:n],
