@@ -12,16 +12,16 @@ config = {
     "in_database": True,
     "plot_average_target_names": [],
     ###
-    "generate_database": False,
+    "generate_database": True,
     "generate_targets": True,
-    "cur_subset": False,
-    "fps_subset": False, # FPS seg fault on qm9 for now.. 
-    "sml_subset": False,
-    "algo_model": False,
-    "algo_subset": False,
-    "learning_curves": ["random"], #["fragments", "sml", "cur", "random"],
-    "plots_individual": ["random"], #["algo", "sml", "cur", "random"],
-    "plots_average": [], #["algo", "sml", "cur", "random"],
+    "cur_subset": True,
+    "fps_subset": False,  # FPS seg fault on qm9 for now..
+    "sml_subset": True,
+    "algo_model": True,
+    "algo_subset": True,
+    "learning_curves": ["fragments", "sml", "cur", "random"],
+    "plots_individual": ["algo", "sml", "cur", "random"],
+    "plots_average": ["algo", "sml", "cur", "random"],
     ###
     "scope": "local_vector",
     "penalty": 0,

@@ -3,8 +3,8 @@ config = {
     "current_folder": "/home/haeberle/molekuehl/cluster/",
     "repository_folder": "/home/haeberle/molekuehl/",
     ###
-    "config_name": "drugs",
-    "database": "qm9",
+    "config_name": "qm7drugs",
+    "database": "qm7",
     "representation": "FCHL",
     ###
     # corresponding names must be in targets/targets.csv
@@ -36,14 +36,14 @@ config = {
     ###
     "generate_database": True,
     "generate_targets": True,
-    "cur_subset": False,
-    "fps_subset": False,
-    "sml_subset": False,
-    "algo_model": False,
-    "algo_subset": False,
+    "cur_subset": True,
+    "fps_subset": True,
+    "sml_subset": True,
+    "algo_model": True,
+    "algo_subset": True,
     "learning_curves": ["fragments", "sml", "fps", "cur", "random"],
-    "plots_individual": ["algo", "sml", "fps", "cur", "random"],
-    "plots_average": ["algo", "sml", "fps", "cur", "random"],
+    "plots_individual": ["algo", "fps", "sml", "cur", "random"],
+    "plots_average": ["algo", "fps", "sml", "cur", "random"],
     ###
     "scope": "local_vector",
     "penalty": 0,
@@ -51,7 +51,7 @@ config = {
     "timelimit": 1 * 3600,  # 1 hours
     "PoolSearchMode": 2,
     "number_of_fragments": 1024,  # size of subset selected
-    "verbose": False,
+    "verbose": True,
     ###
     "learning_curve_ticks": [2**k for k in range(4, 11)],
     ###
