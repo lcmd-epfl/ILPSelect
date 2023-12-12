@@ -84,7 +84,9 @@ def generate_targets(config):
             + [len(mol.nuclear_charges) for mol in target_mols]
         )
     else:
-        all_elements = np.unique(np.concatenate([(x) for x in database_nuclear_charges]))
+        all_elements = np.unique(
+            np.concatenate([(x) for x in database_nuclear_charges])
+        )
         max_natoms = max([len(x) for x in database_nuclear_charges])
 
     for target_name in targets:
@@ -95,7 +97,8 @@ def generate_targets(config):
             TARGET_PATH = f"{repository_folder}{database}/{target_name}.xyz"
             target_index = np.where(database_labels == target_name)[0][0]
             target_mol = Mol(
-                database_nuclear_charges[target_index], database_coordinates[target_index]
+                database_nuclear_charges[target_index],
+                database_coordinates[target_index],
             )
 
         X_target, Q_target = get_representations(

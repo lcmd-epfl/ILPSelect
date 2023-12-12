@@ -434,7 +434,9 @@ def plots_average(config):
     #     trace.line.color = colours[i]
     #     trace.line.width = 3.5
 
-    SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_average_{pen}.svg"
+    config_name = config["config_name"]
+
+    SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_{config_name}_average_{pen}.svg"
     fig.write_image(SAVE_PATH)
     print(f"Saved plot to {SAVE_PATH}")
 
