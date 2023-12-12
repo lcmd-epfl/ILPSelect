@@ -390,7 +390,7 @@ class model:
                     for j in range(n)
                     if (Mcharges[i] == Tcharges[j])
                     and (np.linalg.norm(Mrep[i] - Trep[j]) < 1)  # EXPERIMENTAL
-                    and (Mcharges[i]!=1) # remove hydrogen
+                    # and (Mcharges[i]!=1) # remove hydrogen
                 ]  # if condition excludes j; i always takes all m values
                 J = J + [(M, G) for G in range(self.duplicates)]
 
