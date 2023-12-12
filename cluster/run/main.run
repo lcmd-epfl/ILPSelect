@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --chdir /home/haeberle/molekuehl/cluster/run
-#SBATCH --mem=131072
-#SBATCH --time=32:00:00
+#SBATCH --mem=262144
+#SBATCH --time=72:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
-#SBATCH --job-name=FCHL-qm7-10_drugs-1
+#SBATCH --job-name=FCHL-qm9drugs-1
 
 echo STARTING AT `date`
 
@@ -16,6 +16,12 @@ module load gcc/11.3.0 python/3.10.4 intel-mkl/2020.4.304 gurobi
 export GRB_LICENSE_FILE=/ssoft/spack/external/gurobi/gurobi.lic
 export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"
 
-python /home/haeberle/molekuehl/cluster/main.py "config-drugs"
+python /home/haeberle/molekuehl/qm9/generate.py
+python /home/haeberle/molekuehl/cluster/main.py "config-qm7qm7"
+python /home/haeberle/molekuehl/cluster/main.py "config-qm7qm9"
+python /home/haeberle/molekuehl/cluster/main.py "config-qm7drugs"
+python /home/haeberle/molekuehl/cluster/main.py "config-qm9qm9"
+python /home/haeberle/molekuehl/cluster/main.py "config-qm9drugs"
+
 
 echo FINISHED AT `date`
