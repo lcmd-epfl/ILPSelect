@@ -56,6 +56,7 @@ def generate_targets(config):
     database = config["database"]
     targets = config["target_names"]
     representation = config["representation"]
+    in_database = config["in_database"]
 
     DATA_PATH = f"{repository_folder}cluster/data/qm9_data.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
