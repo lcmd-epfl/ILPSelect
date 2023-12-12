@@ -3,7 +3,7 @@ config = {
     "current_folder": "/home/haeberle/molekuehl/cluster/",
     "repository_folder": "/home/haeberle/molekuehl/",
     ###
-    "config_name": "qm9fragments",
+    "config_name": "qm7qm9",
     "database": "qm7",
     "representation": "FCHL",
     ###
@@ -34,19 +34,19 @@ config = {
         "120425",
     ],
     ###
-    "generate_database": False,
-    "generate_targets": False,
-    "cur_subset": False,
-    "fps_subset": False,  # FPS not implemented yet
-    "sml_subset": False,
-    "algo_model": False,
-    "algo_subset": False,
-    "learning_curves": [],  # ["fragments", "sml", "cur", "random"],
-    "plots_individual": ["algo", "sml", "fps", "cur", "random"],
-    "plots_average": ["algo", "sml", "fps", "cur", "random"],
+    "generate_database": True,
+    "generate_targets": True,
+    "cur_subset": True,
+    "fps_subset": True,
+    "sml_subset": True,
+    "algo_model": True,
+    "algo_subset": True,
+    "learning_curves": ["fragments", "sml", "fps", "cur", "random"],
+    "plots_individual": ["algo", "fps", "sml", "cur", "random"],
+    "plots_average": ["algo", "fps", "sml", "cur", "random"],
     ###
     "scope": "local_vector",
-    "penalty": 1,
+    "penalty": 0,
     "duplicates": 1,
     "timelimit": 1 * 3600,  # 1 hours
     "PoolSearchMode": 2,

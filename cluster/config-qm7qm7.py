@@ -3,7 +3,7 @@ config = {
     "current_folder": "/home/haeberle/molekuehl/cluster/",
     "repository_folder": "/home/haeberle/molekuehl/",
     ###
-    "config_name": "qm7fragments",
+    "config_name": "qm7qm7",
     "database": "qm7",
     "representation": "FCHL",
     ###
@@ -12,19 +12,19 @@ config = {
     "in_database": True,
     "plot_average_target_names": [],
     ###
-    "generate_database": False,
-    "generate_targets": False,
-    "cur_subset": False,
-    "fps_subset": True,  # FPS not implemented yet
-    "sml_subset": False,
-    "algo_model": False,
-    "algo_subset": False,
-    "learning_curves": [],  # ["fragments", "sml", "cur", "random"],
-    "plots_individual": [], #["algo", "sml", "cur", "random"],
-    "plots_average": [], #["algo", "sml", "cur", "random"],
+    "generate_database": True,
+    "generate_targets": True,
+    "cur_subset": True,
+    "fps_subset": True,
+    "sml_subset": True,
+    "algo_model": True,
+    "algo_subset": True,
+    "learning_curves": ["fragments", "sml", "fps", "cur", "random"],
+    "plots_individual": ["algo", "fps", "sml", "cur", "random"],
+    "plots_average": ["algo", "fps", "sml", "cur", "random"],
     ###
     "scope": "local_vector",
-    "penalty": 1,
+    "penalty": 0,
     "duplicates": 1,
     "timelimit": 1 * 3600,  # 1 hours
     "PoolSearchMode": 2,
@@ -48,7 +48,9 @@ qm7_df = pd.DataFrame({"ncharges": qm7["ncharges"], "labels": qm7["labels"]})
 num_heavy_atoms = qm7_df["ncharges"].map(lambda charges: sum(charges != 1))
 
 # take 10 with fixed random state (doesn't matter so much)
-target_sample = qm7_df[num_heavy_atoms >= 7]["labels"].sample(10, random_state=42).values
+target_sample = (
+    qm7_df[num_heavy_atoms >= 7]["labels"].sample(10, random_state=42).values
+)
 
 config["target_names"] = target_sample
 config["plot_average_target_names"] = target_sample

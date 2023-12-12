@@ -37,7 +37,7 @@ config = {
     "generate_database": True,
     "generate_targets": True,
     "cur_subset": True,
-    "fps_subset": False,
+    "fps_subset": False,  # seg fault for now
     "sml_subset": True,
     "algo_model": True,
     "algo_subset": True,
@@ -46,7 +46,7 @@ config = {
     "plots_average": ["algo", "sml", "cur", "random"],
     ###
     "scope": "local_vector",
-    "penalty": 1,
+    "penalty": 0,
     "duplicates": 1,
     "timelimit": 1 * 3600,  # 1 hours
     "PoolSearchMode": 2,
