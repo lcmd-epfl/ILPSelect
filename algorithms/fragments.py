@@ -86,7 +86,12 @@ class model:
         self.target_ncharges = self.target["ncharges"]
 
         # prune the target to remove atoms we cannot be mapped to!
+        PRUNE_HYDROGEN = True
         ncharges_in_database = np.unique(np.concatenate(self.database_ncharges))
+        if PRUNE_HYDROGEN:
+            ncharges_in_database = [
+                charge for charge in ncharges_in_database if charge != 1
+            ]
         mask = [charge in ncharges_in_database for charge in self.target_ncharges]
         n = len(self.target_ncharges)
         self.target_rep = self.target_rep[:n][mask]
@@ -390,7 +395,7 @@ class model:
                     for j in range(n)
                     if (Mcharges[i] == Tcharges[j])
                     and (np.linalg.norm(Mrep[i] - Trep[j]) < 1)  # EXPERIMENTAL
-                    # and (Mcharges[i]!=1) # remove hydrogen
+                    # and (Mcharges[i] != 1)  # remove hydrogen
                 ]  # if condition excludes j; i always takes all m values
                 J = J + [(M, G) for G in range(self.duplicates)]
 
