@@ -327,7 +327,6 @@ class model:
         self.add_visited_fragments(frags)
         self.solutions["Fragments"].append(frags)
         self.solutions["Value"].append(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
-        print(self.solutions)
         return 0
 
     # used only by self.callback() !
