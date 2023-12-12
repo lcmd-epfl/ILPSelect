@@ -36,8 +36,6 @@ def algo_model(config):
 
         M.savemodel(SAVE_PATH)
 
-        print(
-            f"Generated model of representation {representation} for database {database} and target {target_name} with penalty {pen}."
-        )
+        print(f"Saved model to file {SAVE_PATH}.")
 
     return 0
