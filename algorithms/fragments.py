@@ -85,6 +85,12 @@ class model:
         self.target_rep = self.target["rep"]
         self.target_ncharges = self.target["ncharges"]
 
+        # prune the target to remove atoms we cannot be mapped to!
+        ncharges_in_database = np.unique(np.sum(self.database_ncharges, axis=0))
+        mask = [charge in ncharges_in_database for charge in self.target_ncharges]
+        self.target_rep = self.target_rep[mask]
+        self.target_ncharges = self.target_ncharges[mask]
+
         self.size_database = len(self.database_labels)
         # self.size_database=20 # uncomment this to only take first indices of the database for testing
         self.database_indices = range(self.size_database)
@@ -315,6 +321,7 @@ class model:
         self.add_visited_fragments(frags)
         self.solutions["Fragments"].append(frags)
         self.solutions["Value"].append(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
+        print(self.solutions)
         return 0
 
     # used only by self.callback() !
@@ -392,8 +399,6 @@ class model:
                 (M, G) for M in self.database_indices for G in range(self.duplicates)
             ]  # indices of variable x
             x = Z.addVars(I, vtype=GRB.BINARY, name="x")
-            # for M in [0,1,16,28,29,53,92]:
-            #    x[M,0].start = 1
             y = Z.addVars(
                 len(np.unique(self.target_ncharges)), vtype="C", name="y"
             )  # variable for each atom type in target
@@ -404,15 +409,14 @@ class model:
         print("Adding constraints...")
         if self.scope == "local_matrix" or self.scope == "local_vector":
             n = len(self.target_ncharges)  # size of target
-            # injection into [n]
-            Z.addConstrs((x.sum("*", j, "*", "*") <= 1 for j in range(n)), name="inj")
-            # # bijection into [n]
-            # Z.addConstrs((x.sum("*", j, "*", "*") == 1 for j in range(n)), name="bij")
+            # bijection into [n]: all indices j of target must be mapped to.
+            # important: remove in preprocessing the atoms which are not present in database!
+            Z.addConstrs((x.sum("*", j, "*", "*") == 1 for j in range(n)), name="bij")
             I = x.keys()
 
             for M in self.database_indices:
                 m = len(self.database_ncharges[M])
-                # each i of each group is used at most once #TODO: does this make sense?
+                # each i of each group is used at most once
                 Z.addConstrs(
                     x.sum(i, "*", M, G) <= 1
                     for i in range(m)
