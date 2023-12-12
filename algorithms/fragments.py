@@ -86,9 +86,10 @@ class model:
         self.target_ncharges = self.target["ncharges"]
 
         # prune the target to remove atoms we cannot be mapped to!
-        ncharges_in_database = np.unique(np.sum(self.database_ncharges, axis=0))
+        ncharges_in_database = np.unique(np.concatenate(self.database_ncharges))
         mask = [charge in ncharges_in_database for charge in self.target_ncharges]
-        self.target_rep = self.target_rep[mask]
+        n = len(self.target_ncharges)
+        self.target_rep = self.target_rep[:n][mask]
         self.target_ncharges = self.target_ncharges[mask]
 
         self.size_database = len(self.database_labels)
