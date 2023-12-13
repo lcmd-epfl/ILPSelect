@@ -135,6 +135,7 @@ def generate_database(config):
     targets = config["target_names"]
     representation = config["representation"]
     in_database = config["in_database"]
+    config_name=config["config_name"]
 
     DATA_PATH = f"{repository_folder}cluster/data/qm9_data.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
@@ -179,7 +180,7 @@ def generate_database(config):
         elements=all_elements,
     )
 
-    SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{database}_{config["config_name"]}.npz"
+    SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{database}_{config_name}.npz"
 
     np.savez(SAVE_PATH, reps=X, labels=database_info["index"], ncharges=Q)
 

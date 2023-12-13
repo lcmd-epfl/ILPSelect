@@ -59,8 +59,9 @@ def fps_subset(config):
     database = config["database"]
     N = config["learning_curve_ticks"][-1]
     in_database = config["in_database"]
+    config_name=config["config_name"]
 
-    DATABASE_PATH = f"{parent_folder}data/{representation}_{database}_{config["config_name"]}.npz"
+    DATABASE_PATH = f"{parent_folder}data/{representation}_{database}_{config_name}.npz"
     database_info = np.load(DATABASE_PATH, allow_pickle=True)
 
     database_reps = database_info["reps"]

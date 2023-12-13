@@ -100,6 +100,7 @@ def learning_curves(config):
     targets = config["target_names"]
     database = config["database"]
     curves = [e for e in config["learning_curves"] if e != "random"]
+    config_name=config["config_name"]
 
     for curve in curves:
         assert curve in [
@@ -109,7 +110,7 @@ def learning_curves(config):
             "cur",
         ], "only fragments, sml, fps and cur algorithms are handled"
 
-    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config["config_name"]}.npz"
+    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config_name}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
     X = database_info["reps"]
     Q = database_info["ncharges"]
@@ -221,11 +222,12 @@ def learning_curves_random(config, add_onto_old=True):
     targets = config["target_names"]
     database = config["database"]
     CV = config["CV"]
+    config_name=config["config_name"]
 
     if config["random_state"] != None:
         print("WARNING: random_state is fixed -- all random subsets are identical!")
 
-    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config["config_name"]}.npz"
+    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config_name}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
 
 

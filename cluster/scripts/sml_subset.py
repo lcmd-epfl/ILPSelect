@@ -28,10 +28,11 @@ def sml_subset(config):
     representation = config["representation"]
     N = config["learning_curve_ticks"][-1]
     in_database = config["in_database"]
+    config_name=config["config_name"]
 
     DATA_PATH = f"{parent_folder}data/"
     database_info = np.load(
-        f"{DATA_PATH}{representation}_{database}_{config["config_name"]}.npz", allow_pickle=True
+        f"{DATA_PATH}{representation}_{database}_{config_name}.npz", allow_pickle=True
     )
 
     database_reps = database_info["reps"]
