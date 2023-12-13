@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import qml
 from qml.math import cho_solve
-from sklearn.model_selection import train_test_split, KFold
+from sklearn.model_selection import KFold, train_test_split
 
 
 def krr(kernel, properties, l2reg=1e-9):
@@ -109,7 +109,7 @@ def learning_curves(config):
             "cur",
         ], "only fragments, sml, fps and cur algorithms are handled"
 
-    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
+    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config["config_name"]}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
     X = database_info["reps"]
     Q = database_info["ncharges"]
@@ -225,7 +225,7 @@ def learning_curves_random(config, add_onto_old=True):
     if config["random_state"] != None:
         print("WARNING: random_state is fixed -- all random subsets are identical!")
 
-    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
+    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config["config_name"]}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
 
 

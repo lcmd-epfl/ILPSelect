@@ -159,7 +159,7 @@ def generate_database(config):
         elements=all_elements,
     )
 
-    SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{database}.npz"
+    SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{database}_{config["config_name"]}.npz"
 
     np.savez(SAVE_PATH, reps=X, labels=file_names, ncharges=Q)
 

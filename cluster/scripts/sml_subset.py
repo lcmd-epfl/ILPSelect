@@ -31,7 +31,7 @@ def sml_subset(config):
 
     DATA_PATH = f"{parent_folder}data/"
     database_info = np.load(
-        f"{DATA_PATH}{representation}_{database}.npz", allow_pickle=True
+        f"{DATA_PATH}{representation}_{database}_{config["config_name"]}.npz", allow_pickle=True
     )
 
     database_reps = database_info["reps"]

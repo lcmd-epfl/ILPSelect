@@ -21,7 +21,7 @@ def algo_model(config):
     database = config["database"]
 
     for target_name in targets:
-        DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
+        DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config["config_name"]}.npz"
         TARGET_PATH = (
             f"{repository_path}cluster/data/{representation}_{target_name}.npz"
         )

@@ -17,7 +17,7 @@ def cur_subset(config):
     N = config["learning_curve_ticks"][-1]
     in_database = config["in_database"]
 
-    DATABASE_PATH = f"{parent_folder}data/{representation}_{database}.npz"
+    DATABASE_PATH = f"{parent_folder}data/{representation}_{database}_{config["config_name"]}.npz"
     database_info = np.load(DATABASE_PATH, allow_pickle=True)
 
     database_reps = database_info["reps"]

@@ -18,7 +18,7 @@ def algo_subset(config):
     database = config["database"]
     N = config["learning_curve_ticks"][-1]
 
-    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}.npz"
+    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config["config_name"]}.npz"
 
     for target_name in targets:
         TARGET_PATH = (
