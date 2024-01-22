@@ -45,108 +45,113 @@ def add_onto_and_save(df, prop, value):
 
 # %%
 # generate representations
-if database=="qm7":
-    from scripts.generate import generate_database, generate_targets
-elif database=="qm9":
-    from scripts.generate_qm9 import generate_database, generate_targets
 
 if config["generate_database"]:
-    t = time.time()
+    if database=="qm7":
+        from scripts.generate import generate_database
+    elif database=="qm9":
+        from scripts.generate_qm9 import generate_database
+    timer = time.time()
     generate_database(config)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_generate_database", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_generate_database", timer)
 
 if config["generate_targets"]:
-    t = time.time()
+    if database=="qm7":
+        from scripts.generate import generate_targets
+    elif database=="qm9":
+        from scripts.generate_qm9 import generate_targets
+    timer = time.time()
     generate_targets(config)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_generate_targets", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_generate_targets", timer)
 
 
 # %%
 # generate sml subset
 
-from scripts.sml_subset import sml_subset
 
 if config["sml_subset"]:
-    t = time.time()
+    from scripts.sml_subset import sml_subset
+    timer = time.time()
     sml_subset(config)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_sml_subset", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_sml_subset", timer)
 # %%
 # generate fps, cur subset
 
-from scripts.cur_subset import cur_subset
 
 if config["cur_subset"]:
-    t = time.time()
+    from scripts.cur_subset import cur_subset
+    timer = time.time()
     cur_subset(config)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_cur_subset", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_cur_subset", timer)
 
-from scripts.fps_subset import fps_subset
 
 if config["fps_subset"]:
-    t = time.time()
+    from scripts.fps_subset import fps_subset
+    timer = time.time()
     fps_subset(config)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_fps_subset", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_fps_subset", timer)
 
 # %%
 # generate algo model
 
-from scripts.algo_model import algo_model
 
 if config["algo_model"]:
-    t = time.time()
+    from scripts.algo_model import algo_model
+    timer = time.time()
     algo_model(config)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_algo_model", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_algo_model", timer)
 
 # %% generate algo subset
-from scripts.algo_subset import algo_subset
 
 if config["algo_subset"]:
-    t = time.time()
+    from scripts.algo_subset import algo_subset
+    timer = time.time()
     algo_subset(config)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_algo_subset", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_algo_subset", timer)
 
 # %%
 # generate learning curves
-from scripts.learning_curves import learning_curves
 
 no_random_curves = [e for e in config["learning_curves"] if e != "random"]
 
 if len(no_random_curves) != 0:
-    t = time.time()
+    from scripts.learning_curves import learning_curves
+    timer = time.time()
     learning_curves(config)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_learning_curves", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_learning_curves", timer)
 # %%
-from scripts.learning_curves import learning_curves_random
 
 if "random" in config["learning_curves"]:
-    t = time.time()
+    from scripts.learning_curves import learning_curves_random
+    timer = time.time()
     learning_curves_random(config, add_onto_old=False)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_learning_curves_random", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_learning_curves_random", timer)
 
 # %%
 # draw learning curves
-from scripts.plots import plots_average, plots_individual
 
 if len(config["plots_individual"]) != 0:
-    t = time.time()
+    from scripts.plots import plots_individual
+    timer = time.time()
     plots_individual(config)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_plots_individual", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_plots_individual", timer)
 
 if len(config["plots_average"]) != 0:
-    t = time.time()
+    from scripts.plots import plots_average
+    timer = time.time()
     plots_average(config)
-    t = time.time() - t
-    dump = add_onto_and_save(dump, "time_plots_average", t)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_plots_average", timer)
 
 
 # %%
