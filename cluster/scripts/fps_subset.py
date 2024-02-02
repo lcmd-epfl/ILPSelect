@@ -10,7 +10,7 @@ def add_variables(M, n):
 
 
 def add_constraints(M, subsetsize, x):
-    M.addConstr(x.sum() == subsetsize)
+    M.addConstr(x.sum() == subsetsize, name="SUBSETSIZE")
     return 0
 
 
@@ -30,6 +30,7 @@ def set_objective(M, points, x):
     obj = M.addVar(vtype="C")
     maxnorm = np.max(cdist(points, points, metric="euclidean"))
     for i in range(n):
+        print(f"{i} / {n}")
         for j in range(i + 1, n):
             norm = np.linalg.norm(points[i] - points[j])
             M.addConstr(obj <= norm + maxnorm * (1 - x[i] + 1 - x[j]))
@@ -47,7 +48,7 @@ def read_solution(M, n, x):
 
 def fps_subset(config):
     """
-    Generate FPS subsets of size N for each target from the database.
+    Generate FPS subsets of each N of `learning_curve_ticks` for each target from the database.
 
     Parameters:
         config: TODO
@@ -55,15 +56,19 @@ def fps_subset(config):
 
     parent_folder = config["current_folder"]
     representation = config["representation"]
+    config_name = config["config_name"]
     targets = config["target_names"]
     database = config["database"]
-    N = config["learning_curve_ticks"][-1]
     in_database = config["in_database"]
-    config_name=config["config_name"]
+    N=config["learning_curve_ticks"]
 
+    # we solve FPS horizontally (for each subset size for each target), store in a dictionary...
+    # and regroup vertically (for each target for each subset size) and save.
+    
     DATABASE_PATH = f"{parent_folder}data/{representation}_{database}_{config_name}.npz"
     database_info = np.load(DATABASE_PATH, allow_pickle=True)
 
+    database_labels = database_info["labels"]
     database_reps = database_info["reps"]
     if representation == "FCHL":
         database_global_rep = np.sum(database_reps, axis=1)
@@ -72,16 +77,15 @@ def fps_subset(config):
         raise
 
     # n = number of points
-    # d = dimension of space
-    n, d = database_global_rep.shape
-    assert N <= n, "Number of points is smaller than size of subset."
+    n = len(database_global_rep)
+    assert N[-1] <= n, "Number of points is smaller than size of subset."
 
     M = gp.Model()
-    M.setParam("TimeLimit", 10 * 60)  # 10 mins
+    M.setParam("TimeLimit", config["timelimit"])
 
     x = add_variables(M, n)
 
-    add_constraints(M, N, x)
+    # Add constraint later, as it's subset size-dependent
 
     print("Constructing objective...")
     set_objective(M, database_global_rep, x)
@@ -89,30 +93,103 @@ def fps_subset(config):
 
     M.update()
 
+    # all_rankings keys are (target_index, subset_size), with
+    # target_index = -1 if it doesn't matter (if not in_database)
+    all_rankings = {}
+
+    for subset_size in N:
+
+        # add size constraint
+        size_constr = add_constraints(M, subset_size, x)
+
+        if not in_database:
+            ranking = fps_ranking(config, subset_size, database_labels, M, x)[0]
+
+            all_rankings[(-1, subset_size)] = ranking
+
+        else:
+            rankings = fps_ranking(config, subset_size, database_labels, M, x)
+            for i in range(len(targets)):
+                ranking = rankings[i]
+
+                all_rankings[(i,subset_size)]=ranking
+
+        # remove size constraint for later
+        M.remove(size_constr)
+
+    # merge all rankings of each target inside a single array and save
+                
+    # not target-dependent
+    if not in_database:
+        rankings = []
+        for subset_size in N:
+            rankings.append(all_rankings[(-1,subset_size)])
+        
+        SAVE_PATH = f"{parent_folder}rankings/fps_{representation}_{database}.npy"
+        np.save(SAVE_PATH, rankings)
+        print(
+            f"Saved FPS rankings of {N} fragments of database {database} to {SAVE_PATH}."
+        )
+
+    # target-dependent
+    for i in range(len(targets)):
+        target_name = targets[i]
+        rankings = []
+        for subset_size in range(N):
+            rankings.append(all_rankings[(i,subset_size)])
+
+        SAVE_PATH = (
+            f"{parent_folder}rankings/fps_{representation}_{database}_{target_name}.npy"
+        )
+        np.save(SAVE_PATH, ranking)
+        print(
+            f"Saved FPS ranking of {subset_size} fragments of database {database} without {target_name} to {SAVE_PATH}."
+        )
+
+    return 0
+
+def fps_ranking(config, size_subset, database_labels, M, x):
+    """
+    Generate FPS subsets of size size_subset for each target from the database.
+    This disregards the entry `learning_curve_ticks` of `config`.
+
+    Parameters:
+        config: TODO
+        size_subset: size of subset (int)
+        database_labels: database (npz)
+        M: gurobi FPS model to solve (gurobipy.Model)
+        x: variables of model M
+
+    Returns:
+        rankings (array of array)
+    """
+
+    targets = config["target_names"]
+    in_database = config["in_database"]
+
+    n=len(database_labels)
+
     # if not in database, need only N points
     if not in_database:
         M.optimize()
         assert M.status != 3, "Model is infeasible."
 
         ranking = read_solution(M, n, x)
-        assert len(ranking) == N
+        assert len(ranking) == size_subset, "Ranking output size does not match input condition."
 
-        SAVE_PATH = f"{parent_folder}rankings/fps_{representation}_{database}.npy"
-        np.save(SAVE_PATH, ranking)
-        print(
-            f"Saved FPS ranking of {N} fragments of database {database} to {SAVE_PATH}."
-        )
-        return 0
+        return [ranking]
 
     # if in database, points need to be removed.
     # I don't take a subset of size N+1 and then remove, because FPS on N points is not a subset of FPS on N+1 points!
+   
     constr = None
     ranking = None
+    rankings = []
     for target_name in targets:
         reset_temp_constr(M, constr)
         M.update()
 
-        target_index = np.where(database_info["labels"] == target_name)[0][0]
+        target_index = np.where(database_labels == target_name)[0][0]
 
         # if the ranking includes the target, recompute!
         if (ranking is None) or (target_index in ranking):
@@ -122,16 +199,10 @@ def fps_subset(config):
             assert M.status != 3, "Model is infeasible."
 
             ranking = read_solution(M, n, x)
-            assert len(ranking) == N
+            assert len(ranking) == size_subset, "Ranking output size does not match input condition."
         else:
             constr = None
 
-        SAVE_PATH = (
-            f"{parent_folder}rankings/fps_{representation}_{database}_{target_name}.npy"
-        )
-        np.save(SAVE_PATH, ranking)
-        print(
-            f"Saved FPS ranking of {N} fragments of database {database} without {target_name} to {SAVE_PATH}."
-        )
+        rankings.append(ranking)
 
-    return 0
+    return rankings
