@@ -172,8 +172,16 @@ def learning_curves(config):
             opt_ranking = np.load(RANKING_PATH)
 
             maes = []
+            i=0
             for n in config["learning_curve_ticks"]:
-                ranking = opt_ranking[:n]
+
+                # FPS has a special structure of array of rankings for each tick
+                # throws an error if there are more learning curve ticks than entries in the ranking
+                if curve == "fps":
+                    ranking = opt_ranking[i]
+                    i+=1
+                else:
+                    ranking = opt_ranking[:n]
 
                 min_sigma, min_l2reg = opt_hypers(X[ranking], Q[ranking], y[ranking])
 

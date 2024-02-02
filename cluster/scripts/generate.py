@@ -50,8 +50,9 @@ def generate_targets(config):
     targets = config["target_names"]
     representation = config["representation"]
     in_database = config["in_database"]
+    config_name=config["config_name"]
 
-    DATA_PATH = f"{repository_folder}cluster/data/{representation}_{database}.npz"
+    DATA_PATH = f"{repository_folder}cluster/data/{representation}_{database}_{config_name}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
     database_ncharges = database_info["ncharges"]
 
