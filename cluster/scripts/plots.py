@@ -239,6 +239,7 @@ def plots_average(config):
             )
         )
 
+        """
         if pen == 0:
             ALGO = []
             for target_name in targets:
@@ -263,6 +264,7 @@ def plots_average(config):
                     line=dict(dash="solid", color="#1f77b4", width=3.5),
                 )
             )
+        """
 
     if "sml" in curves:
         SML = []

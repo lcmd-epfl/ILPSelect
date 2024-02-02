@@ -283,11 +283,13 @@ def learning_curves_random(config, add_onto_old=True):
                 # y energies offset
                 for ncharge in Q_target:
                     y_target -= atom_energy_coeffs[ncharge]
-
             # removing target from database
-            mask = database_labels != target_name
+            mask = (database_labels != target_name)
             X = X[mask]
             Q = Q[mask]
+            print(y_target)
+            y_target = y[np.logical_not(mask)][0]
+            print(y_target)
             database_labels = database_labels[mask]
             y=y[mask]
 

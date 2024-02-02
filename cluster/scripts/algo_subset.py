@@ -43,9 +43,9 @@ def algo_subset(config):
             number_of_solutions=100,
             PoolSearchMode=config["PoolSearchMode"],
             timelimit=config["timelimit"],
-            poolgapabs=35,
+            poolgapabs=100,
             callback=True,
-            objbound=30,
+            objbound=100,
             number_of_fragments=N,
         )
 
@@ -53,7 +53,7 @@ def algo_subset(config):
         SOLUTION_SAVE_PATH = f"{repository_path}cluster/solutions/{representation}_{database}_{target_name}_{pen}.csv"
         solution_df.to_csv(SOLUTION_SAVE_PATH)
 
-        print(f"Saved solution to {SOLUTION_SAVE_PATH}.")
+        print(f"Saved solution of {len(solution_df)} fragments to {SOLUTION_SAVE_PATH}.")
 
         # sorts solutions found by objective value
         # and saves fragments to file
