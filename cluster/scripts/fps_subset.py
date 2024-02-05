@@ -10,8 +10,8 @@ def add_variables(M, n):
 
 
 def add_constraints(M, subsetsize, x):
-    M.addConstr(x.sum() == subsetsize, name="SUBSETSIZE")
-    return 0
+    constr = M.addConstr(x.sum() == subsetsize, name="SUBSETSIZE")
+    return constr
 
 
 def remove_variable(M, x, i):
@@ -135,7 +135,7 @@ def fps_subset(config):
     for i in range(len(targets)):
         target_name = targets[i]
         rankings = []
-        for subset_size in range(N):
+        for subset_size in N:
             rankings.append(all_rankings[(i,subset_size)])
 
         SAVE_PATH = (
