@@ -132,19 +132,20 @@ def fps_subset(config):
         )
 
     # target-dependent
-    for i in range(len(targets)):
-        target_name = targets[i]
-        rankings = []
-        for subset_size in N:
-            rankings.append(all_rankings[(i,subset_size)])
+    else:
+        for i in range(len(targets)):
+            target_name = targets[i]
+            rankings = []
+            for subset_size in N:
+                rankings.append(all_rankings[(i,subset_size)])
 
-        SAVE_PATH = (
-            f"{parent_folder}rankings/fps_{representation}_{database}_{target_name}.npy"
-        )
-        np.save(SAVE_PATH, ranking)
-        print(
-            f"Saved FPS ranking of {subset_size} fragments of database {database} without {target_name} to {SAVE_PATH}."
-        )
+            SAVE_PATH = (
+                f"{parent_folder}rankings/fps_{representation}_{database}_{target_name}.npy"
+            )
+            np.save(SAVE_PATH, ranking)
+            print(
+                f"Saved FPS ranking of {subset_size} fragments of database {database} without {target_name} to {SAVE_PATH}."
+            )
 
     return 0
 
