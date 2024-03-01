@@ -125,7 +125,7 @@ def fps_subset(config):
         for subset_size in N:
             rankings.append(all_rankings[(-1,subset_size)])
         
-        SAVE_PATH = f"{parent_folder}rankings/fps_{representation}_{database}.npy"
+        SAVE_PATH = f"{parent_folder}rankings/fps_{representation}_{database}.npz"
         np.save(SAVE_PATH, rankings)
         print(
             f"Saved FPS rankings of {N} fragments of database {database} to {SAVE_PATH}."
@@ -140,7 +140,7 @@ def fps_subset(config):
                 rankings.append(all_rankings[(i,subset_size)])
 
             SAVE_PATH = (
-                f"{parent_folder}rankings/fps_{representation}_{database}_{target_name}.npy"
+                f"{parent_folder}rankings/fps_{representation}_{database}_{target_name}.npz"
             )
             np.save(SAVE_PATH, ranking)
             print(

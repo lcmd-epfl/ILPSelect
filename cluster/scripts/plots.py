@@ -7,7 +7,7 @@ Ha2kcal = 627.5
 
 ###### PLOT PARAMETERS ######
 # set to False to get absolute errors
-PERCENTAGE_ERROR = True
+PERCENTAGE_ERROR = False
 # set to True to set scale to e-3 instead of e-2
 MULTIPLY_BY_10 = False
 # set to True iif both pen 0 and 1 are available to draw
@@ -238,49 +238,11 @@ def plots_average(config):
     fig = go.Figure()
 
     if "algo" in curves:
-
-<<<<<<< HEAD
-        """
-        if pen == 0:
-            ALGO = []
-            for target_name in targets:
-                # normalization constant is energy of targett
-                normalization = 1
-                if PERCENTAGE_ERROR:
-                    y_target = target_energy(config, target_name)
-                    normalization = (
-                        np.abs(y_target * Ha2kcal) / 100
-                    )  # divide by another 100 since the graph yaxis is e-2
-
-                ALGO_CURVE_PATH = f"{parent_directory}learning_curves/algo_{representation}_{database}_{target_name}_{1}.npz"
-                ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
-                ALGO.append(ALGO_CURVE["mae"] * Ha2kcal / normalization)
-            ALGO = np.mean(ALGO, axis=0)
-
-            fig.add_trace(
-                go.Scatter(
-                    x=N,
-                    y=ALGO,
-                    name="ILP (p=1)",
-                    line=dict(dash="solid", color="#1f77b4", width=3.5),
-                )
-            )
-        """
-
-    if "sml" in curves:
-        SML = []
-        for target_name in targets:
-            # normalization constant is energy of targett
-            normalization = 1
-            if PERCENTAGE_ERROR:
-                y_target = target_energy(config, target_name)
-                normalization = (
-                    np.abs(y_target * Ha2kcal) / 100
-                )  # divide by another 100 since the graph yaxis is e-2
         if not PEN_0_AND_1:
             ALGO_PLOT(config, fig, PERCENTAGE_ERROR, MULTIPLY_BY_10, pen, "solid")
 
         if PEN_0_AND_1:
+            ALGO_PLOT(config, fig, PERCENTAGE_ERROR, MULTIPLY_BY_10, 1, "solid")
             ALGO_PLOT(config, fig, PERCENTAGE_ERROR, MULTIPLY_BY_10, 0, "dot")
 
     if "sml" in curves:
