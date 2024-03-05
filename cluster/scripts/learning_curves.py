@@ -101,6 +101,7 @@ def learning_curves(config):
     database = config["database"]
     curves = [e for e in config["learning_curves"] if e != "random"]
     config_name=config["config_name"]
+    learning_curve_ticks = config["learning_curve_ticks"]
 
     for curve in curves:
         assert curve in [
@@ -108,6 +109,7 @@ def learning_curves(config):
             "sml",
             "fps",
             "cur",
+            "full",
         ], "only fragments, sml, fps and cur algorithms are handled"
 
     DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config_name}.npz"
@@ -128,6 +130,8 @@ def learning_curves(config):
         for i, mol_ncharges in enumerate(Q):
             for ncharge in mol_ncharges:
                 y[i] -= atom_energy_coeffs[ncharge]
+
+    assert (len(X) == len(y)) and (len(Q) == len(y)), "Mismatch between number of database representations, charges, and labels."
 
     for curve in curves:
         for target_name in targets:
@@ -174,11 +178,15 @@ def learning_curves(config):
                 else:
                     RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}.npz"
 
-            opt_ranking = np.load(RANKING_PATH, allow_pickle=True)
+            if curve == "full":
+                opt_ranking = range(len(y))
+                learning_curve_ticks = [len(y)]
+            else:
+                opt_ranking = np.load(RANKING_PATH, allow_pickle=True)
 
             maes = []
             i=0
-            for n in config["learning_curve_ticks"]:
+            for n in learning_curve_ticks:
 
                 # FPS has a special structure of array of rankings for each tick
                 # throws an error if there are more learning curve ticks than entries in the ranking

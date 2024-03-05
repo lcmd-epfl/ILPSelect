@@ -53,7 +53,7 @@ def algo_subset(config):
         SOLUTION_SAVE_PATH = f"{repository_path}cluster/solutions/{representation}_{database}_{target_name}_{pen}.csv"
         solution_df.to_csv(SOLUTION_SAVE_PATH)
 
-        print(f"Saved solution of {len(solution_df)} fragments to {SOLUTION_SAVE_PATH}.")
+        print(f"Saved {len(solution_df)} solutions to {SOLUTION_SAVE_PATH}.")
 
         # sorts solutions found by objective value
         # and saves fragments to file
@@ -67,6 +67,6 @@ def algo_subset(config):
         RANKING_SAVE_PATH = f"{repository_path}cluster/rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
         np.save(RANKING_SAVE_PATH, ordered_frags)
 
-        print(f"Saved ranking to {RANKING_SAVE_PATH}.")
+        print(f"Saved ranking of size {len(ordered_frags)} to {RANKING_SAVE_PATH}.")
 
     return 0
