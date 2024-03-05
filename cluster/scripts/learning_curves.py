@@ -163,13 +163,18 @@ def learning_curves(config):
                 RANKING_PATH = f"{repository_path}cluster/rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
             elif curve == "sml":
                 RANKING_PATH = f"{repository_path}cluster/rankings/sml_{representation}_{database}_{target_name}.npy"
-            elif curve in ["fps", "cur"]:
+            elif curve == "cur":
                 if config["in_database"]:
                     RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}_{target_name}.npy"
                 else:
                     RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}.npy"
+            elif curve == "fps":
+                if config["in_database"]:
+                    RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}_{target_name}.npz"
+                else:
+                    RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}.npz"
 
-            opt_ranking = np.load(RANKING_PATH)
+            opt_ranking = np.load(RANKING_PATH, allow_pickle=True)
 
             maes = []
             i=0
@@ -178,7 +183,7 @@ def learning_curves(config):
                 # FPS has a special structure of array of rankings for each tick
                 # throws an error if there are more learning curve ticks than entries in the ranking
                 if curve == "fps":
-                    ranking = opt_ranking[i]
+                    ranking = opt_ranking["arr_"+str(i)]
                     i+=1
                 else:
                     ranking = opt_ranking[:n]
@@ -208,7 +213,7 @@ def learning_curves(config):
                 SAVE_PATH,
                 train_sizes=config["learning_curve_ticks"],
                 mae=maes,
-                ranking_xyz=database_info["labels"][opt_ranking],
+                # ranking_xyz=database_info["labels"][opt_ranking],
             )
 
             print(f"Saved to file {SAVE_PATH}.")
