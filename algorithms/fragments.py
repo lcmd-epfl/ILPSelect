@@ -165,8 +165,10 @@ class model:
         print("------------------------------------")
         print("           Optimization")
         print("Time limit: ", timelimit, " seconds")
-        print("------------------------------------")
+        print("------------------------------------")        
         if callback:
+            self.start_time = timeit.default_timer()
+            self.next_tick = 16
             self.Z.setParam("LazyConstraints", 1)
             self.objbound = objbound
             self.number_of_fragments = number_of_fragments
@@ -367,9 +369,15 @@ class model:
             if self.verbose:
                 print(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
             self.add_lazy_constraint()
+            
+            num_sol = len(self.visitedfragments)
             if self.verbose:
-                print(len(self.visitedfragments))
-            if len(self.visitedfragments) >= self.number_of_fragments:
+                print(num_sol)
+                if num_sol >= self.next_tick:
+                    print(f"Time for {self.next_tick} fragments: {timeit.default_timer() - self.start_time}")
+                    self.next_tick *= 2
+
+            if num_sol >= self.number_of_fragments:
                 self.Z.terminate()
                 print("Interrupting because enough fragments were found.")
         return 0
@@ -393,7 +401,7 @@ class model:
                     for i in range(m)
                     for j in range(n)
                     if (Mcharges[i] == Tcharges[j])
-                    # and (np.linalg.norm(Mrep[i] - Trep[j]) < 1)  # EXPERIMENTAL
+                    and (np.linalg.norm(Mrep[i] - Trep[j]) < 10)  # EXPERIMENTAL
                 ]  # if condition excludes j; i always takes all m values
                 J = J + [(M, G) for G in range(self.duplicates)]
 
