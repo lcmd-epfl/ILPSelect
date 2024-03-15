@@ -1,5 +1,5 @@
 from algorithms import fragments
-
+import os.path
 
 def algo_model(config):
     """
@@ -22,6 +22,8 @@ def algo_model(config):
     config_name=config["config_name"]
 
     for target_name in targets:
+
+
         DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config_name}.npz"
         TARGET_PATH = (
             f"{repository_path}cluster/data/{representation}_{target_name}.npz"
@@ -30,10 +32,18 @@ def algo_model(config):
             DATA_PATH, TARGET_PATH, scope=config["scope"], verbose=config["verbose"]
         )
 
-        # sets up model and writes to a file. Only needed once.
-        M.setup(penalty_constant=pen, duplicates=1)
-
         SAVE_PATH = f"{repository_path}cluster/models/{representation}_{database}_{target_name}_{pen}.mps"
+
+        # if pen=1 file already exists, open it, change the penalty, and save.
+        PEN_1_PATH = f"{repository_path}cluster/models/{representation}_{database}_{target_name}_1.mps"
+        if os.path.isfile(PEN_1_PATH):
+            M.readmodel(PEN_1_PATH)
+            M.changepenalty(pen)
+            M.savemodel(SAVE_PATH)
+            continue
+
+        # otherwise, sets up model from scratch and writes to a file. Only needed once.
+        M.setup(penalty_constant=pen, duplicates=1)
 
         M.savemodel(SAVE_PATH)
 
