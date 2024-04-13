@@ -1,19 +1,19 @@
 # Requirements
 
-    The code was run on Python 3.10.12. The following modules are required: numpy, pandas, qml, sklearn, skmatter, plotly, kaleido, pickle, json, os
-    `python3 -m pip install numpy pandas qml sklearn skmatter plotly kaleido pickle json os`
+The code was run on Python 3.10.12. The following modules are required: numpy, pandas, qml, sklearn, skmatter, plotly, kaleido, pickle, json, os
+    python3 -m pip install numpy pandas qml sklearn skmatter plotly kaleido pickle json os
 
 # First Run
 
-	- to use `algo_model` and `algo_subset`, the molekuehl folder should be added to the python path.
-	Example:
-	`export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"`
-	Add this line at the end of your .bashrc file to add it systematically.
+- to use `algo_model` and `algo_subset`, the molekuehl folder should be added to the python path.
+Example:
+	export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"
+Add this line at the end of your .bashrc file to add it systematically.
 
-	- create folder models, rankings, solutions, and learning_curves. The .mps files it contains are large and thus in the .gitignore.
-	`mkdir models rankings solutions learning_curves`
+- create folder models, rankings, solutions, and learning_curves. The .mps files it contains are large and thus in the .gitignore.
+	mkdir models rankings solutions learning_curves
 
-	- verify that the folder `qm7` exists, and that it contains the energies described in an `energies.csv` file (with columns `file` and `energy / Ha`).
+- verify that the folder `qm7` exists, and that it contains the energies described in an `energies.csv` file (with columns `file` and `energy / Ha`).
 
 The `main.py` file runs everything based on a Python config file. The default config files `config.py` used by default when running `main.py` with no argument.
 In order to use custom config `config-foo.py`, use the command `python3 main.py "config-foo"`.
