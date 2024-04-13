@@ -1,13 +1,17 @@
 # Requirements
 
-The code was run on Python 3.10.12. The following modules are required: numpy, pandas, qml, sklearn, skmatter, plotly, kaleido, pickle, json, os
+The code was run on Python 3.10.12. The following modules are required: numpy, pandas, qml, sklearn, skmatter, plotly, kaleido, pickle, json, os.
+    ```
     python3 -m pip install numpy pandas qml sklearn skmatter plotly kaleido pickle json os
+    ```
 
 # First Run
 
 - to use `algo_model` and `algo_subset`, the molekuehl folder should be added to the python path.
 Example:
-	export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"
+	```
+    export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"
+    ```
 Add this line at the end of your .bashrc file to add it systematically.
 
 - create folder models, rankings, solutions, and learning_curves. The .mps files it contains are large and thus in the .gitignore.
