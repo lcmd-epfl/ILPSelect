@@ -14,7 +14,9 @@ export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"
 ```
 
 - create folder models, rankings, solutions, and learning_curves. The .mps files it contains are large and thus in the .gitignore.
-	mkdir models rankings solutions learning_curves
+```
+mkdir models rankings solutions learning_curves
+```
 
 - verify that the folder `qm7` exists, and that it contains the energies described in an `energies.csv` file (with columns `file` and `energy / Ha`).
 
