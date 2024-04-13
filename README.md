@@ -1,56 +1,71 @@
-# Data
-## Structures
-The matrices for 3 target structures (to synthesize) and a database of 7165 query structures (to combine to build the target)
-are compressed in `data.npz` 
+# Requirements
 
-Within python, it can be read like: 
-```
-data = np.load("data.npz", allow_pickle=True)
-```
+    The code was run on Python 3.10.12. The following modules are required: numpy, pandas, qml, sklearn, skmatter, plotly, kaleido, pickle, json, os
+    `python3 -m pip install numpy pandas qml sklearn skmatter plotly kaleido pickle json os`
 
-where `data.files` will return the names of the numpy arrays (should be `target_labels, target_CMs, target_ncharges, database_labels, database_CMs, database_ncharges`) 
-where CMs are the matrices (of target and database respectively) and the corresponding arrays can be accessed like: 
+# First Run
 
-```
-data["target_labels"]
-```
+	- to use `algo_model` and `algo_subset`, the molekuehl folder should be added to the python path.
+	Example:
+	`export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"`
+	Add this line at the end of your .bashrc file to add it systematically.
 
-For more details see the documentation: 
-https://het.as.utexas.edu/HET/Software/Numpy/reference/generated/numpy.savez.html
+	- create folder models, rankings, solutions, and learning_curves. The .mps files it contains are large and thus in the .gitignore.
+	`mkdir models rankings solutions learning_curves`
 
-## Connectivity / functional group information
-Adjacency matrices and functional group information derived from the connectivity are compressed in `connectivity_data.npz`. 
+	- verify that the folder `qm7` exists, and that it contains the energies described in an `energies.csv` file (with columns `file` and `energy / Ha`).
 
-Within python, it can be read like:
-```
-connectivity_data = np.load("connectivity_data.npz")
-```
+The `main.py` file runs everything based on a Python config file. The default config files `config.py` used by default when running `main.py` with no argument.
+In order to use custom config `config-foo.py`, use the command `python3 main.py "config-foo"`.
 
-the corresponding keys are `fg_counts_targets` for the functional group counts of each of the 3 target molecules,`fg_counts_frags` for the functional group counts of
-each of the fragment molecules, `frag_adj_matrices` for the adjacency matrices of the fragments and `target_adj_matrices` for the adjacency matrices of the target molecules.
-The order is the same as those in `data` containing the structures.  
+# Walkthrough of `main.py`
 
-## Optimal databases 
-Dedicated databases of small molecules are saved for each target, all compressed in the file `amons_data.npz`.
+The `main.py` combines all files of folder scripts to do the following.
 
-```
-data = np.load("amons_data.npz")
-```
+- Read target names from config file. The corresponding `{target_name}.xyz` files should be present in the folder `targets`.
+- Read the config script for the following parameters: database (qm7 for now), representation (FCHL), algorithm-specific parameters, learning curve parameters, ...
+- Generate the representations if not present (with convention `{rep}\_{target}.npz and {rep}\_{database}.npz`) and save to folder `data`. The database must be in `molekuehl/{database}/`.
+- Compute fragment subsets using different techniques (indices of database)
+	- Subset selection by ILP (named `algo` in the code):
+		- Generate model and write it to `models` folder OR read it and modify its parameters if possible (simple penalty change for example).
+		- Solve model and output subset to folder `rankings` with prefix `algo_`, and solution of ILP to folder `solutions`.
+	- Subset selection by SML:
+		- Output subset to `rankings` folder with prefix `sml_`.
+	- Subset selection by CUR:
+		- Output subset to `rankings` with prefix `cur_`.
+	- Subset selection by FPS:
+		- Output subset to `rankings` with prefix `fps_`.
+	- Random subset selection (with cross-validation):
+		- Output subset to `rankings` with prefix `random_`.
+- Compute the learning curve of each subset and save to folder `learning_curves`.
+- Draw the learning curves and save to folder `plots`.
+- The timings of each step are saved in a dump file in the `run` folder.
 
-contains the same information as in the original `data`, but now specific to each target. 
-Target 0 (qm9) has the data: 
-```
-qm9_amons_labels
-qm9_amons_ncharges
-qm9_amons_CMs
-```
-where the CMs are the representation matrices. 
+# Running on clusters
 
-Similarly, target 1 (vitc) has the same data with the prefix `vitc_`. Same for vitd. These databases are much smaller, making the search faster.
+The folder `run` contains a `main.run` file which describes how the scripts were ran on the JED cluster.
+An example output file `slurm-20632813.out` is included.
 
-### Optimal databases and vector data 
-Rather than using symmetric matrices to represent our molecules where each row/column index represents an atom index, we can directly use a vector of the same length for each atom index. 
-In other words, we have an asymmetric matrix of dimensions N_atoms x V_dim where V_dim is the length of the vector. We can access the representation for each atom as the appropriate index
-of the asymmetric matrix. V_dim will vary based on the atoms present in the target system, but will be consistent between the target and database candidates.
+# Adding targets, databases, representations
 
-Now we have datasets for 4 different asymmetric representations: aCM, SLATM, SOAP and FCHL, all named like `target_repname_data.npz` for the target and `amons_repname_data.npz` for the fragments.
+## Targets
+
+Add a `{target_name}.xyz` file to the folder `targets`.
+Add a corresponding entry with the associated energy in the `energies.csv` file in the same folder.
+
+## Databases
+
+Create a `{database}` folder, which contains the energies described in an `energies.csv` file (with columns `file` and `energy / Ha`).
+One may add a column `atomization energy / Ha`. 
+See the `qm9/generate.py` script and the `cluster/scripts/generate_qm9.py` file in the master branch for an example of a qm9 implementation from a master file.
+
+## Representation
+
+Modify accordingly the file `scripts/generate.py`. Currently the `get_representations` function asserts that FCHL is used.
+
+# TODO
+
+    - Run example
+    - Complete the python mkdocs
+    - Implement qm9 database. The only thing currently missing is some pruning of the database because Gurobi uses too much memory (even on clusters). 
+    - Implement other representations than FCHL. Not a priority but should not be too difficult (`representation` is already a parameter).
