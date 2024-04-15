@@ -25,12 +25,12 @@ def reset_temp_constr(M, constr):
     return 0
 
 
-def set_objective(M, points, x):
+def set_objective(M, points, x, verbose):
     n = len(points)
     obj = M.addVar(vtype="C")
     maxnorm = np.max(cdist(points, points, metric="euclidean"))
     for i in range(n):
-        print(f"{i} / {n}")
+        if verbose: print(f"{i} / {n}")
         for j in range(i + 1, n):
             norm = np.linalg.norm(points[i] - points[j])
             M.addConstr(obj <= norm + maxnorm * (1 - x[i] + 1 - x[j]))
@@ -82,13 +82,14 @@ def fps_subset(config):
 
     M = gp.Model()
     M.setParam("TimeLimit", config["FPS_timelimit"])
+    M.setParam("OutputFlag", config["verbose"])
 
     x = add_variables(M, n)
 
     # Add constraint later, as it's subset size-dependent
 
     print("Constructing objective...")
-    set_objective(M, database_global_rep, x)
+    set_objective(M, database_global_rep, x, config["verbose"])
     print("Objective set.")
 
     M.update()
