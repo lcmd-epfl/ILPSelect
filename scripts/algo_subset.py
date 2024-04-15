@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import fragments
+from scripts import fragments
 
 
 def algo_subset(config):

@@ -1,4 +1,4 @@
-import fragments
+from scripts import fragments
 import os.path
 
 def algo_model(config):
