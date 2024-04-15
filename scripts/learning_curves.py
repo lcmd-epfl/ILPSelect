@@ -68,7 +68,6 @@ def opt_hypers(X_train, atoms_train, y_train):
                 fold_maes.append(mae)
 
             avg_mae = np.mean(fold_maes)
-            print("sigma", sigma, "l2reg", l2reg, "avg mae", avg_mae)
             maes[i, j] = avg_mae
 
     min_j, min_k = np.unravel_index(np.argmin(maes, axis=None), maes.shape)

@@ -6,7 +6,7 @@ See `config-qm7drugs.py` for a full config file.
 """
 
 config = {
-    # absolute paths
+    # absolute path
     "repository_folder": "/home/haeberle/molekuehl/",
     ###
     "config_name": "template",
@@ -38,10 +38,10 @@ config = {
     "duplicates": 1,
     "timelimit": 3600,  # 1 hour
     "PoolSearchMode": 2,
-    "number_of_fragments": 64,  # size of subset selected
+    "number_of_fragments": 64,  # size of subset selected by ILP
     ###
     "FPS_timelimit": 600, # 10 mins
-    "verbose": True,
+    "verbose": False,
     ###
     "learning_curve_ticks": [16, 32, 64],
     ###
