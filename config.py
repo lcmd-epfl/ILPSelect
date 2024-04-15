@@ -22,9 +22,9 @@ config = {
         "sildenafil",
     ],
     ###
-    "generate_database": True,
-    "generate_targets": True,
-    "cur_subset": True,
+    "generate_database": False,
+    "generate_targets": False,
+    "cur_subset": False,
     "fps_subset": True,
     "sml_subset": True,
     "algo_model": True,

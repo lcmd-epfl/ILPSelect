@@ -52,13 +52,13 @@ def generate_targets(config):
     in_database = config["in_database"]
     config_name=config["config_name"]
 
-    DATA_PATH = f"{repository_folder}cluster/data/{representation}_{database}_{config_name}.npz"
+    DATA_PATH = f"{repository_folder}data/{representation}_{database}_{config_name}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
     database_ncharges = database_info["ncharges"]
 
     # only used to not miss some new ncharges in targets, and natoms
     if not in_database:
-        TARGETS_PATH = f"{repository_folder}cluster/targets/"
+        TARGETS_PATH = f"{repository_folder}targets/"
         target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
         target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
         target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
@@ -81,7 +81,7 @@ def generate_targets(config):
 
     for target_name in targets:
         if not in_database:
-            TARGET_PATH = f"{repository_folder}cluster/targets/{target_name}.xyz"
+            TARGET_PATH = f"{repository_folder}targets/{target_name}.xyz"
         else:
             TARGET_PATH = f"{repository_folder}{database}/{target_name}.xyz"
 
@@ -96,7 +96,7 @@ def generate_targets(config):
 
         # to use in the fragments algo
         SAVE_PATH = (
-            f"{repository_folder}cluster/data/{representation}_{target_name}.npz"
+            f"{repository_folder}data/{representation}_{target_name}.npz"
         )
         np.savez(SAVE_PATH, ncharges=Q_target[0], rep=X_target[0])
 
@@ -109,7 +109,7 @@ def generate_targets(config):
 
 def generate_database(config):
     """
-    Generate representation of full databases in repository_folder/cluster/data/ from xyz files in /repository_folder/{database}
+    Generate representation of full databases in repository_folder/data/ from xyz files in /repository_folder/{database}
     There must be a `energies.csv` in the database folder with columns "file" and "energy / Ha".
 
     Parameters:
@@ -132,7 +132,7 @@ def generate_database(config):
 
     # only used to not miss some new ncharges in targets outside database
     if not in_database:
-        TARGETS_PATH = f"{repository_folder}cluster/targets/"
+        TARGETS_PATH = f"{repository_folder}targets/"
         target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
         target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
         target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
@@ -161,7 +161,7 @@ def generate_database(config):
         elements=all_elements,
     )
 
-    SAVE_PATH = f"{repository_folder}cluster/data/{representation}_{database}_{config_name}.npz"
+    SAVE_PATH = f"{repository_folder}data/{representation}_{database}_{config_name}.npz"
 
     np.savez(SAVE_PATH, reps=X, labels=file_names, ncharges=Q)
 

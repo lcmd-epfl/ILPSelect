@@ -28,7 +28,7 @@ def target_energy(config, target_name):
         )
 
     else:
-        Y_PATH = f"{repository_path}cluster/targets/energies.csv"
+        Y_PATH = f"{repository_path}targets/energies.csv"
         y_target = (
             pd.read_csv(Y_PATH)
             .query("file == @target_name+'.xyz'")["energy / Ha"]
@@ -37,10 +37,10 @@ def target_energy(config, target_name):
 
     # REMOVED AS PER RUBEN'S COMMENTS
     # representation = config["representation"]
-    # TARGET_PATH = f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+    # TARGET_PATH = f"{repository_path}data/{representation}_{target_name}.npz"
     # target_info = np.load(TARGET_PATH, allow_pickle=True)
     # Q_target = target_info["ncharges"]
-    # with open(f"{repository_path}cluster/data/atom_energy_coeffs.pickle", "rb") as f:
+    # with open(f"{repository_path}data/atom_energy_coeffs.pickle", "rb") as f:
     #     atom_energy_coeffs = pickle.load(f)
     #
     # # y energies offset

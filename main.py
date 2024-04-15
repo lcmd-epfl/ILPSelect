@@ -28,7 +28,7 @@ size_subset = config["learning_curve_ticks"][-1]
 
 # timings dump
 current_time = datetime.now().strftime("%Y-%m-%d")
-DUMP_PATH = f"{repository_folder}cluster/run/dump-{config_name}-{current_time}.csv"
+DUMP_PATH = f"{repository_folder}run/dump-{config_name}-{current_time}.csv"
 
 dump = pd.DataFrame(
     {"Property": ["num_targets", "targets"], "Value": [len(target_names), target_names]}
@@ -62,16 +62,6 @@ if config["generate_targets"]:
 
 
 # %%
-# generate sml subset
-
-
-if config["sml_subset"]:
-    from scripts.sml_subset import sml_subset
-    timer = time.time()
-    sml_subset(config)
-    timer = time.time() - timer
-    dump = add_onto_and_save(dump, "time_sml_subset", timer)
-# %%
 # generate fps, cur subset
 
 
@@ -89,6 +79,17 @@ if config["fps_subset"]:
     fps_subset(config)
     timer = time.time() - timer
     dump = add_onto_and_save(dump, "time_fps_subset", timer)
+
+# %%
+# generate sml subset
+
+
+if config["sml_subset"]:
+    from scripts.sml_subset import sml_subset
+    timer = time.time()
+    sml_subset(config)
+    timer = time.time() - timer
+    dump = add_onto_and_save(dump, "time_sml_subset", timer)
 
 # %%
 # generate algo model

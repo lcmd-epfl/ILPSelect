@@ -19,17 +19,17 @@ def algo_subset(config):
     N = config["learning_curve_ticks"][-1]
     config_name=config["config_name"]
 
-    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config_name}.npz"
+    DATA_PATH = f"{repository_path}data/{representation}_{database}_{config_name}.npz"
 
     for target_name in targets:
         TARGET_PATH = (
-            f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+            f"{repository_path}data/{representation}_{target_name}.npz"
         )
         M = fragments.model(
             DATA_PATH, TARGET_PATH, scope=config["scope"], verbose=config["verbose"]
         )
 
-        MODEL_PATH = f"{repository_path}cluster/models/{representation}_{database}_{target_name}_{pen}.mps"
+        MODEL_PATH = f"{repository_path}models/{representation}_{database}_{target_name}_{pen}.mps"
         M.readmodel(MODEL_PATH)
 
         # reads already found combinations to remove then (if we want to continue previous optimization for example)
@@ -50,7 +50,7 @@ def algo_subset(config):
         )
 
         solution_df = pd.DataFrame(M.solutions)
-        SOLUTION_SAVE_PATH = f"{repository_path}cluster/solutions/{representation}_{database}_{target_name}_{pen}.csv"
+        SOLUTION_SAVE_PATH = f"{repository_path}solutions/{representation}_{database}_{target_name}_{pen}.csv"
         solution_df.to_csv(SOLUTION_SAVE_PATH)
 
         print(f"Saved {len(solution_df)} solutions to {SOLUTION_SAVE_PATH}.")
@@ -64,7 +64,7 @@ def algo_subset(config):
                 if not f in ordered_frags:
                     ordered_frags.append(f)
 
-        RANKING_SAVE_PATH = f"{repository_path}cluster/rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
+        RANKING_SAVE_PATH = f"{repository_path}rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
         np.save(RANKING_SAVE_PATH, ordered_frags)
 
         print(f"Saved ranking of size {len(ordered_frags)} to {RANKING_SAVE_PATH}.")

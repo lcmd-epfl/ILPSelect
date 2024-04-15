@@ -112,7 +112,7 @@ def learning_curves(config):
             "full",
         ], "only algo, sml, fps and cur algorithms are handled"
 
-    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config_name}.npz"
+    DATA_PATH = f"{repository_path}data/{representation}_{database}_{config_name}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
     X = database_info["reps"]
     Q = database_info["ncharges"]
@@ -120,7 +120,7 @@ def learning_curves(config):
     frame = pd.read_csv(f"{repository_path}{database}/energies.csv")
 
     # y energies offset
-    with open(f"{repository_path}cluster/data/atom_energy_coeffs.pickle", "rb") as f:
+    with open(f"{repository_path}data/atom_energy_coeffs.pickle", "rb") as f:
         atom_energy_coeffs = pickle.load(f)
 
     if "atomization energy / Ha" in frame.columns:
@@ -136,7 +136,7 @@ def learning_curves(config):
     for curve in curves:
         for target_name in targets:
             TARGET_PATH = (
-                f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+                f"{repository_path}data/{representation}_{target_name}.npz"
             )
 
             target_info = np.load(TARGET_PATH, allow_pickle=True)
@@ -151,7 +151,7 @@ def learning_curves(config):
                     .iloc[0]
                 )
             else:
-                Y_PATH = f"{repository_path}cluster/targets/energies.csv"
+                Y_PATH = f"{repository_path}targets/energies.csv"
                 y_target = (
                     pd.read_csv(Y_PATH)
                     .query("file == @target_name+'.xyz'")["energy / Ha"]
@@ -164,19 +164,19 @@ def learning_curves(config):
 
             # algo curve ranking
             if curve == "algo":
-                RANKING_PATH = f"{repository_path}cluster/rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
+                RANKING_PATH = f"{repository_path}rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
             elif curve == "sml":
-                RANKING_PATH = f"{repository_path}cluster/rankings/sml_{representation}_{database}_{target_name}.npy"
+                RANKING_PATH = f"{repository_path}rankings/sml_{representation}_{database}_{target_name}.npy"
             elif curve == "cur":
                 if config["in_database"]:
-                    RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}_{target_name}.npy"
+                    RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}_{target_name}.npy"
                 else:
-                    RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}.npy"
+                    RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}.npy"
             elif curve == "fps":
                 if config["in_database"]:
-                    RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}_{target_name}.npz"
+                    RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}_{target_name}.npz"
                 else:
-                    RANKING_PATH = f"{repository_path}cluster/rankings/{curve}_{representation}_{database}.npz"
+                    RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}.npz"
 
             if curve == "full":
                 opt_ranking = range(len(y))
@@ -213,9 +213,9 @@ def learning_curves(config):
             maes = np.array(maes)
 
             if curve == "algo":
-                SAVE_PATH = f"{repository_path}cluster/learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
+                SAVE_PATH = f"{repository_path}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
             else:
-                SAVE_PATH = f"{repository_path}cluster/learning_curves/{curve}_{representation}_{database}_{target_name}.npz"
+                SAVE_PATH = f"{repository_path}learning_curves/{curve}_{representation}_{database}_{target_name}.npz"
 
             np.savez(
                 SAVE_PATH,
@@ -248,7 +248,7 @@ def learning_curves_random(config, add_onto_old=True):
     if config["random_state"] != None:
         print("WARNING: random_state is fixed -- all random subsets are identical!")
 
-    DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config_name}.npz"
+    DATA_PATH = f"{repository_path}data/{representation}_{database}_{config_name}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
 
 
@@ -259,7 +259,7 @@ def learning_curves_random(config, add_onto_old=True):
     database_energies = pd.read_csv(f"{repository_path}{database}/energies.csv")
 
     # y energies offset
-    with open(f"{repository_path}cluster/data/atom_energy_coeffs.pickle", "rb") as f:
+    with open(f"{repository_path}data/atom_energy_coeffs.pickle", "rb") as f:
         atom_energy_coeffs = pickle.load(f)
 
     if "atomization energy / Ha" in database_energies.columns:
@@ -281,7 +281,7 @@ def learning_curves_random(config, add_onto_old=True):
 
     for target_name in targets:
         TARGET_PATH = (
-            f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+            f"{repository_path}data/{representation}_{target_name}.npz"
         )
 
         target_info = np.load(TARGET_PATH, allow_pickle=True)
@@ -315,7 +315,7 @@ def learning_curves_random(config, add_onto_old=True):
             y=y[mask]
 
         else:
-            Y_PATH = f"{repository_path}cluster/targets/energies.csv"
+            Y_PATH = f"{repository_path}targets/energies.csv"
             y_target = (
                 pd.read_csv(Y_PATH)
                 .query("file == @target_name+'.xyz'")["energy / Ha"]
@@ -368,7 +368,7 @@ def learning_curves_random(config, add_onto_old=True):
 
         print("All MAEs random", all_maes_random)
 
-        SAVE_PATH = f"{repository_path}cluster/learning_curves/random_{representation}_{database}_{target_name}.npz"
+        SAVE_PATH = f"{repository_path}learning_curves/random_{representation}_{database}_{target_name}.npz"
 
         np.savez(
             SAVE_PATH,

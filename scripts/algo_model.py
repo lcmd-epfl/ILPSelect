@@ -24,18 +24,18 @@ def algo_model(config):
     for target_name in targets:
 
 
-        DATA_PATH = f"{repository_path}cluster/data/{representation}_{database}_{config_name}.npz"
+        DATA_PATH = f"{repository_path}data/{representation}_{database}_{config_name}.npz"
         TARGET_PATH = (
-            f"{repository_path}cluster/data/{representation}_{target_name}.npz"
+            f"{repository_path}data/{representation}_{target_name}.npz"
         )
         M = fragments.model(
             DATA_PATH, TARGET_PATH, scope=config["scope"], verbose=config["verbose"]
         )
 
-        SAVE_PATH = f"{repository_path}cluster/models/{representation}_{database}_{target_name}_{pen}.mps"
+        SAVE_PATH = f"{repository_path}models/{representation}_{database}_{target_name}_{pen}.mps"
 
         # if pen=1 file already exists, open it, change the penalty, and save.
-        PEN_1_PATH = f"{repository_path}cluster/models/{representation}_{database}_{target_name}_1.mps"
+        PEN_1_PATH = f"{repository_path}models/{representation}_{database}_{target_name}_1.mps"
         if os.path.isfile(PEN_1_PATH):
             M.readmodel(PEN_1_PATH)
             M.changepenalty(pen)
