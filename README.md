@@ -35,7 +35,7 @@ The `main.py` combines all files of folder scripts to do the following.
 
 - Read target names from config file. The corresponding `{target_name}.xyz` files should be present in the folder `targets`.
 - Read the config script for the following parameters: database (qm7 for now), representation (FCHL), algorithm-specific parameters, learning curve parameters, ...
-- Generate the representations if not present (with convention `{rep}\_{target}.npz and {rep}\_{database}.npz`) and save to folder `data`. The database must be in the `{database}` folder.
+- Generate the representations if not present (with convention `{rep}\_{target}.npz` and `{rep}\_{database}.npz`) and save to folder `data`. The database must be in the `{database}` folder.
 The file `scripts/generate.py` is responsible for this step.
 - Compute fragment subsets using different techniques (indices of database)
 	- Subset selection by ILP (named `algo` in the code):
@@ -56,12 +56,12 @@ The file `scripts/generate.py` is responsible for this step.
 The file `scripts/learning_curves.py` is responsible for this step.
 - Draw the learning curves and save to folder `plots`.
 The file `scripts/plots.py` is responsible for this step.
-- The timings of each step are saved in a dump file in the `run` folder.
+- The timings of each step are saved in a dump file in the `run` folder. An example file `dump-template.csv` can be found in the folder.
 
 ## Running on clusters
 
 The folder `run` contains a `main.run` file which describes how the scripts were ran on the JED cluster.
-An example output file `slurm-20632813.out` is included.
+An example output file `slurm.out` is included.
 
 ## Adding targets, databases, representations
 
