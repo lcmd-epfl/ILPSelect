@@ -344,9 +344,6 @@ def learning_curves_random(config, add_onto_old=True):
                 min_sigma, min_l2reg = opt_hypers(
                     X_train[:n], Q_train[:n], y_train[:n]
                 ) 
-                print(min_sigma, min_l2reg)
-                
-                # min_sigma, min_l2reg = 1, 1e-7
 
                 mae, y_pred = train_predict_model(
                     X_train[:n],
