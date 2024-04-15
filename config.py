@@ -36,9 +36,11 @@ config = {
     "scope": "local_vector",
     "penalty": 1,
     "duplicates": 1,
-    "timelimit": 600,  # 10 mins
+    "timelimit": 3600,  # 1 hour
     "PoolSearchMode": 2,
     "number_of_fragments": 64,  # size of subset selected
+    ###
+    "FPS_timelimit": 600, # 10 mins
     "verbose": True,
     ###
     "learning_curve_ticks": [16, 32, 64],

@@ -81,7 +81,7 @@ def fps_subset(config):
     assert N[-1] <= n, "Number of points is smaller than size of subset."
 
     M = gp.Model()
-    M.setParam("TimeLimit", config["timelimit"])
+    M.setParam("TimeLimit", config["FPS_timelimit"])
 
     x = add_variables(M, n)
 

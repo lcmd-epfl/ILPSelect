@@ -1,0 +1,14 @@
+,Property,Value
+0,num_targets,1
+1,targets,['sildenafil']
+0,time_generate_database,12.64309024810791
+0,time_generate_targets,0.08286738395690918
+0,time_cur_subset,93.19113373756409
+0,time_fps_subset,2795.7274746894836
+0,time_sml_subset,2.538109302520752
+0,time_algo_model,14.326371431350708
+0,time_algo_subset,1115.5727138519287
+0,time_learning_curves,27.074753284454346
+0,time_learning_curves_random,9.683861255645752
+0,time_plots_individual,4.71488881111145
+0,time_plots_average,0.8297557830810547

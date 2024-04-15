@@ -8,13 +8,13 @@ Ha2kcal = 627.5
 
 ###### PLOT PARAMETERS ######
 # set to True to show MAPE instead of absolute errors
-PERCENTAGE_ERROR = True
+PERCENTAGE_ERROR = False
 # set to True to set scale to e-3 instead of e-2
 MULTIPLY_BY_10 = False
 # set to True iif both pen 0 and 1 are available to draw
-PEN_0_AND_1 = True
+PEN_0_AND_1 = False
 # show legend switch
-SHOW_LEGEND=False
+SHOW_LEGEND= True
 
 def target_energy(config, target_name):
     repository_path = config["repository_folder"]
