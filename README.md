@@ -82,7 +82,6 @@ Modify accordingly the file `scripts/generate.py`. Currently the `get_representa
 
 ## TODO
 
-- Run example
-- Complete the python mkdocs
+- Add list of class attributes of `scripts.fragments.model`.
 - Implement qm9 database. The only thing currently missing is some pruning of the database because Gurobi uses too much memory (even on clusters). 
 - Implement other representations than FCHL. Not a priority but should not be too difficult (`representation` is already a parameter).
