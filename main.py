@@ -1,3 +1,12 @@
+"""
+Main file agregator that reads a python config file and runs each script accordingly.
+
+Running with no argument takes the template config.py.
+    >>> python3 main.py
+Running with an argument searches for the config name.
+    >>> python3 main.py "config-qm7drugs"
+"""
+
 # %%
 import sys
 import time

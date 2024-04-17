@@ -10,34 +10,28 @@ class model:
     """
     Molecule fragmentation algorithm to split given target with database elements using a common representation.
     ---------
-    Expected file structures
+    Expected database and target .npz files structures: see documentation of `scripts.generate`.
 
     Database structure: npz file with keys 'labels', 'ncharges', and 'reps'.
     Target structure: npz file with keys 'ncharges' and 'rep'.
-    See documentation.
     ---------
-    Parameters of __init__
+    Parameters of `__init__`
 
     path_to_database: string
         path to .npz file with database structure.
     path_to_target: string
         path to .npz file with target structure.
-    ---------
-    Parameters of setup
-
     scope: string
         defines shape of representations; takes value "local_matrix", "local_vector", or "global_vector".
+    ---------
+    Parameters of `setup`
+
     penalty_constant: int or float, optional (default=1e6)
         sets penalty constant in objective value.
     duplicates: int, optional (default=1)
         number of times the database is processed. Higher values than 1 replicate the database.
-    ## TODO move the two below to self.optimize
-    nthreads: int, optional (default=0)
-        number of threads used by Gurobi for the optimization. Lower values reduce the amount of memory used.
-    poolgapabs: int or float, optional (default=GRB.INFINITY)
-        absolute gap between best and worst solutions that are kept by Gurobi. This is used to filter extremely bad solutions.
     ---------
-    Parameters of optimize
+    Parameters of `optimize`
 
     number_of_solutions: int, optional (default=15)
         number of solutions computed by the algorithm.
@@ -45,31 +39,43 @@ class model:
         number of seconds the optimization may run.
     poolsearchmode: int, optional (default=2)
         takes value 0, 1, or 2, and defines behavior of algorithm in terms of finding best solutions. See gurobi documentation.
+    nthreads: int, optional (default=0)
+        number of threads used by Gurobi for the optimization. Lower values reduce the amount of memory used.
+    poolgapabs: int or float, optional (default=GRB.INFINITY)
+        absolute gap between best and worst solutions that are kept by Gurobi. This is used to filter extremely bad solutions.
+    callback: bool, optional (default=False)
+        whether new constraints are added at each callback, making the ILP search endlessly for good solutions.
+    objbound: int or float, optional (default=40),
+        if `callback` is `True`, upperbound on objective value of found solutions that are kept.
+    number_of_fragments: int, optional (default=20)
+        if `callback` is `True`, number of unique fragments found until optimization stops.
     --------
-    Parameters of output
+    Parameters of `output`
 
-    output_name: string, optional (default="../out/output.csv")
-        path to a .csv file to write the solutions in.
+    output_name: string or None, optional (default=None)
+        if not `None`, path to a .csv file to write the solutions in.
     --------
     Attributes
 
     TODO
     --------
-    Example
+    Example. To execute in the molekuehl repository folder (for `data` folder path).
 
-    >>> import fragments
-    >>>M=fragments.model("../representations/database.npz", "../representations/target.npz")
-    >>>M.setup("global_vector",1e6)
-    >>>M.optimize()
-    >>>M.output()
+    >>> import scripts.fragments
+    >>> from scripts.generate import generate_database, generate_targets
+    >>> from config import config
+    >>> generate_database(config)
+    >>> generate_targets(config)
+    >>> M=scripts.fragments.model("data/FCHL_qm7_template.npz", "data/FCHL_sildenafil.npz", scope="local_vector")
+    >>> M.setup()
+    >>> M.optimize()
+    >>> M.output("output.csv")
     --------
     Reference
-    [1] ******
+    [1] TODO
     """
 
     ################### functions to call below ##################
-    # TODO: move initial arguments to the setup phase?
-    # since it's not useful when reading from file (it's used right now but may be changed)
     def __init__(self, path_to_database, path_to_target, scope, verbose=False):
         assert scope in [
             "local_vector",
@@ -116,11 +122,6 @@ class model:
         start = timeit.default_timer()
 
         self.Z = gp.Model()
-
-        # model parameters
-        # useless now?
-        # self.Z.setParam("PreQLinearize", 0)
-        # self.Z.setParam("MIPFocus",1)
 
         print(
             "Parameters: penalty_constant=",
@@ -332,28 +333,23 @@ class model:
         return 0
 
     # used only by self.callback() !
-    #
     def add_lazy_constraint(self):
         # var is the variable indicator of fragments (x or y)
+        # values of var: 1 if fragment is picked, 0 otherwise.
         if self.scope == "global_vector":
             var = self.x
         else:
             var = self.y
 
-        # values of var, 1 if fragment is picked, 0 otherwise.
         frags = self.Z.cbGetSolution(var)
         S = []
         for i in frags.keys():
             if np.abs(frags[i] - 1) < 1e-5:
-                # expr+=var[i]
                 S.append(i[0])
 
         # adds found combination with objective value to solutions and visitedfragments
         self.add_to_solutions(S)
         # forces new fragment to appear: expr sums over indices NOT in visitedfragments.
-        # expr=gp.LinExpr()
-        # self.Z.cbLazy(expr <= len(S)-1) # forbids combination found
-        # I=[i for (i,_) in var.keys() if not np.any(np.isin(self.visitedfragments, i))]
         I = [i for (i, _) in var.keys() if not i in self.visitedfragments]
         expr = var.sum(I, "*")
         self.Z.cbLazy(expr >= 1)
@@ -388,7 +384,6 @@ class model:
             Tcharges = self.target_ncharges
             Trep = self.target_rep
             n = len(Tcharges)  # size of target
-            upperbounds = []
             I = []
             J = []
             for M in self.database_indices:
@@ -557,7 +552,7 @@ class model:
         print("Objective function set.")
         return 0
 
-    # Solution processing, saved in "output_repname.csv".
+    # Solution processing, saved in "output_name".
     def print_sols(self, Z, x, y, output_name):
         self.SolCount = Z.SolCount
         if self.scope == "local_matrix" or self.scope == "local_vector":

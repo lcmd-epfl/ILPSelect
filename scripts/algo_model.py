@@ -11,7 +11,8 @@ def algo_model(config):
         database: database name (str) eg. "qm7"
         targets: array of target names (array(str))
         representation: name of representation (str) eg. "FCHL"
-        config: config dictionary. Must contain keys "penalty" and "scope".
+        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty"`, `"representation"`, `"target_names"`,
+            `"database"`, `"config_name"`, `"scope"`, `"verbose"`.
     """
 
     repository_path = config["repository_folder"]

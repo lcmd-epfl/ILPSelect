@@ -55,7 +55,8 @@ def plots_individual(config):
     Draw combined plots of the learning curves for each target and saves them to plots/.
 
     Parameters:
-        config: config dictionary. Must contain keys "learning_curve_ticks", "random_state", "in_database" TODO
+        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty"`, `"representation"`, `"plot_average_target_names"`,
+            `"database"`, `"learning_curve_ticks"`, `"plots_average"`.
     """
 
     learning_curve_ticks = config["learning_curve_ticks"]
@@ -271,9 +272,9 @@ def plots_average(config):
     Draw average plots of the learning curves and saves them to plots/.
 
     Parameters:
-        config: TODO
+        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty"`, `"representation"`, `"plot_average_target_names"`,
+            `"database"`, `"learning_curve_ticks"`, `"plots_average"`.
     """
-
     N = config["learning_curve_ticks"]
     parent_directory = config["repository_folder"]
     pen = config["penalty"]
@@ -378,7 +379,14 @@ def plots_average(config):
 
 def ALGO_PLOT(config, fig, MULTIPLY_BY_10, pen, style):
     """
-    style: "dot" or "solid"
+
+    Parameters:
+        config: config dictionary. Must contain keys `"repository_folder"`, `"representation"`,
+            `"database"`, `"learning_curve_ticks"`, `"plot_average_target_names"`.
+        fig: plotly figure to append.
+        MULTIPLY_BY_10: bool, whether to multiply by 10 the y axis.
+        pen: float or int, penalty.
+        style: string, "dot" or "solid".
     """
 
     N = config["learning_curve_ticks"]
@@ -444,6 +452,14 @@ def ALGO_PLOT(config, fig, MULTIPLY_BY_10, pen, style):
     )
 
 def SML_PLOT(config, fig, MULTIPLY_BY_10):
+    """
+
+    Parameters:
+        config: config dictionary. Must contain keys `"repository_folder"`, `"representation"`,
+            `"database"`, `"learning_curve_ticks"`, `"plot_average_target_names"`.
+        fig: plotly figure to append.
+        MULTIPLY_BY_10: bool, whether to multiply by 10 the y axis.
+    """
 
     N = config["learning_curve_ticks"]
     parent_directory = config["repository_folder"]
@@ -476,6 +492,14 @@ def SML_PLOT(config, fig, MULTIPLY_BY_10):
     )
 
 def FPS_PLOT(config, fig, MULTIPLY_BY_10):
+    """
+
+    Parameters:
+        config: config dictionary. Must contain keys `"repository_folder"`, `"representation"`,
+            `"database"`, `"learning_curve_ticks"`, `"plot_average_target_names"`.
+        fig: plotly figure to append.
+        MULTIPLY_BY_10: bool, whether to multiply by 10 the y axis.
+    """
 
     N = config["learning_curve_ticks"]
     parent_directory = config["repository_folder"]
@@ -507,6 +531,14 @@ def FPS_PLOT(config, fig, MULTIPLY_BY_10):
     )
 
 def CUR_PLOT(config, fig, MULTIPLY_BY_10):
+    """
+
+    Parameters:
+        config: config dictionary. Must contain keys `"repository_folder"`, `"representation"`,
+            `"database"`, `"learning_curve_ticks"`, `"plot_average_target_names"`.
+        fig: plotly figure to append.
+        MULTIPLY_BY_10: bool, whether to multiply by 10 the y axis.
+    """
 
     N = config["learning_curve_ticks"]
     parent_directory = config["repository_folder"]
@@ -538,6 +570,14 @@ def CUR_PLOT(config, fig, MULTIPLY_BY_10):
     )
 
 def RANDOM_PLOT(config, fig, MULTIPLY_BY_10):
+    """
+
+    Parameters:
+        config: config dictionary. Must contain keys `"repository_folder"`, `"representation"`,
+            `"database"`, `"learning_curve_ticks"`, `"plot_average_target_names"`.
+        fig: plotly figure to append.
+        MULTIPLY_BY_10: bool, whether to multiply by 10 the y axis.
+    """
 
     N = config["learning_curve_ticks"]
     parent_directory = config["repository_folder"]

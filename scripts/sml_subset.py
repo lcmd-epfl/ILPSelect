@@ -19,7 +19,8 @@ def sml_subset(config):
     Generate SML subsets of size N for each target from the database.
 
     Parameters:
-        config: TODO
+        config: config dictionary. Must contain keys `"repository_folder"`, `"representation"`, `"target_names"`,
+            `"database"`, `"in_database"`, `"learning_curve_ticks"`, `"config_name"`.
     """
 
     parent_folder = config["repository_folder"]
