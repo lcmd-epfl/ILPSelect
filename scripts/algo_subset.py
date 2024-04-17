@@ -5,10 +5,12 @@ from scripts import fragments
 
 def algo_subset(config):
     """
-    Generates size N subset of database indices.
+    Generates size N subset of database indices from a .mps file (Gurobi model). 
+    The corresponding model must already have been generated using `scripts.algo_model.algo_model`.
 
     Parameters:
-        config: config dictionary. Must contain keys "penalty", "scope", "verbose", "PoolSearchMode", "timelimit" TODO
+        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty"`, `"representation"`, `"target_names"`,
+            `"database"`, `"learning_curve_ticks"`, `"config_name"`, `"scope"`, `"verbose"`, `"PoolSearchMode"`, `"timelimit"`.
     """
 
     repository_path = config["repository_folder"]
@@ -30,7 +32,11 @@ def algo_subset(config):
         )
 
         MODEL_PATH = f"{repository_path}models/{representation}_{database}_{target_name}_{pen}.mps"
-        M.readmodel(MODEL_PATH)
+        try:
+            M.readmodel(MODEL_PATH)
+        except:
+            print(f"WARNING: model of target {target_name} not in models/ folder. Path name must be {MODEL_PATH}.")
+            continue
 
         # reads already found combinations to remove then (if we want to continue previous optimization for example)
         # df=pd.read_csv(outfolder+"newsolutions"+str(pen)+".csv")

@@ -51,7 +51,8 @@ def fps_subset(config):
     Generate FPS subsets of each N of `learning_curve_ticks` for each target from the database.
 
     Parameters:
-        config: TODO
+        config: config dictionary. Must contain keys `"repository_folder"`, `"representation"`, `"target_names"`,
+            `"database"`, `"in_database"`, `"learning_curve_ticks"`, `"config_name"`, `"verbose"`, `"FPS_timelimit"`.
     """
 
     parent_folder = config["repository_folder"]
@@ -157,7 +158,7 @@ def fps_ranking(config, size_subset, database_labels, M, x):
     This disregards the entry `learning_curve_ticks` of `config`.
 
     Parameters:
-        config: TODO
+        config: config dictionary. Must contain keys `"target_names"`, `"in_database"`.
         size_subset: size of subset (int)
         database_labels: database (npz)
         M: gurobi FPS model to solve (gurobipy.Model)

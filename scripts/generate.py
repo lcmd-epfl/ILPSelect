@@ -42,7 +42,8 @@ def generate_targets(config):
     The database must already be generated in order to keep the same parameters!
 
     Parameters:
-        config: TODO
+        config: config dictionary. Must contain keys `"repository_folder"`, `"representation"`, `"target_names"`,
+            `"database"`, `"in_database"`, `"config_name"`.
     """
 
     repository_folder = config["repository_folder"]
@@ -113,7 +114,8 @@ def generate_database(config):
     There must be a `energies.csv` in the database folder with columns "file" and "energy / Ha".
 
     Parameters:
-        config:TODO
+        config: config dictionary. Must contain keys `"repository_folder"`, `"representation"`, `"target_names"`,
+            `"database"`, `"in_database"`, `"config_name"`.
     """
 
     repository_folder = config["repository_folder"]

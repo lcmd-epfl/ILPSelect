@@ -90,7 +90,8 @@ def learning_curves(config):
     Compute learning curves once for each prefix, and each target. For N-fold random learning curves, use `learning_curves_random`.
 
     Parameters:
-        config: TODO
+        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty"`, `"representation"`, `"target_names"`,
+            `"database"`, `"in_database"`, `"learning_curve_ticks"`, `"config_name"`.
     """
 
     repository_path = config["repository_folder"]
@@ -101,6 +102,7 @@ def learning_curves(config):
     curves = [e for e in config["learning_curves"] if e != "random"]
     config_name=config["config_name"]
     learning_curve_ticks = config["learning_curve_ticks"]
+    in_database = config["in_database"]
 
     for curve in curves:
         assert curve in [
@@ -142,7 +144,7 @@ def learning_curves(config):
             X_target = target_info["rep"]
             Q_target = target_info["ncharges"]
 
-            if config["in_database"]:
+            if in_database:
                 Y_PATH = f"{repository_path}{database}/energies.csv"
                 y_target = (
                     pd.read_csv(Y_PATH)
@@ -167,12 +169,12 @@ def learning_curves(config):
             elif curve == "sml":
                 RANKING_PATH = f"{repository_path}rankings/sml_{representation}_{database}_{target_name}.npy"
             elif curve == "cur":
-                if config["in_database"]:
+                if in_database:
                     RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}_{target_name}.npy"
                 else:
                     RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}.npy"
             elif curve == "fps":
-                if config["in_database"]:
+                if in_database:
                     RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}_{target_name}.npz"
                 else:
                     RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}.npz"
@@ -218,7 +220,7 @@ def learning_curves(config):
 
             np.savez(
                 SAVE_PATH,
-                train_sizes=config["learning_curve_ticks"],
+                train_sizes=learning_curve_ticks,
                 mae=maes,
                 # ranking_xyz=database_info["labels"][opt_ranking],
             )
@@ -233,7 +235,8 @@ def learning_curves_random(config, add_onto_old=True):
     Compute for CV-fold random learning curves.
 
     Parameters:
-        config: TODO
+        config: config dictionary. Must contain keys `"repository_folder"`, `"representation"`, `"target_names"`,
+            `"database"`, `"in_database"`, `"learning_curve_ticks"`, `"config_name"`, `"CV"`, `"random_state"`.
         add_onto_old: if some random curves already exist, we will append onto them (bool)
     """
 
@@ -243,6 +246,8 @@ def learning_curves_random(config, add_onto_old=True):
     database = config["database"]
     CV = config["CV"]
     config_name=config["config_name"]
+    in_database=config["in_database"]
+    learning_curve_ticks=config["learning_curve_ticks"]
 
     if config["random_state"] != None:
         print("WARNING: random_state is fixed -- all random subsets are identical!")
@@ -290,7 +295,7 @@ def learning_curves_random(config, add_onto_old=True):
 
 
         # y_target definition
-        if config["in_database"]:
+        if in_database:
             # label of target
             if "atomization energy / Ha" in database_energies.columns:
                 y_target = database_energies.query("file == @target_name")[
@@ -334,12 +339,11 @@ def learning_curves_random(config, add_onto_old=True):
             ranking = old_random["ranking_xyz"].tolist()
 
         # five fold cross validation
-        CV = config["CV"]
         for i in range(CV):
             # we don't use the test indices since we test on the target (label y_target)
             X_train, _, Q_train, _, database_labels_train, _, y_train, _ = train_test_split(X, Q, database_labels, y, test_size=.2, random_state=config["random_state"])
             maes_random = []
-            for n in config["learning_curve_ticks"]:
+            for n in learning_curve_ticks:
                 
                 min_sigma, min_l2reg = opt_hypers(
                     X_train[:n], Q_train[:n], y_train[:n]
@@ -368,7 +372,7 @@ def learning_curves_random(config, add_onto_old=True):
 
         np.savez(
             SAVE_PATH,
-            train_sizes=config["learning_curve_ticks"],
+            train_sizes=learning_curve_ticks,
             all_maes_random=all_maes_random,
             ranking_xyz=ranking,
         )
