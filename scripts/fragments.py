@@ -54,10 +54,36 @@ class model:
 
     output_name: string or None, optional (default=None)
         if not `None`, path to a .csv file to write the solutions in.
-    --------
-    Attributes
 
-    TODO
+    --------
+    Parameters of `readmodel`
+
+    filepath: string
+        absolute or relative path to .mps file to be read.
+    --------
+    Parameters of `changepenalty`
+
+    newpenalty: int or float
+        if the current penalty of the model is nonzero, changes it to `newpenalty`.
+        The old penatly is printed for sanity check. 
+    --------
+    Parameters of `savemodel`
+
+    filepath: string
+        absolute or relative path to .mps file to be read.
+    --------
+    Class attributes
+
+     database: NpzFile (NumPy) with files `ncharges`, `labels` and `reps`.
+     target: NpzFile (NumPy) with files `ncharges` and `rep`.
+     size_database: size of database.
+     solutions: dictionary of found solutions. Key `Fragments` is an array of indices arrays (solutions found). Key `Value` is an array of corresponding objective values.
+        Indices correspond directly to the `database` attribute and its files.
+     visitedfragments: array of indices of visited fragments (all unique).
+        Indices correspond directly to the `database` attribute and its files.
+     SolDict: dictionary containing found solutions with keys `SolN`, `Fragments`, `FragmentsID`, `Excess`, `ObjValNoPen`, `ObjValWithPen`, `Assignments`.
+        Only available through `self.output()` method.
+         
     --------
     Example. To execute in the molekuehl repository folder (for `data` folder path).
 
