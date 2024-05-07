@@ -55,11 +55,16 @@ def algo_subset(config):
             number_of_fragments=N,
         )
 
-        solution_df = pd.DataFrame(M.solutions)
-        SOLUTION_SAVE_PATH = f"{repository_path}solutions/{representation}_{database}_{target_name}_{pen}.csv"
-        solution_df.to_csv(SOLUTION_SAVE_PATH)
+        SOLUTION_SAVE_NAME = f"{repository_path}solutions/{representation}_{database}_{target_name}_{pen}"
 
-        print(f"Saved {len(solution_df)} solutions to {SOLUTION_SAVE_PATH}.")
+        # full solutions (with mappings, excess).
+        M.output(SOLUTION_SAVE_NAME+"-full.csv")
+
+        # simple solutions (only fragments and objective values)
+        solution_df = pd.DataFrame(M.solutions)
+        solution_df.to_csv(SOLUTION_SAVE_NAME+".csv")
+
+        print(f"Saved {len(solution_df)} solutions to {SOLUTION_SAVE_NAME}(-full).csv.")
 
         # sorts solutions found by objective value
         # and saves fragments to file

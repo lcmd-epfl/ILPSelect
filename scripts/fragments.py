@@ -139,6 +139,16 @@ class model:
         self.solutions = {"Fragments": [], "Value": []}
         self.objbound = None
         self.number_of_fragments = None
+        self.SolDict = {
+            "SolN": [],
+            "Fragments": [],
+            "FragmentsID": [],
+            "Excess": [],
+            "ObjValNoPen": [],
+            "ObjValWithPen": [],
+            "Assignments": [],
+        }
+        self.SolNum = 0
 
     def setup(self, penalty_constant=1, duplicates=1):
         # construction of the model
@@ -273,8 +283,21 @@ class model:
         return 0
 
     def output(self, output_name=None):
-        d = self.print_sols(self.Z, self.x, self.y, output_name)
-        return d
+        # Save full output.
+        # Only call when using callback!
+
+        df = pd.DataFrame(self.SolDict)
+        df["Fragments"] = df["Fragments"].apply(lambda x: str(x))
+
+        # remove duplicate solutions with there are any (arrays of fragments)
+        df = df.drop_duplicates(subset="Fragments")
+        df = df.reset_index(drop=True)
+
+        if output_name != None:
+            df.to_csv(output_name)
+            print("Saved full solutions to " + output_name)
+
+        return 0
 
     ############## functions for subset selection ###############
 
@@ -358,6 +381,83 @@ class model:
         self.solutions["Value"].append(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
         return 0
 
+
+    # used only by self.callback() !
+    def update_visited_fragments(self):        
+        if self.scope == "global_vector":
+            var = self.x
+        else:
+            var = self.y
+
+        frags = self.Z.cbGetSolution(var)
+        S = []
+        for i in frags.keys():
+            if np.rint(frags[i]) == 1:
+                S.append(i[0])
+
+        # adds found combination with objective value to solutions and visitedfragments
+        self.add_to_solutions(S)
+
+        return 0
+    
+    # used only by self.callback() !
+    def update_full_solution(self):
+        # save full solution, with mappings. only for local representations!
+
+        self.SolNum += 1
+
+        if self.scope == "local_matrix" or self.scope == "local_vector":
+            
+            OBJ_VAL = self.Z.cbGet(GRB.Callback.MIPSOL_OBJ)
+            # mapping variables
+            x = self.Z.cbGetSolution(self.x)
+            I = x.keys()
+
+            n = len(self.target_ncharges)  # size of target
+            fragments = set()
+
+            # constructs matrix A with entry [j,M,G] that takes value i+1 if x[i,j,M,G]=1, and 0 otherwise
+            A = np.zeros((n, self.size_database, self.duplicates))
+            for i, j, M, G in [v for v in I if np.rint(x[v]) == 1]:
+                fragments.add((M, G))
+                A[j, M, G] = i + 1
+
+            penalty = -n
+            assignments = []
+            excess = []
+            fragmentlabels = []
+            fragmentsid = []
+            k = 0
+            for M, G in fragments:
+                used_indices = []
+                maps = []
+                m = len(self.database_ncharges[M])
+                penalty += m
+                fragmentlabels.append(self.database_labels[M])
+                fragmentsid.append(M)
+                for j in range(n):
+                    i = int(A[j, M, G] - 1)
+                    if i >= 0:
+                        maps.append((i + 1, j + 1))
+                        used_indices.append(i)
+                assignments.append(maps)
+                charges = np.array(self.database_ncharges[M])
+                excess.append(charges[np.delete(range(m), used_indices)].tolist())
+                k = k + 1
+            
+            d = self.SolDict
+            d["Excess"].append(excess)
+            d["Fragments"].append(fragmentlabels)
+            d["FragmentsID"].append(fragmentsid)
+            d["SolN"].append(self.SolNum)
+            d["ObjValNoPen"].append(OBJ_VAL - penalty * self.penalty_constant)
+            d["ObjValWithPen"].append(OBJ_VAL)
+            d["Assignments"].append(assignments)
+
+            self.SolDict = d
+    
+        return 0
+
     # used only by self.callback() !
     def add_lazy_constraint(self):
         # var is the variable indicator of fragments (x or y)
@@ -367,14 +467,6 @@ class model:
         else:
             var = self.y
 
-        frags = self.Z.cbGetSolution(var)
-        S = []
-        for i in frags.keys():
-            if np.abs(frags[i] - 1) < 1e-5:
-                S.append(i[0])
-
-        # adds found combination with objective value to solutions and visitedfragments
-        self.add_to_solutions(S)
         # forces new fragment to appear: expr sums over indices NOT in visitedfragments.
         I = [i for (i, _) in var.keys() if not i in self.visitedfragments]
         expr = var.sum(I, "*")
@@ -391,6 +483,8 @@ class model:
             if self.verbose:
                 print(self.Z.cbGet(GRB.Callback.MIPSOL_OBJ))
             self.add_lazy_constraint()
+            self.update_visited_fragments()
+            self.update_full_solution()
             
             num_sol = len(self.visitedfragments)
             if self.verbose:
@@ -578,8 +672,11 @@ class model:
         print("Objective function set.")
         return 0
 
-    # Solution processing, saved in "output_name".
     def print_sols(self, Z, x, y, output_name):
+        # Solution processing, saved in "output_name".
+        # do not call when using callbacks. Call self.output() instead.
+        # callbacks automatically fill the self.SolDict dictionary.
+
         self.SolCount = Z.SolCount
         if self.scope == "local_matrix" or self.scope == "local_vector":
             d = {
@@ -604,7 +701,7 @@ class model:
                 fragments = set()
                 # constructs matrix A with entry [j,M,G] that takes value i+1 if x[i,j,M,G]=1, and 0 otherwise
                 A = np.zeros((n, self.size_database, self.duplicates))
-                for i, j, M, G in [v for v in I if np.rint(x[v].Xn) == 1]:
+                for i, j, M, G in [v for v in I if np.rint(x[v]) == 1]:
                     fragments.add((M, G))
                     A[j, M, G] = i + 1
 
@@ -663,11 +760,11 @@ class model:
                 fragmentsid = []
                 penalty = -len(self.target_ncharges)  # number of atoms in target
                 for i in range(len(np.unique(self.target_ncharges))):
-                    penalty += y[i].Xn
+                    penalty += y[i]
 
                 for M in self.database_indices:
                     for G in range(self.duplicates):
-                        if np.rint(x[M, G].Xn) == 1:
+                        if np.rint(x[M, G]) == 1:
                             if self.verbose:
                                 print(self.database_labels[M])
                             fragmentsid.append(M)
