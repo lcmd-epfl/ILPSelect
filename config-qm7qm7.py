@@ -25,7 +25,7 @@ config = {
     "scope": "local_vector",
     "penalty": 1,
     "duplicates": 1,
-    "timelimit": 1 * 3600,  # 1 hours
+    "timelimit": 10 * 3600,  # 10 hours
     "PoolSearchMode": 2,
     "number_of_fragments": 1024,  # size of subset selected
     "verbose": True,
