@@ -129,7 +129,6 @@ def fps_subset(config):
         
         SAVE_PATH = f"{parent_folder}rankings/fps_{representation}_{database}.npz"
         np.savez(SAVE_PATH, *rankings)
-        np.save(SAVE_PATH, rankings)
         print(
             f"Saved FPS rankings of {N} fragments of database {database} to {SAVE_PATH}."
         )
