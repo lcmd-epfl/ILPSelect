@@ -36,6 +36,7 @@ def train_predict_model(
 
 
 def opt_hypers(X_train, atoms_train, y_train):
+    #TODO sigma range should be larger
     sigmas = [0.25, 0.5, 0.75, 1e0, 1.25, 1.5]
     l2regs = [1e-7, 1e-6, 1e-4]
 
@@ -132,6 +133,9 @@ def learning_curves(config):
             for ncharge in mol_ncharges:
                 y[i] -= atom_energy_coeffs[ncharge]
 
+    # convert to Ha
+    y *= 627.503
+
     assert (len(X) == len(y)) and (len(Q) == len(y)), "Mismatch between number of database representations, charges, and labels."
 
     for curve in curves:
@@ -162,6 +166,9 @@ def learning_curves(config):
             # y energies offset
             for ncharge in Q_target:
                 y_target -= atom_energy_coeffs[ncharge]
+
+            # convert
+            y_target *= 627.503
 
             # algo curve ranking
             if curve == "algo":
