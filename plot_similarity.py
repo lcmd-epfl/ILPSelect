@@ -1,9 +1,7 @@
 import numpy as np
-#import qml
 from sklearn.metrics import pairwise_distances
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
-#from sklearn.manifold import TSNE
 from matplotlib.colors import Normalize
 np.random.seed(20)
 plt.rcParams["figure.figsize"] = (7,4.8)
@@ -251,31 +249,15 @@ colors = ['tab:blue', 'tab:blue', 'tab:purple', 'tab:red', 'tab:orange', 'tab:gr
 df = pd.read_csv('targets/energies.csv')
 y_target = float(df[df['file'] == target+'.xyz']['energy / Ha'])
 
-if target == 'all':
-    targets = ['apixaban', 'imatinib', 'oseltamivir', 'oxycodone', 'pemetrexed', 'penicillin', 'pregabalin',
-               'salbutamol', 'sildenafil', 'troglitazone']
-    for target in targets:
-        target_rep, target_ncharges, h_target_rep, h_target_ncharges = load_reps_target(target)
-        (algo_1_ncharges, algo_1_reps, sizes_algo_1, h_algo_1_ncharges, h_algo_1_reps,
-         algo_0_ncharges, algo_0_reps, sizes_algo_0, h_algo_0_ncharges, h_algo_0_reps,
-         cur_ncharges, cur_reps, sizes_cur, h_cur_ncharges, h_cur_reps,
-         fps_ncharges, fps_reps, sizes_fps, h_fps_ncharges, h_fps_reps,
-         sml_ncharges, sml_reps, sizes_sml, h_sml_ncharges, h_sml_reps,
-         random_ncharges, random_reps, sizes_random, h_random_ncharges, h_random_reps) = load_qm7(target)
+target_rep, target_ncharges, h_target_rep, h_target_ncharges = load_reps_target(target)
+(algo_1_ncharges, algo_1_reps, sizes_algo_1, h_algo_1_ncharges, h_algo_1_reps,
+           algo_0_ncharges, algo_0_reps, sizes_algo_0, h_algo_0_ncharges, h_algo_0_reps,
+           cur_ncharges, cur_reps, sizes_cur, h_cur_ncharges, h_cur_reps,
+           fps_ncharges, fps_reps, sizes_fps, h_fps_ncharges, h_fps_reps,
+           sml_ncharges, sml_reps, sizes_sml, h_sml_ncharges, h_sml_reps,
+           random_ncharges, random_reps, sizes_random, h_random_ncharges, h_random_reps) = load_qm7(target)
 
-    # TODO get all subplots
-
-
-else:
-    target_rep, target_ncharges, h_target_rep, h_target_ncharges = load_reps_target(target)
-    (algo_1_ncharges, algo_1_reps, sizes_algo_1, h_algo_1_ncharges, h_algo_1_reps,
-               algo_0_ncharges, algo_0_reps, sizes_algo_0, h_algo_0_ncharges, h_algo_0_reps,
-               cur_ncharges, cur_reps, sizes_cur, h_cur_ncharges, h_cur_reps,
-               fps_ncharges, fps_reps, sizes_fps, h_fps_ncharges, h_fps_reps,
-               sml_ncharges, sml_reps, sizes_sml, h_sml_ncharges, h_sml_reps,
-               random_ncharges, random_reps, sizes_random, h_random_ncharges, h_random_reps) = load_qm7(target)
-
-    distance_plot(h_algo_0_reps, h_algo_0_ncharges, h_algo_1_reps, h_algo_1_ncharges,
-                  h_random_reps, h_random_ncharges, h_cur_reps, h_cur_ncharges,
-                  h_sml_reps, h_sml_ncharges, h_fps_reps, h_fps_ncharges,
-                  h_target_rep, h_target_ncharges)
+distance_plot(h_algo_0_reps, h_algo_0_ncharges, h_algo_1_reps, h_algo_1_ncharges,
+              h_random_reps, h_random_ncharges, h_cur_reps, h_cur_ncharges,
+              h_sml_reps, h_sml_ncharges, h_fps_reps, h_fps_ncharges,
+              h_target_rep, h_target_ncharges)
