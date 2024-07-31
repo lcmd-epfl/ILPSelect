@@ -22,6 +22,9 @@ def get_lc(target, method, pen=0):
 
     return lc['train_sizes'], lc['mae'] * 627.5
 
+def average_std(stds):
+    return np.sqrt(np.mean([x**2 for x in stds]))
+
 def plot_single_target(args):
     methods = ['algo', 'algo', 'fps', 'cur', 'sml', 'random']
     labels = ['ILP(p=0)', 'ILP(p=1)', 'FPS', 'CUR', 'SML', 'Random']
@@ -87,7 +90,6 @@ def plot_avg_targets(args):
     ax.set_ylabel("Average $\hat{E}$ MAE [kcal/mol]")
 
     for i, label in enumerate(labels):
-        print(f'{label=}, {tr_sizes}, {np.mean(mean_maes[label], axis=0)}')
         if i == 0:
             linestyle = 'dashed'
         else:
@@ -95,7 +97,7 @@ def plot_avg_targets(args):
         if label != 'Random':
             ax.plot(tr_sizes, np.mean(mean_maes[label], axis=0), label=label, color=colors[i], linestyle=linestyle)
         else:
-            ax.errorbar(tr_sizes, np.mean(mean_maes[label], axis=0), np.mean(mean_stds, axis=0), label=label, color=colors[i])
+            ax.errorbar(tr_sizes, np.mean(mean_maes[label], axis=0), average_std(mean_stds), label=label, color=colors[i])
 
     plt.tight_layout()
     plt.legend()
