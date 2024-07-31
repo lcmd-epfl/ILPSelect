@@ -118,19 +118,15 @@ def learning_curves(config):
     X = database_info["reps"]
     Q = database_info["ncharges"]
 
-    frame = pd.read_csv(f"{repository_path}{database}/energies.csv")
+    frame = pd.read_csv(f"{repository_path}{database}/all_targets.csv")
 
+    # no correction needed for new targets
     # y energies offset
-    with open(f"{repository_path}data/atom_energy_coeffs.pickle", "rb") as f:
-        atom_energy_coeffs = pickle.load(f)
+    # with open(f"{repository_path}data/atom_energy_coeffs.pickle", "rb") as f:
+    #     atom_energy_coeffs = pickle.load(f)
 
-    if "atomization energy / Ha" in frame.columns:
-        y = frame["atomization energy / Ha"].values
-    else:
-        y = frame["energy / Ha"].values
-        for i, mol_ncharges in enumerate(Q):
-            for ncharge in mol_ncharges:
-                y[i] -= atom_energy_coeffs[ncharge]
+    assert "dipole moment magnitude (a.u.)" in frame.columns, "Missing property in file."
+    y = frame["dipole moment magnitude (a.u.)"].values
 
     assert (len(X) == len(y)) and (len(Q) == len(y)), "Mismatch between number of database representations, charges, and labels."
 
@@ -145,23 +141,24 @@ def learning_curves(config):
             Q_target = target_info["ncharges"]
 
             if in_database:
-                Y_PATH = f"{repository_path}{database}/energies.csv"
+                Y_PATH = f"{repository_path}{database}/all_targets.csv"
                 y_target = (
                     pd.read_csv(Y_PATH)
-                    .query("file == @target_name")["energy / Ha"]
+                    .query("file == @target_name+'.xyz'")["dipole moment magnitude (a.u.)"]
                     .iloc[0]
                 )
             else:
-                Y_PATH = f"{repository_path}targets/energies.csv"
+                Y_PATH = f"{repository_path}targets/all_targets.csv"
                 y_target = (
                     pd.read_csv(Y_PATH)
-                    .query("file == @target_name+'.xyz'")["energy / Ha"]
+                    .query("file == @target_name+'.xyz'")["dipole moment magnitude (a.u.)"]
                     .iloc[0]
                 )
 
+            # no correction needed for new targets
             # y energies offset
-            for ncharge in Q_target:
-                y_target -= atom_energy_coeffs[ncharge]
+            # for ncharge in Q_target:
+            #     y_target -= atom_energy_coeffs[ncharge]
 
             # algo curve ranking
             if curve == "algo":
@@ -222,7 +219,6 @@ def learning_curves(config):
                 SAVE_PATH,
                 train_sizes=learning_curve_ticks,
                 mae=maes,
-                # ranking_xyz=database_info["labels"][opt_ranking],
             )
 
             print(f"Saved to file {SAVE_PATH}.")
@@ -260,19 +256,15 @@ def learning_curves_random(config, add_onto_old=True):
     Q = database_info["ncharges"]
     database_labels = database_info["labels"]
 
-    database_energies = pd.read_csv(f"{repository_path}{database}/energies.csv")
+    database_energies = pd.read_csv(f"{repository_path}{database}/all_targets.csv")
 
+    # no correction needed for new targets
     # y energies offset
-    with open(f"{repository_path}data/atom_energy_coeffs.pickle", "rb") as f:
-        atom_energy_coeffs = pickle.load(f)
+    # with open(f"{repository_path}data/atom_energy_coeffs.pickle", "rb") as f:
+    #     atom_energy_coeffs = pickle.load(f)
 
-    if "atomization energy / Ha" in database_energies.columns:
-        y = database_energies["atomization energy / Ha"].values
-    else:
-        y = database_energies["energy / Ha"].values
-        for i, mol_ncharges in enumerate(Q):
-            for ncharge in mol_ncharges:
-                y[i] -= atom_energy_coeffs[ncharge]
+    assert "dipole moment magnitude (a.u.)" in database_energies.columns, "Missing property in file."
+    y = database_energies["dipole moment magnitude (a.u.)"].values
     
     # shuffle
     N = len(X)
@@ -297,38 +289,24 @@ def learning_curves_random(config, add_onto_old=True):
         # y_target definition
         if in_database:
             # label of target
-            if "atomization energy / Ha" in database_energies.columns:
-                y_target = database_energies.query("file == @target_name")[
-                    "atomization energy / Ha"
-                ].iloc[0]
-            else:
-                y_target = database_energies.query("file == @target_name")[
-                    "energy / Ha"
-                ].iloc[0]
-                # y energies offset
-                for ncharge in Q_target:
-                    y_target -= atom_energy_coeffs[ncharge]
+            assert "dipole moment magnitude (a.u.)" in database_energies.columns, "Missing property in file."
+            y = database_energies["dipole moment magnitude (a.u.)"].values
+            
             # removing target from database
             mask = (database_labels != target_name)
             X = X[mask]
             Q = Q[mask]
-            print(y_target)
             y_target = y[np.logical_not(mask)][0]
-            print(y_target)
             database_labels = database_labels[mask]
             y=y[mask]
 
         else:
-            Y_PATH = f"{repository_path}targets/energies.csv"
+            Y_PATH = f"{repository_path}targets/all_targets.csv"
             y_target = (
                 pd.read_csv(Y_PATH)
-                .query("file == @target_name+'.xyz'")["energy / Ha"]
+                .query("file == @target_name+'.xyz'")["dipole moment magnitude (a.u.)"]
                 .iloc[0]
             )
-            # y energies offset
-            for ncharge in Q_target:
-                y_target -= atom_energy_coeffs[ncharge]
-
         
         all_maes_random = []
         ranking = []

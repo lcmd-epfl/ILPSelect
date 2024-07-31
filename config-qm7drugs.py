@@ -35,14 +35,14 @@ config = {
     ###
     "generate_database": True,
     "generate_targets": True,
-    "cur_subset": True,
-    "fps_subset": True,
-    "sml_subset": True,
-    "algo_model": True,
-    "algo_subset": True,
+    "cur_subset": False,
+    "fps_subset": False,
+    "sml_subset": False,
+    "algo_model": False,
+    "algo_subset": False,
     "learning_curves": ["algo", "sml", "fps", "cur", "random"],
     "plots_individual": ["algo", "fps", "sml", "cur", "random"],
-    "plots_average": ["algo", "fps", "sml", "cur", "random"],
+    "plots_average": ["algo", "fps", "cur", "random"],
     ###
     "scope": "local_vector",
     "penalty": 0,
@@ -52,6 +52,7 @@ config = {
     "number_of_fragments": 1024,  # size of subset selected
     "verbose": True,
     ###
+    "FPS_timelimit": 600, # 10 mins
     "learning_curve_ticks": [2**k for k in range(4, 11)],
     ###
     "random_state": None,  # for multiple random subset selection, don't use a fixed state!
