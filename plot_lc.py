@@ -23,12 +23,12 @@ def get_lc(target, method, pen=0):
     return lc['train_sizes'], lc['mae'] * 627.5
 
 def average_std(stds):
-    return np.sqrt(np.mean([x**2 for x in stds]))
+    return np.sqrt(np.sum(np.array(stds) ** 2, axis=0)) / len(stds)
 
 def plot_single_target(args):
     methods = ['algo', 'algo', 'fps', 'cur', 'sml', 'random']
     labels = ['ILP(p=0)', 'ILP(p=1)', 'FPS', 'CUR', 'SML', 'Random']
-    colors = ['tab:blue', 'tab:blue', 'tab:purple', 'tab:red', 'tab:orange', 'tab:green']
+    colors = ['tab:blue', 'tab:blue', 'tab:green', 'tab:red', 'tab:orange', 'tab:purple']
     fig, ax = plt.subplots(nrows=1, ncols=1)
     ax.set_xscale("log")
     ax.set_yscale("log")
