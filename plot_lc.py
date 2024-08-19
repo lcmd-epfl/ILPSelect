@@ -30,8 +30,8 @@ def plot_single_target(args):
     labels = ['ILP(p=0)', 'ILP(p=1)', 'FPS', 'CUR', 'SML', 'Random']
     colors = ['tab:blue', 'tab:blue', 'tab:green', 'tab:red', 'tab:orange', 'tab:purple']
     fig, ax = plt.subplots(nrows=1, ncols=1)
-    ax.set_xscale("log")
-    ax.set_yscale("log")
+    ax.set_xscale("log", base=2)
+    ax.set_yscale("log", base=2)
     ax.set_xlabel("Training set size")
     ax.set_ylabel("$\hat{E}$ MAE [kcal/mol]")
     for i, method in enumerate(methods):
@@ -49,6 +49,27 @@ def plot_single_target(args):
             tr_sizes, maes = get_lc(args.target, method)
             ax.plot(tr_sizes, maes, label=labels[i], color=colors[i])
 
+    ax.set_xticks([16, 32, 64, 128, 256, 512, 1024])
+    ax.set_xticklabels(['16', '32', '64', '128', '256', '512', '1024'])
+
+
+    if args.target == 'apixaban' or args.target == 'imatinib' or args.target == 'pemetrexed':
+        ax.set_yticks([64, 128, 256])
+        ax.set_yticklabels(['64', '128', '256'])
+
+    elif args.target == 'oseltamivir':
+        ax.set_yticks([8, 16, 32, 64, 128])
+        ax.set_yticklabels(['8', '16', '32', '64', '128'])
+
+    elif args.target == 'oxycodone':
+        ax.set_yticks([64, 128])
+        ax.set_yticklabels(['64', '128'])
+
+    elif args.target == 'penicillin':
+        ax.set_yticks([16, 32, 64, 128, 256])
+        ax.set_yticklabels(['16', '32', '64', '128', '256'])
+
+    #TODO CONTINUE from pregabalin
     plt.tight_layout()
     plt.legend()
     plt.savefig(f"plots/lcs_clean/{args.target}.pdf")
@@ -84,8 +105,8 @@ def plot_avg_targets(args):
 
     colors = ['tab:blue', 'tab:blue', 'tab:green', 'tab:red', 'tab:orange', 'tab:purple']
     fig, ax = plt.subplots(nrows=1, ncols=1)
-    ax.set_xscale("log")
-    ax.set_yscale("log")
+    ax.set_xscale("log", base=2)
+    ax.set_yscale("log", base=2)
     ax.set_xlabel("Training set size")
     ax.set_ylabel("Average $\hat{E}$ MAE [kcal/mol]")
 
@@ -99,6 +120,12 @@ def plot_avg_targets(args):
         else:
             ax.errorbar(tr_sizes, np.mean(mean_maes[label], axis=0), average_std(mean_stds), label=label, color=colors[i])
 
+    ax.set_xticks([], minor=True)
+
+    ax.set_yticks([40, 60, 90, 133.7, 200])
+    ax.set_yticklabels(['40', '60', '90', '134', '200'])
+    ax.set_xticks([16, 32, 64, 128, 256, 512, 1024])
+    ax.set_xticklabels(['16', '32', '64', '128', '256', '512', '1024'])
     plt.tight_layout()
     plt.legend()
     plt.savefig(f"plots/lcs_clean/average.pdf")
