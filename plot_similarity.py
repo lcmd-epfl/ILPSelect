@@ -5,6 +5,9 @@ from sklearn.decomposition import PCA
 from matplotlib.colors import Normalize
 np.random.seed(20)
 plt.rcParams["figure.figsize"] = (7,4.8)
+import matplotlib
+matplotlib.rcParams.update({'font.size': 14})
+
 from scripts.kernels import get_local_kernel
 import seaborn as sns
 import argparse as ap
@@ -211,9 +214,103 @@ def distance_plot(h_algo_0_reps, h_algo_0_ncharges, h_algo_1_reps, h_algo_1_ncha
     plt.show()
     return
 
-def distance_plot_all():
-    # TODO make all subplots for all distances to all targets
-    return
+
+def combined_distance_plot(targets_data, option='all'):
+    """
+    Plot all distances observed for a set of target molecules and their associated subsets of molecules in a single plot.
+
+    Parameters:
+    targets_data (list of dict): List of dictionaries where each dictionary contains the following keys:
+                                 - 'target_rep': The feature vectors for the target atoms.
+                                 - 'target_ncharges': The atom types for the target atoms.
+                                 - 'h_algo_0_reps': The feature vectors for the ILP(p=0) subset.
+                                 - 'h_algo_0_ncharges': The atom types for the ILP(p=0) subset.
+                                 - 'h_algo_1_reps': The feature vectors for the ILP(p=1) subset.
+                                 - 'h_algo_1_ncharges': The atom types for the ILP(p=1) subset.
+                                 - 'h_random_reps': The feature vectors for the random subset.
+                                 - 'h_random_ncharges': The atom types for the random subset.
+                                 - 'h_cur_reps': The feature vectors for the CUR subset.
+                                 - 'h_cur_ncharges': The atom types for the CUR subset.
+                                 - 'h_sml_reps': The feature vectors for the SML subset.
+                                 - 'h_sml_ncharges': The atom types for the SML subset.
+                                 - 'h_fps_reps': The feature vectors for the FPS subset.
+                                 - 'h_fps_ncharges': The atom types for the FPS subset.
+                                 - 'target_name': A name or identifier for the target molecule.
+    option (str): Option for computing distances ('all' or 'min').
+
+    Returns:
+    None
+    """
+
+    # Initialize lists to store the distances
+    all_algo_0_d = []
+    all_algo_1_d = []
+    all_random_d = []
+    all_cur_d = []
+    all_sml_d = []
+    all_fps_d = []
+
+    for target_data in targets_data:
+        target_rep = target_data['target_rep']
+        target_ncharges = target_data['target_ncharges']
+
+        # Compute distances for each subset
+        algo_O_d = np.concatenate(
+            compute_pairwise_distances(target_data['h_algo_0_reps'], target_rep, target_data['h_algo_0_ncharges'],
+                                       target_ncharges, option=option),
+            axis=0)
+        algo_1_d = np.concatenate(
+            compute_pairwise_distances(target_data['h_algo_1_reps'], target_rep, target_data['h_algo_1_ncharges'],
+                                       target_ncharges, option=option),
+            axis=0)
+        random_d = np.concatenate(
+            compute_pairwise_distances(target_data['h_random_reps'], target_rep, target_data['h_random_ncharges'],
+                                       target_ncharges, option=option),
+            axis=0)
+        cur_d = np.concatenate(
+            compute_pairwise_distances(target_data['h_cur_reps'], target_rep, target_data['h_cur_ncharges'],
+                                       target_ncharges, option=option), axis=0)
+        sml_d = np.concatenate(
+            compute_pairwise_distances(target_data['h_sml_reps'], target_rep, target_data['h_sml_ncharges'],
+                                       target_ncharges, option=option),
+            axis=0)
+        fps_d = np.concatenate(
+            compute_pairwise_distances(target_data['h_fps_reps'], target_rep, target_data['h_fps_ncharges'],
+                                       target_ncharges, option=option),
+            axis=0)
+
+        # Append the distances to the lists
+        all_algo_0_d.extend(algo_O_d)
+        all_algo_1_d.extend(algo_1_d)
+        all_random_d.extend(random_d)
+        all_cur_d.extend(cur_d)
+        all_sml_d.extend(sml_d)
+        all_fps_d.extend(fps_d)
+
+    # Convert lists to numpy arrays for plotting
+    all_algo_0_d = np.array(all_algo_0_d)
+    all_algo_1_d = np.array(all_algo_1_d)
+    all_random_d = np.array(all_random_d)
+    all_cur_d = np.array(all_cur_d)
+    all_sml_d = np.array(all_sml_d)
+    all_fps_d = np.array(all_fps_d)
+
+    # Plotting all distances in a single plot
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 6))
+    sns.kdeplot(all_algo_0_d, label='ILP(p=0)', color=colors[0], linestyle='dashed', ax=ax)
+    sns.kdeplot(all_algo_1_d, label='ILP(p=1)', color=colors[1], ax=ax)
+    sns.kdeplot(all_random_d, label='random', color=colors[2], ax=ax)
+    sns.kdeplot(all_cur_d, label='CUR', color=colors[3], ax=ax)
+    sns.kdeplot(all_sml_d, label='SML', color=colors[4], ax=ax)
+    sns.kdeplot(all_fps_d, label='FPS', color=colors[5], ax=ax)
+    ax.set_xlim(0, 13)
+    ax.set_xlabel('Euclidean distance to target atoms')
+    ax.set_ylabel('Density')
+    ax.legend()
+
+    plt.tight_layout()
+    plt.savefig(f'interpret_figs/combined_dist_targets_{option}.pdf')
+    plt.show()
 
 def similarity_plot(algo_0_reps, algo_0_ncharges, algo_1_reps, algo_1_ncharges,
                     fps_reps, fps_ncharges, sml_reps, sml_ncharges,
@@ -243,21 +340,58 @@ def similarity_plot(algo_0_reps, algo_0_ncharges, algo_1_reps, algo_1_ncharges,
     plt.show()
     return
 
+# NOW ONLY PLOTTING DISTS BUT OTHER FUNCS ARE ALSO AVAILABLE (SIMILARITIES ETC)
 args = parse_args()
 target = args.target
 colors = ['tab:blue', 'tab:blue', 'tab:purple', 'tab:red', 'tab:orange', 'tab:green']
 df = pd.read_csv('targets/energies.csv')
-y_target = float(df[df['file'] == target+'.xyz']['energy / Ha'])
 
-target_rep, target_ncharges, h_target_rep, h_target_ncharges = load_reps_target(target)
-(algo_1_ncharges, algo_1_reps, sizes_algo_1, h_algo_1_ncharges, h_algo_1_reps,
-           algo_0_ncharges, algo_0_reps, sizes_algo_0, h_algo_0_ncharges, h_algo_0_reps,
-           cur_ncharges, cur_reps, sizes_cur, h_cur_ncharges, h_cur_reps,
-           fps_ncharges, fps_reps, sizes_fps, h_fps_ncharges, h_fps_reps,
-           sml_ncharges, sml_reps, sizes_sml, h_sml_ncharges, h_sml_reps,
-           random_ncharges, random_reps, sizes_random, h_random_ncharges, h_random_reps) = load_qm7(target)
+if target != 'all':
+    y_target = float(df[df['file'] == target+'.xyz']['energy / Ha'])
 
-distance_plot(h_algo_0_reps, h_algo_0_ncharges, h_algo_1_reps, h_algo_1_ncharges,
-              h_random_reps, h_random_ncharges, h_cur_reps, h_cur_ncharges,
-              h_sml_reps, h_sml_ncharges, h_fps_reps, h_fps_ncharges,
-              h_target_rep, h_target_ncharges)
+    target_rep, target_ncharges, h_target_rep, h_target_ncharges = load_reps_target(target)
+    (algo_1_ncharges, algo_1_reps, sizes_algo_1, h_algo_1_ncharges, h_algo_1_reps,
+               algo_0_ncharges, algo_0_reps, sizes_algo_0, h_algo_0_ncharges, h_algo_0_reps,
+               cur_ncharges, cur_reps, sizes_cur, h_cur_ncharges, h_cur_reps,
+               fps_ncharges, fps_reps, sizes_fps, h_fps_ncharges, h_fps_reps,
+               sml_ncharges, sml_reps, sizes_sml, h_sml_ncharges, h_sml_reps,
+               random_ncharges, random_reps, sizes_random, h_random_ncharges, h_random_reps) = load_qm7(target)
+
+    distance_plot(h_algo_0_reps, h_algo_0_ncharges, h_algo_1_reps, h_algo_1_ncharges,
+                  h_random_reps, h_random_ncharges, h_cur_reps, h_cur_ncharges,
+                  h_sml_reps, h_sml_ncharges, h_fps_reps, h_fps_ncharges,
+                  h_target_rep, h_target_ncharges)
+
+else:
+    targets = ['apixaban', 'imatinib', 'oseltamivir', 'oxycodone', 'pemetrexed', 'penicillin', 'pregabalin',
+               'salbutamol', 'sildenafil', 'troglitazone']
+    targets_data = []
+    for target in targets:
+        y_target = float(df[df['file'] == target + '.xyz']['energy / Ha'])
+
+        target_rep, target_ncharges, h_target_rep, h_target_ncharges = load_reps_target(target)
+        (algo_1_ncharges, algo_1_reps, sizes_algo_1, h_algo_1_ncharges, h_algo_1_reps,
+         algo_0_ncharges, algo_0_reps, sizes_algo_0, h_algo_0_ncharges, h_algo_0_reps,
+         cur_ncharges, cur_reps, sizes_cur, h_cur_ncharges, h_cur_reps,
+         fps_ncharges, fps_reps, sizes_fps, h_fps_ncharges, h_fps_reps,
+         sml_ncharges, sml_reps, sizes_sml, h_sml_ncharges, h_sml_reps,
+         random_ncharges, random_reps, sizes_random, h_random_ncharges, h_random_reps) = load_qm7(target)
+
+        targets_data.append({
+                'target_rep': h_target_rep,
+                'target_ncharges': h_target_ncharges,
+                'h_algo_0_reps': h_algo_0_reps,
+                'h_algo_0_ncharges': h_algo_0_ncharges,
+                'h_algo_1_reps': h_algo_1_reps,
+                'h_algo_1_ncharges': h_algo_1_ncharges,
+                'h_random_reps': h_random_reps,
+                'h_random_ncharges': h_random_ncharges,
+                'h_cur_reps': h_cur_reps,
+                'h_cur_ncharges': h_cur_ncharges,
+                'h_sml_reps': h_sml_reps,
+                'h_sml_ncharges': h_sml_ncharges,
+                'h_fps_reps': h_fps_reps,
+                'h_fps_ncharges': h_fps_ncharges,
+                'target_name': target
+            })
+    combined_distance_plot(targets_data)
