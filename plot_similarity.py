@@ -6,7 +6,7 @@ from matplotlib.colors import Normalize
 np.random.seed(20)
 plt.rcParams["figure.figsize"] = (7,4.8)
 import matplotlib
-matplotlib.rcParams.update({'font.size': 14})
+matplotlib.rcParams.update({'font.size': 18})
 
 from scripts.kernels import get_local_kernel
 import seaborn as sns
