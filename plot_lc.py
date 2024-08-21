@@ -2,6 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse as ap
 import pandas as pd
+plt.rcParams["figure.figsize"] = (6.4,6.4)
+import matplotlib
+matplotlib.rcParams.update({'font.size': 14})
 
 Ha2kcal = 627.5
 
