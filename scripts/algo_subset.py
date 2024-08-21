@@ -10,7 +10,8 @@ def algo_subset(config):
 
     Parameters:
         config: config dictionary. Must contain keys `"repository_folder"`, `"penalty"`, `"representation"`, `"target_names"`,
-            `"database"`, `"learning_curve_ticks"`, `"config_name"`, `"scope"`, `"verbose"`, `"PoolSearchMode"`, `"timelimit"`.
+            `"database"`, `"learning_curve_ticks"`, `"config_name"`, `"scope"`, `"verbose"`, `"PoolSearchMode"`, `"timelimit"`,
+            `"number_of_fragments"`.
     """
 
     repository_path = config["repository_folder"]
@@ -46,7 +47,7 @@ def algo_subset(config):
 
         # optimize with callback
         M.optimize(
-            number_of_solutions=100,
+            number_of_solutions=config["number_of_fragments"],
             PoolSearchMode=config["PoolSearchMode"],
             timelimit=config["timelimit"],
             poolgapabs=100,
