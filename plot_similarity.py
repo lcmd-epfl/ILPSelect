@@ -6,7 +6,7 @@ from matplotlib.colors import Normalize
 np.random.seed(20)
 plt.rcParams["figure.figsize"] = (7,4.8)
 import matplotlib
-matplotlib.rcParams.update({'font.size': 18})
+matplotlib.rcParams.update({'font.size': 20})
 
 from scripts.kernels import get_local_kernel
 import seaborn as sns
@@ -18,7 +18,9 @@ pt = {"C":6, "N":7, "O":8, "S":16, "F":9, "H":1}
 def parse_args():
     parser = ap.ArgumentParser()
     parser.add_argument('-t', '--target', default='sildenafil') # can be all
-    parser.add_argument('-m', '--min', action='store_true') # less
+    parser.add_argument('-m', '--min', action='store_true') # instead of all distances
+    parser.add_argument('-d', '--database', default='drugs')
+    parser.add_argument('-s', '--size', action='store_true') # size plot instead
     args = parser.parse_args()
     return args
 
@@ -108,8 +110,8 @@ def load_reps_target(target):
     h_target_ncharges = target_ncharges[h_indices]
     return target_rep, target_ncharges, h_target_rep, h_target_ncharges
 
-def load_qm7(target):
-    qm7_data = np.load('data/FCHL_qm7_qm7drugs.npz', allow_pickle=True)
+def load_qm7(target, database='drugs'):
+    qm7_data = np.load(f'data/FCHL_qm7_qm7{database}.npz', allow_pickle=True)
     qm7_reps = qm7_data['reps']
     qm7_ncharges = qm7_data['ncharges']
     qm7_labels = qm7_data['labels']
@@ -180,6 +182,71 @@ def size_plot(sizes_algo_0, sizes_algo_1, sizes_random, sizes_cur, sizes_sml, si
     plt.show()
     return
 
+def combined_size_plot_stacked(targets_data, bin_width=0.1, database='drugs'):
+    """
+    Plot the sizes (number of heavy atoms) for a set of target molecules and their associated subsets of molecules.
+    The bars for different methods are stacked vertically in a single plot.
+
+    Parameters:
+    targets_data (list of dict): List of dictionaries where each dictionary contains the following keys:
+                                 - 'sizes_algo_0': List of sizes for the ILP(p=0) subset.
+                                 - 'sizes_algo_1': List of sizes for the ILP(p=1) subset.
+                                 - 'sizes_random': List of sizes for the random subset.
+                                 - 'sizes_cur': List of sizes for the CUR subset.
+                                 - 'sizes_sml': List of sizes for the SML subset.
+                                 - 'sizes_fps': List of sizes for the FPS subset.
+                                 - 'target_name': A name or identifier for the target molecule.
+    bin_width (int): Width of the bins for the histogram.
+
+    Returns:
+    None
+    """
+
+    # Initialize lists to store the sizes
+    all_sizes_algo_0 = []
+    all_sizes_algo_1 = []
+    all_sizes_random = []
+    all_sizes_cur = []
+    all_sizes_sml = []
+    all_sizes_fps = []
+
+    for target_data in targets_data:
+        all_sizes_algo_0.extend(target_data['sizes_algo_0'])
+        all_sizes_algo_1.extend(target_data['sizes_algo_1'])
+        all_sizes_random.extend(target_data['sizes_random'])
+        all_sizes_cur.extend(target_data['sizes_cur'])
+        all_sizes_sml.extend(target_data['sizes_sml'])
+        all_sizes_fps.extend(target_data['sizes_fps'])
+
+    # Create a figure
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 8))
+
+    # Plot each histogram with a slight offset
+    ax.hist(np.array(all_sizes_algo_0) - bin_width * 2.5, bins=50, label='ILP(p=0)',
+            color=colors[0], alpha=0.8,  orientation='horizontal', hatch='***', edgecolor='black')
+    ax.hist(np.array(all_sizes_algo_1) - bin_width * 1.5, bins=50, label='ILP(p=1)',
+            color=colors[1], alpha=0.8, orientation='horizontal', hatch='///', edgecolor='black')
+    ax.hist(np.array(all_sizes_random) - bin_width * 0.5, bins=50, label='Random',
+            color=colors[2], edgecolor=colors[2], alpha=0.8, orientation='horizontal')
+    ax.hist(np.array(all_sizes_cur) + bin_width * 0.5, bins=50, label='CUR',
+            color=colors[3], edgecolor=colors[3], alpha=0.8, orientation='horizontal')
+    ax.hist(np.array(all_sizes_sml) + bin_width * 1.5, bins=50, label='SML',
+            color=colors[4], edgecolor=colors[4], alpha=0.8, orientation='horizontal')
+    ax.hist(np.array(all_sizes_fps) + bin_width * 2.5, bins=50, label='FPS',
+            color=colors[5], edgecolor=colors[5], alpha=0.8, orientation='horizontal')
+
+    # Labeling the plot
+    ax.set_ylabel("Number of heavy atoms")
+    ax.set_xlabel("Count")
+    ax.set_yticks([1,2,3,4,5,6,7])
+    ax.set_yticklabels(['1', '2', '3', '4', '5', '6', '7'])
+    #ax.set_yticks(bins + bin_width / 2)  # Center the tick labels
+    ax.set_xscale('log')
+    plt.legend(loc='lower right')
+    plt.savefig(f"interpret_figs/combined_size_plot_stacked_{database}.pdf", format='pdf')
+    plt.show()
+    return
+
 def distance_plot(h_algo_0_reps, h_algo_0_ncharges, h_algo_1_reps, h_algo_1_ncharges,
                   h_random_reps, h_random_ncharges, h_cur_reps, h_cur_ncharges,
                   h_sml_reps, h_sml_ncharges, h_fps_reps, h_fps_ncharges,
@@ -215,7 +282,7 @@ def distance_plot(h_algo_0_reps, h_algo_0_ncharges, h_algo_1_reps, h_algo_1_ncha
     return
 
 
-def combined_distance_plot(targets_data, option='all'):
+def combined_distance_plot(targets_data, database='drugs', option='all'):
     """
     Plot all distances observed for a set of target molecules and their associated subsets of molecules in a single plot.
 
@@ -309,13 +376,13 @@ def combined_distance_plot(targets_data, option='all'):
     ax.legend()
 
     plt.tight_layout()
-    plt.savefig(f'interpret_figs/combined_dist_targets_{option}.pdf')
+    plt.savefig(f'interpret_figs/combined_dist_targets_{option}_{database}.pdf')
     plt.show()
 
 def similarity_plot(algo_0_reps, algo_0_ncharges, algo_1_reps, algo_1_ncharges,
                     fps_reps, fps_ncharges, sml_reps, sml_ncharges,
                     cur_reps, cur_ncharges, random_reps, random_ncharges,
-                    target_rep, target_ncharges):
+                    target_rep, target_ncharges, database='drugs'):
     # get global similarity
     algo_0_K = local_global_sim(algo_0_reps, target_rep, algo_0_ncharges, target_ncharges)
     algo_1_K = local_global_sim(algo_1_reps, target_rep, algo_1_ncharges, target_ncharges)
@@ -336,18 +403,49 @@ def similarity_plot(algo_0_reps, algo_0_ncharges, algo_1_reps, algo_1_ncharges,
     sns.kdeplot(random_K, label='Random', alpha=0.8, color=colors[5])
     ax.set_xlabel("Local kernel similarity")
     plt.legend()
-    plt.savefig(f'interpret_figs/{target}_hists_sim.pdf')
+    plt.savefig(f'interpret_figs/{target}_hists_sim_{database}.pdf')
     plt.show()
     return
 
 # NOW ONLY PLOTTING DISTS BUT OTHER FUNCS ARE ALSO AVAILABLE (SIMILARITIES ETC)
 args = parse_args()
 target = args.target
+database = args.database
 colors = ['tab:blue', 'tab:blue', 'tab:purple', 'tab:red', 'tab:orange', 'tab:green']
-df = pd.read_csv('targets/energies.csv')
+
+if database != 'qm7':
+    df = pd.read_csv('targets/energies.csv')
+else:
+    df = pd.read_csv('qm7/energies.csv')
+if database == 'drugs':
+    targets = ['apixaban', 'imatinib', 'oseltamivir', 'oxycodone', 'pemetrexed', 'penicillin', 'pregabalin',
+               'salbutamol', 'sildenafil', 'troglitazone']
+
+elif database == 'qm9':
+    targets = ["121259",
+        "12351",
+        "35811",
+        "85759",
+        "96295",
+        "5696",
+        "31476",
+        "55607",
+        "68076",
+        "120425"]
+
+elif database == 'qm7':
+    targets = ['qm7_1251', 'qm7_3576', 'qm7_6163', 'qm7_1513', 'qm7_1246',
+       'qm7_2161', 'qm7_6118', 'qm7_5245', 'qm7_5107', 'qm7_3037']
+
+else:
+    raise NotImplementedError('only qm7, qm9 and drugs not implemented')
 
 if target != 'all':
-    y_target = float(df[df['file'] == target+'.xyz']['energy / Ha'])
+    if database != 'qm7':
+        target_name = target + '.xyz'
+    else:
+        target_name = target
+    y_target = float(df[df['file'] == target_name]['energy / Ha'])
 
     target_rep, target_ncharges, h_target_rep, h_target_ncharges = load_reps_target(target)
     (algo_1_ncharges, algo_1_reps, sizes_algo_1, h_algo_1_ncharges, h_algo_1_reps,
@@ -357,17 +455,23 @@ if target != 'all':
                sml_ncharges, sml_reps, sizes_sml, h_sml_ncharges, h_sml_reps,
                random_ncharges, random_reps, sizes_random, h_random_ncharges, h_random_reps) = load_qm7(target)
 
+    if args.size:
+        size_plot(sizes_algo_0, sizes_algo_1, sizes_random, sizes_cur, sizes_sml, sizes_fps)
+
     distance_plot(h_algo_0_reps, h_algo_0_ncharges, h_algo_1_reps, h_algo_1_ncharges,
                   h_random_reps, h_random_ncharges, h_cur_reps, h_cur_ncharges,
                   h_sml_reps, h_sml_ncharges, h_fps_reps, h_fps_ncharges,
-                  h_target_rep, h_target_ncharges)
+                  h_target_rep, h_target_ncharges, database=database)
 
 else:
-    targets = ['apixaban', 'imatinib', 'oseltamivir', 'oxycodone', 'pemetrexed', 'penicillin', 'pregabalin',
-               'salbutamol', 'sildenafil', 'troglitazone']
     targets_data = []
+    sizes_targets_data = []
     for target in targets:
-        y_target = float(df[df['file'] == target + '.xyz']['energy / Ha'])
+        if database != 'qm7':
+            target_name = target + '.xyz'
+        else:
+            target_name = target
+        y_target = float(df[df['file'] == target_name]['energy / Ha'])
 
         target_rep, target_ncharges, h_target_rep, h_target_ncharges = load_reps_target(target)
         (algo_1_ncharges, algo_1_reps, sizes_algo_1, h_algo_1_ncharges, h_algo_1_reps,
@@ -376,6 +480,19 @@ else:
          fps_ncharges, fps_reps, sizes_fps, h_fps_ncharges, h_fps_reps,
          sml_ncharges, sml_reps, sizes_sml, h_sml_ncharges, h_sml_reps,
          random_ncharges, random_reps, sizes_random, h_random_ncharges, h_random_reps) = load_qm7(target)
+
+        if args.size:
+            sizes_targets_data.append(
+                {
+                "sizes_algo_0" : sizes_algo_0,
+                "sizes_algo_1" : sizes_algo_1,
+                "sizes_random" : sizes_random,
+                "sizes_cur" : sizes_cur,
+                "sizes_sml" : sizes_sml,
+                "sizes_fps" : sizes_fps,
+                "target_name" : target
+                }
+            )
 
         targets_data.append({
                 'target_rep': h_target_rep,
@@ -394,4 +511,6 @@ else:
                 'h_fps_ncharges': h_fps_ncharges,
                 'target_name': target
             })
-    combined_distance_plot(targets_data)
+    if args.size:
+        combined_size_plot_stacked(sizes_targets_data, database=database)
+    #combined_distance_plot(targets_data, database=database)
