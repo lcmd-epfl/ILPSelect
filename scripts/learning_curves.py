@@ -6,7 +6,9 @@ import pandas as pd
 import qml
 from qml.math import cho_solve
 from sklearn.model_selection import KFold, train_test_split
+import copy
 
+TARGET_PROPERTY = "gap/eV" 
 
 def krr(kernel, properties, l2reg=1e-9):
     alpha = cho_solve(kernel, properties, l2reg=l2reg)
@@ -125,8 +127,8 @@ def learning_curves(config):
     # with open(f"{repository_path}data/atom_energy_coeffs.pickle", "rb") as f:
     #     atom_energy_coeffs = pickle.load(f)
 
-    assert "dipole moment magnitude (a.u.)" in frame.columns, "Missing property in file."
-    y = frame["dipole moment magnitude (a.u.)"].values
+    assert TARGET_PROPERTY in frame.columns, "Missing property in file."
+    y = frame[TARGET_PROPERTY].values
 
     assert (len(X) == len(y)) and (len(Q) == len(y)), "Mismatch between number of database representations, charges, and labels."
 
@@ -144,14 +146,14 @@ def learning_curves(config):
                 Y_PATH = f"{repository_path}{database}/all_targets.csv"
                 y_target = (
                     pd.read_csv(Y_PATH)
-                    .query("file == @target_name+'.xyz'")["dipole moment magnitude (a.u.)"]
+                    .query("file == @target_name+'.xyz'")[TARGET_PROPERTY]
                     .iloc[0]
                 )
             else:
                 Y_PATH = f"{repository_path}targets/all_targets.csv"
                 y_target = (
                     pd.read_csv(Y_PATH)
-                    .query("file == @target_name+'.xyz'")["dipole moment magnitude (a.u.)"]
+                    .query("file == @target_name+'.xyz'")[TARGET_PROPERTY]
                     .iloc[0]
                 )
 
@@ -263,9 +265,12 @@ def learning_curves_random(config, add_onto_old=True):
     # with open(f"{repository_path}data/atom_energy_coeffs.pickle", "rb") as f:
     #     atom_energy_coeffs = pickle.load(f)
 
-    assert "dipole moment magnitude (a.u.)" in database_energies.columns, "Missing property in file."
-    y = database_energies["dipole moment magnitude (a.u.)"].values
+    # label of target
+    assert TARGET_PROPERTY in database_energies.columns, "Missing property in file."
+    y = database_energies[TARGET_PROPERTY].values
     
+    assert len(y) == len(database_labels), "Number of targets and labels do not match"
+
     # shuffle
     N = len(X)
     inds = np.arange(N)
@@ -274,6 +279,12 @@ def learning_curves_random(config, add_onto_old=True):
     Q=Q[inds]
     database_labels=database_labels[inds]
     y=y[inds]
+
+    if in_database:
+        original_X = copy.copy(X)
+        original_Q = copy.copy(Q)
+        original_database_labels=copy.copy(database_labels)
+
 
     for target_name in targets:
         TARGET_PATH = (
@@ -288,23 +299,28 @@ def learning_curves_random(config, add_onto_old=True):
 
         # y_target definition
         if in_database:
-            # label of target
-            assert "dipole moment magnitude (a.u.)" in database_energies.columns, "Missing property in file."
-            y = database_energies["dipole moment magnitude (a.u.)"].values
             
             # removing target from database
-            mask = (database_labels != target_name)
-            X = X[mask]
-            Q = Q[mask]
-            y_target = y[np.logical_not(mask)][0]
-            database_labels = database_labels[mask]
-            y=y[mask]
+            mask = (original_database_labels != target_name)
+            X = original_X[mask]
+            Q = original_Q[mask]
+            y_target = (
+                database_energies
+                .query("file == @target_name+'.xyz'")[TARGET_PROPERTY]
+                .iloc[0]
+            )
+            database_labels = original_database_labels[mask]
+            y = (
+                database_energies
+                .query("file != @target_name+'.xyz'")[TARGET_PROPERTY]
+                .values
+            )
 
         else:
             Y_PATH = f"{repository_path}targets/all_targets.csv"
             y_target = (
                 pd.read_csv(Y_PATH)
-                .query("file == @target_name+'.xyz'")["dipole moment magnitude (a.u.)"]
+                .query("file == @target_name+'.xyz'")[TARGET_PROPERTY]
                 .iloc[0]
             )
         
