@@ -144,7 +144,7 @@ def plot_avg_targets(args, database='drugs', property='energy'):
         unit = 'kcal/mol'
     elif property == 'gapeV':
         lab = "$\Delta \epsilon$"
-        unit = 'eV' # TODO
+        unit = 'eV'
     elif property == 'dipole':
         lab = "$\mu$"
         unit = 'a.u.'
@@ -180,6 +180,9 @@ def plot_avg_targets(args, database='drugs', property='energy'):
         elif property == 'dipole':
             ax.set_yticks([0.05, 0.12, 0.25, 0.5, 1])
             ax.set_yticklabels(['0.05', '0.12', '0.25', '0.5', '1'])
+        elif property == 'gapeV':
+            ax.set_yticks([0.12, 0.25, 0.5, 1, 2])
+            ax.set_yticklabels(['0.12', '0.25', '0.5', '1', '2'])
 
     elif database == 'qm9':
         if property == 'energy':
