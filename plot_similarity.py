@@ -15,6 +15,9 @@ import pandas as pd
 
 pt = {"C":6, "N":7, "O":8, "S":16, "F":9, "H":1}
 
+def filter(ar):
+  return ar[np.isfinite(ar)]
+
 def parse_args():
     parser = ap.ArgumentParser()
     parser.add_argument('-t', '--target', default='sildenafil') # can be all
@@ -355,12 +358,14 @@ def combined_distance_plot(targets_data, database='drugs', option='all'):
         all_fps_d.extend(fps_d)
 
     # Convert lists to numpy arrays for plotting
-    all_algo_0_d = np.array(all_algo_0_d)
-    all_algo_1_d = np.array(all_algo_1_d)
-    all_random_d = np.array(all_random_d)
-    all_cur_d = np.array(all_cur_d)
-    all_sml_d = np.array(all_sml_d)
-    all_fps_d = np.array(all_fps_d)
+    all_algo_0_d = filter(np.array(all_algo_0_d))
+    all_algo_1_d = filter(np.array(all_algo_1_d))
+    all_random_d = filter(np.array(all_random_d))
+    all_cur_d = filter(np.array(all_cur_d))
+    all_sml_d = filter(np.array(all_sml_d))
+    all_fps_d = filter(np.array(all_fps_d))
+
+    # want to normalise by number of atoms somehow
 
     # Plotting all distances in a single plot
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 6))
@@ -370,13 +375,12 @@ def combined_distance_plot(targets_data, database='drugs', option='all'):
     sns.kdeplot(all_cur_d, label='CUR', color=colors[3], ax=ax)
     sns.kdeplot(all_sml_d, label='SML', color=colors[4], ax=ax)
     sns.kdeplot(all_fps_d, label='FPS', color=colors[5], ax=ax)
-    ax.set_xlim(0, 13)
     ax.set_xlabel('Euclidean distance to target atoms')
-    ax.set_ylabel('Density')
+    ax.set_ylabel('Count')
     ax.legend()
 
     plt.tight_layout()
-    plt.savefig(f'interpret_figs/combined_dist_targets_{option}_{database}.pdf')
+    #plt.savefig(f'interpret_figs/combined_dist_targets_{option}_{database}.pdf')
     plt.show()
 
 def similarity_plot(algo_0_reps, algo_0_ncharges, algo_1_reps, algo_1_ncharges,
@@ -513,4 +517,4 @@ else:
             })
     if args.size:
         combined_size_plot_stacked(sizes_targets_data, database=database)
-    #combined_distance_plot(targets_data, database=database)
+    combined_distance_plot(targets_data, database=database)
