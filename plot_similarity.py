@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from sklearn.metrics import pairwise_distances
 import matplotlib.pyplot as plt
@@ -815,7 +816,7 @@ def tsne_plots(
         # early_exaggeration_iter=10,
         # n_iter=10,
 
-        # V3 
+        # V3
         tsne = TSNE(
             perplexity=2,
             metric="euclidean",
@@ -829,8 +830,30 @@ def tsne_plots(
         selected_atom = 7
         qm7_reps = qm7_reps[np.where(qm7_ncharges == selected_atom)[0]]
         print("After filter:", qm7_reps.shape, qm7_reps.size)
-        e_train = tsne.fit(qm7_reps)
-        x_qm7 = e_train.transform(qm7_reps)
+
+        sav_path = f"{selected_atom}_local_v2.sav"
+        if os.path.isfile(sav_path):
+            print(f"loading from {sav_path}")
+            with open(sav_path, "rb") as f:
+                e_train = pickle.load(f)
+        else:
+            print(f"fitting and saving to {sav_path}")
+            e_train = tsne.fit(qm7_reps)
+            with open(sav_path, "wb") as f:
+                pickle.dump(e_train, f)
+        print()
+        x_sav_path = f"qm7_{selected_atom}_local_v2.sav"
+        if os.path.isfile(x_sav_path):
+            print(f"loading from {x_sav_path}")
+            with open(x_sav_path, "rb") as f:
+                x_qm7 = pickle.load(f)
+        else:
+            print(f"fitting and saving to {x_sav_path}")
+            x_qm7 = e_train.transform(qm7_reps)
+            with open(x_sav_path, "wb") as f:
+                pickle.dump(x_qm7, f)
+        print()
+
 
         training_set_names = [
             "h_algo_0_reps",
@@ -852,6 +875,7 @@ def tsne_plots(
             for training_name, ncharges_name in zip(
                 training_set_names, training_set_name_ncharges
             ):
+                print(f'{training_name=}')
                 target_rep = target_data["target_rep"]
                 target_ncharges = target_data["target_ncharges"]
                 print(target_rep.shape, target_rep.size, target_ncharges[0:10])
@@ -862,11 +886,12 @@ def tsne_plots(
                 if not isinstance(target_rep, np.ndarray):
                     target_rep.reshape(1, -1)
                 target_name = target_data["target_name"]
+                print(f'{target_name=}')
                 xta_algo_0_d = e_train.transform(target_rep)
 
                 training_data = np.concatenate(target_data[training_name], axis=0)
                 training_ncharges = np.concatenate(target_data[ncharges_name], axis=0)
-                print(training_data.shape, training_data.size)
+                print(f'{training_data.shape=} {training_data.size=}')
                 training_data = training_data[
                     np.where(training_ncharges == selected_atom)[0]
                 ]
@@ -883,15 +908,14 @@ def tsne_plots(
                     ),
                     axis=0,
                 )
-                pickle.dump(
-                    e_train, open(f"{training_name}_{selected_atom}_local_v2.sav", "wb")
-                )
                 plot_tsne(
                     x_all,
                     y_all,
                     target_name,
                     f"{training_name}_{selected_atom}_local_v3",
                 )
+                print()
+            print()
         return None
 
     # Flatten the database to get the total number of atoms and their atom types
@@ -1427,10 +1451,11 @@ else:
         )
     # if args.size:
     #    combined_size_plot_stacked(sizes_targets_data, database=database)
-    combined_distance_plot(targets_data, database=database)
+    #combined_distance_plot(targets_data, database=database)
     # combined_distance_plot(targets_data, database=database, option="min")
     # combined_distance_plot(targets_data, database=database, option="max")
     # combined_distance_plot(targets_data, database=database, option="delta")
     # distance_distribution_plots(targets_data, database=database)
     # tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=True)
-    # tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=False)
+    print('tsne')
+    tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=False)
