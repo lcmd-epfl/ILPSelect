@@ -402,31 +402,37 @@ def load_qm7(target, database="drugs"):
         sizes_algo_1,
         h_algo_1_ncharges,
         h_algo_1_reps,
+        algo_1_indices,
         algo_0_ncharges,
         algo_0_reps,
         sizes_algo_0,
         h_algo_0_ncharges,
         h_algo_0_reps,
+        algo_0_indices,
         cur_ncharges,
         cur_reps,
         sizes_cur,
         h_cur_ncharges,
         h_cur_reps,
+        cur_indices,
         fps_ncharges,
         fps_reps,
         sizes_fps,
         h_fps_ncharges,
         h_fps_reps,
+        fps_indices,
         sml_ncharges,
         sml_reps,
         sizes_sml,
         h_sml_ncharges,
         h_sml_reps,
+        sml_indices,
         random_ncharges,
         random_reps,
         sizes_random,
         h_random_ncharges,
         h_random_reps,
+        random_indices,
     )
     return out, qm7_ncharges, qm7_reps
 
@@ -1348,31 +1354,37 @@ else:
             sizes_algo_1,
             h_algo_1_ncharges,
             h_algo_1_reps,
+            algo_1_idxs,
             algo_0_ncharges,
             algo_0_reps,
             sizes_algo_0,
             h_algo_0_ncharges,
             h_algo_0_reps,
+            algo_0_idxs,
             cur_ncharges,
             cur_reps,
             sizes_cur,
             h_cur_ncharges,
             h_cur_reps,
+            cur_idxs,
             fps_ncharges,
             fps_reps,
             sizes_fps,
             h_fps_ncharges,
             h_fps_reps,
+            fps_idxs,
             sml_ncharges,
             sml_reps,
             sizes_sml,
             h_sml_ncharges,
             h_sml_reps,
+            sml_idxs,
             random_ncharges,
             random_reps,
             sizes_random,
             h_random_ncharges,
             h_random_reps,
+            random_idxs,
         ), qm7_ncharges, qm7_reps = load_qm7(target)
 
         if args.size:
@@ -1394,25 +1406,31 @@ else:
                 "target_ncharges": h_target_ncharges,
                 "h_algo_0_reps": h_algo_0_reps,
                 "h_algo_0_ncharges": h_algo_0_ncharges,
+                "h_algo_0_idxs": algo_0_idxs,
                 "h_algo_1_reps": h_algo_1_reps,
                 "h_algo_1_ncharges": h_algo_1_ncharges,
+                "h_algo_1_idxs": algo_1_idxs,
                 "h_random_reps": h_random_reps,
                 "h_random_ncharges": h_random_ncharges,
+                "h_random_idxs": random_idxs,
                 "h_cur_reps": h_cur_reps,
                 "h_cur_ncharges": h_cur_ncharges,
+                "h_cur_idxs": cur_idxs,
                 "h_sml_reps": h_sml_reps,
                 "h_sml_ncharges": h_sml_ncharges,
+                "h_sml_idxs": sml_idxs,
                 "h_fps_reps": h_fps_reps,
                 "h_fps_ncharges": h_fps_ncharges,
+                "h_fps_idxs": fps_idxs,
                 "target_name": target,
             }
         )
     # if args.size:
     #    combined_size_plot_stacked(sizes_targets_data, database=database)
-    # combined_distance_plot(targets_data, database=database)
+    combined_distance_plot(targets_data, database=database)
     # combined_distance_plot(targets_data, database=database, option="min")
     # combined_distance_plot(targets_data, database=database, option="max")
     # combined_distance_plot(targets_data, database=database, option="delta")
     # distance_distribution_plots(targets_data, database=database)
     # tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=True)
-    tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=False)
+    # tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=False)
