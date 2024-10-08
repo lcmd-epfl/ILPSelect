@@ -919,6 +919,17 @@ def tsne_plots(
                 selected_qm7_ncharges = np.concatenate(qm7_ncharges_full[selected_training_set_idx], axis=0)
                 training_data_new = selected_qm7_reps[np.where(selected_qm7_ncharges == selected_atom)]
                 assert np.linalg.norm(training_data-training_data_new) < 1e-15
+
+                # also dumb but i don't know how to do it beautifully
+                atom_mol_idx = np.full((qm7_ncharges_full.shape[::-1]), np.arange(len(qm7_ncharges_full))).T
+                atom_mol_idx = np.concatenate(atom_mol_idx, axis=0)[np.where(qm7_ncharges == selected_atom)]
+                selected_atom_idx = []
+                for i in selected_training_set_idx:
+                    selected_atom_idx.extend(np.where(atom_mol_idx==i)[0])
+                selected_atom_idx = np.array(selected_atom_idx)
+                training_data_new_new = qm7_reps[selected_atom_idx]
+                assert np.linalg.norm(training_data_new_new-training_data_new) < 1e-15
+
                 continue
 
 
