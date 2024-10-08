@@ -813,11 +813,10 @@ def tsne_plots(
         #    qm7_ncharges[0:10],
         #)
 
-        perplexity = {6: 500, # ok
-                      16: 4, # check
-                      1: 850, # check
+        perplexity = {6: 500,
+                      16: 4,
+                      8: 80, # check
                       7: 90, # check
-                      8: 80 # check
                       }
 
         # V4
@@ -832,7 +831,6 @@ def tsne_plots(
         # early_exaggeration_iter=10,
         # n_iter=10,
         )
-
 
         qm7_reps = qm7_reps[np.where(qm7_ncharges == selected_atom)[0]]
         print("After filter:", qm7_reps.shape, qm7_reps.size)
@@ -869,7 +867,7 @@ def tsne_plots(
             "h_sml_reps",
             "h_fps_reps",
         ]
-        for t, target_data in enumerate(targets_data):
+        for target_data in targets_data:
             for training_name in training_set_names:
                 print(f'{training_name=}')
                 idxs_name = training_name.replace('_reps', '_idxs')
@@ -914,6 +912,23 @@ def tsne_plots(
                 )
                 print()
             print()
+
+        if False:
+            for target_data in targets_data:
+                target_name = target_data["target_name"]
+                print(f'{target_name=}')
+                target_ncharges = target_data["target_ncharges"]
+                for q in [16]:
+                    print(f'{q=}')
+                    print(f'target: {len(np.where(target_ncharges == q)[0])}')
+                    for training_name in training_set_names:
+                        ncharges_name = training_name.replace('_reps', '_ncharges')
+                        training_ncharges = np.hstack(target_data[ncharges_name])
+                        print(f'{training_name}: {len(np.where(training_ncharges == q)[0])}')
+                    print(f'total: {len(np.where(qm7_ncharges == q)[0])}')
+                    print()
+                print()
+
         return None
 
     # Flatten the database to get the total number of atoms and their atom types
