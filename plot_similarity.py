@@ -813,10 +813,10 @@ def tsne_plots(
         #    qm7_ncharges[0:10],
         #)
 
-        perplexity = {6: 500,
-                      16: 4,
-                      8: 80, # check
-                      7: 90, # check
+        perplexity = {6: 500*2,
+                      16: 4*2,
+                      8: 80,  # old
+                      7: 90,  # old
                       }
 
         # V4
@@ -835,8 +835,8 @@ def tsne_plots(
         qm7_reps = qm7_reps[np.where(qm7_ncharges == selected_atom)[0]]
         print("After filter:", qm7_reps.shape, qm7_reps.size)
 
-        sav_path = f"{selected_atom}_local_v4.sav"
-        x_sav_path = f"qm7_{selected_atom}_local_v4.sav"
+        sav_path = f"{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
+        x_sav_path = f"qm7_{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
         if os.path.isfile(sav_path):
             print(f"loading from {sav_path}")
             with open(sav_path, "rb") as f:
@@ -852,7 +852,7 @@ def tsne_plots(
             with open(x_sav_path, "rb") as f:
                 x_qm7 = pickle.load(f)
         else:
-            print(f"fitting and saving to {x_sav_path}")
+            print(f"transforming and saving to {x_sav_path}")
             x_qm7 = e_train.transform(qm7_reps)
             with open(x_sav_path, "wb") as f:
                 pickle.dump(x_qm7, f)
@@ -908,7 +908,7 @@ def tsne_plots(
                     x_all,
                     y_all,
                     target_name,
-                    f"{training_name}_{selected_atom}_local_v4",
+                    f"{training_name}_{selected_atom}_local_perp{perplexity[selected_atom]}",
                 )
                 print()
             print()
