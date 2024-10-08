@@ -136,7 +136,7 @@ def parse_args():
     parser.add_argument("-m", "--min", action="store_true")  # instead of all distances
     parser.add_argument("-d", "--database", default="drugs")
     parser.add_argument("-s", "--size", action="store_true")  # size plot instead
-    parser.add_argument("--tsne_atom", default=6)
+    parser.add_argument("--tsne_atom", type=int, default=6)
     args = parser.parse_args()
     return args
 
