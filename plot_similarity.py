@@ -793,8 +793,19 @@ def tsne_plots(
 
         return None
     else:
+        qm7_reps_full = qm7_reps
+        qm7_ncharges_full = qm7_ncharges
+
+        print(qm7_reps)
+
+        print(qm7_ncharges)
+
+
         qm7_reps = np.concatenate(qm7_reps, axis=0)
         qm7_ncharges = np.concatenate(qm7_ncharges, axis=0)
+        print(qm7_reps.shape)
+        print(qm7_ncharges.shape)
+        exit(0)
         #print(
         #    qm7_reps.shape,
         #    qm7_reps.size,
