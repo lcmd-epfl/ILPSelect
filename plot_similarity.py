@@ -802,9 +802,7 @@ def tsne_plots(
 
         qm7_reps = np.concatenate(qm7_reps_full, axis=0)
         qm7_ncharges = np.concatenate(qm7_ncharges_full, axis=0)
-        print(qm7_reps.shape)
-        print(qm7_ncharges.shape)
-        exit(0)
+
         #print(
         #    qm7_reps.shape,
         #    qm7_reps.size,
@@ -881,9 +879,17 @@ def tsne_plots(
             "h_sml_ncharges",
             "h_fps_ncharges",
         ]
+        training_set_name_idxs = [
+            "h_algo_0_idxs",
+            "h_algo_1_idxs",
+            "h_random_idxs",
+            "h_cur_idxs",
+            "h_sml_idxs",
+            "h_fps_idxs",
+        ]
         for t, target_data in enumerate(targets_data):
-            for training_name, ncharges_name in zip(
-                training_set_names, training_set_name_ncharges
+            for training_name, ncharges_name, idxs_name in zip(
+                training_set_names, training_set_name_ncharges, training_set_name_idxs
             ):
                 print(f'{training_name=}')
                 target_rep = target_data["target_rep"]
@@ -897,15 +903,26 @@ def tsne_plots(
                     target_rep.reshape(1, -1)
                 target_name = target_data["target_name"]
                 print(f'{target_name=}')
-                xta_algo_0_d = e_train.transform(target_rep)
+                #xta_algo_0_d = e_train.transform(target_rep)
 
                 training_data = np.concatenate(target_data[training_name], axis=0)
+
                 training_ncharges = np.concatenate(target_data[ncharges_name], axis=0)
                 print(f'{training_data.shape=} {training_data.size=}')
                 training_data = training_data[
                     np.where(training_ncharges == selected_atom)[0]
                 ]
                 print("After filter:", training_data.shape, training_data.size)
+
+                selected_training_set_idx = target_data[idxs_name]
+                selected_qm7_reps     = np.concatenate(qm7_reps_full[selected_training_set_idx], axis=0)
+                selected_qm7_ncharges = np.concatenate(qm7_ncharges_full[selected_training_set_idx], axis=0)
+                training_data_new = selected_qm7_reps[np.where(selected_qm7_ncharges == selected_atom)]
+                assert np.linalg.norm(training_data-training_data_new) < 1e-15
+                continue
+
+
+
                 if training_data.size == 0:
                     continue
                 xtr_algo_0_d = e_train.transform(training_data)
