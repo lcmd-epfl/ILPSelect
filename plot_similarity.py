@@ -19,6 +19,7 @@ import argparse as ap
 import pandas as pd
 
 pt = {"C": 6, "N": 7, "O": 8, "S": 16, "F": 9, "H": 1}
+pt1 = {6:'C', 7:"N", 8:"O", 16:"S", 9:"F", 1:"H"}
 
 
 def plot_tsne(
@@ -36,7 +37,6 @@ def plot_tsne(
     label_order=None,
     **kwargs,
 ):
-    import matplotlib
 
     if ax is None:
         _, ax = matplotlib.pyplot.subplots(figsize=(8, 8))
@@ -50,6 +50,11 @@ def plot_tsne(
     s = np.array((y + 1) * (y + 18), dtype=int)
     alphas = np.clip((y + 1) * 0.4, a_min=0, a_max=1)
 
+    alphas = np.zeros_like(y, dtype=float)
+    alphas[np.where(y==0)] = 0.5
+    alphas[np.where(y==1)] = 0.25
+    alphas[np.where(y==2)] = 0.5
+
     # Create main plot
     if label_order is not None:
         assert all(np.isin(np.unique(y), label_order))
@@ -57,8 +62,9 @@ def plot_tsne(
     else:
         classes = np.unique(y)
     if colors is None:
-        default_colors = matplotlib.rcParams["axes.prop_cycle"]
-        colors = {k: v["color"] for k, v in zip(classes, default_colors())}
+        #default_colors = matplotlib.rcParams["axes.prop_cycle"]
+        #colors = {k: v["color"] for k, v in zip(classes, default_colors())}
+        colors = {0: 'grey', 1: 'green', 2: 'red'}
 
     point_colors = list(map(colors.get, y))
 
@@ -113,14 +119,16 @@ def plot_tsne(
                 label=yi,
                 markeredgecolor="k",
             )
-            for yi in classes
+            for yi in classes[::-1]
         ]
-        legend_kwargs_ = dict(loc="center left", bbox_to_anchor=(1, 0.5), frameon=False)
+        legend_kwargs_ = dict(loc="upper center",
+                              prop={'size': 12},
+                              handletextpad=0, columnspacing=1,
+                              bbox_to_anchor=(0.5, 0), frameon=False, ncol=len(classes))
         if legend_kwargs is not None:
             legend_kwargs_.update(legend_kwargs)
-        ax.legend(handles=legend_handles, **legend_kwargs_)
+        ax.legend(handles=legend_handles, labels=['target','selected from QM7','other in QM7'], **legend_kwargs_)
 
-    # plt.savefig(f"tsne.pdf")
     plt.savefig(f"interpret_figs/tsne_{target_name}_{training_name}.pdf")
     # plt.show()
     return
@@ -813,8 +821,8 @@ def tsne_plots(
         #    qm7_ncharges[0:10],
         #)
 
-        perplexity = {6: 500*2,
-                      16: 4*2,
+        perplexity = {6: 500,
+                      16: 4,
                       8: 80,  # old
                       7: 90,  # old
                       }
@@ -867,6 +875,16 @@ def tsne_plots(
             "h_sml_reps",
             "h_fps_reps",
         ]
+
+        alg_name = {
+            "h_algo_0_reps":'ILP(p=0)',
+            "h_algo_1_reps":'ILP(p=1)',
+            "h_random_reps":'random',
+            "h_cur_reps":'CUR',
+            "h_sml_reps":'SML',
+            "h_fps_reps":'FPS',
+                }
+
         for target_data in targets_data:
             for training_name in training_set_names:
                 print(f'{training_name=}')
@@ -895,10 +913,13 @@ def tsne_plots(
                 if selected_atom_idx.size == 0:
                     continue
                 xtr_algo_0_d = x_qm7[selected_atom_idx]
-                x_all = np.concatenate((x_qm7, xtr_algo_0_d, xta_algo_0_d), axis=0)
+
+                x_qm7_rest = x_qm7[np.setdiff1d(np.arange(len(x_qm7)), selected_atom_idx)]
+
+                x_all = np.concatenate((x_qm7_rest, xtr_algo_0_d, xta_algo_0_d), axis=0)
                 y_all = np.concatenate(
                     (
-                        np.zeros((x_qm7.shape[0])),
+                        np.zeros((x_qm7_rest.shape[0])),
                         np.ones((xtr_algo_0_d.shape[0])),
                         np.full((xta_algo_0_d.shape[0]), fill_value=2),
                     ),
@@ -909,6 +930,7 @@ def tsne_plots(
                     y_all,
                     target_name,
                     f"{training_name}_{selected_atom}_local_perp{perplexity[selected_atom]}",
+                    title = f'{target_name} ({pt1[selected_atom]}) - {alg_name[training_name]}',
                 )
                 print()
             print()
