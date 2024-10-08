@@ -136,6 +136,7 @@ def parse_args():
     parser.add_argument("-m", "--min", action="store_true")  # instead of all distances
     parser.add_argument("-d", "--database", default="drugs")
     parser.add_argument("-s", "--size", action="store_true")  # size plot instead
+    parser.add_argument("--tsne_atom", default=6)
     args = parser.parse_args()
     return args
 
@@ -707,6 +708,7 @@ def tsne_plots(
     qm7_reps,
     qm7_ncharges,
     targets_data,
+    selected_atom=6,
     database="drugs",
     option="all",
     global_rep=True,
@@ -811,35 +813,32 @@ def tsne_plots(
         #    qm7_ncharges[0:10],
         #)
 
-        # V2, good for C
-        #tsne = TSNE(
-        #    perplexity=10,
-        #    metric="euclidean",
-        #    n_jobs=-1,
-        #    random_state=42,
-        #    initialization="random",
-        #    verbose=True,
-        #    early_exaggeration_iter=50,
-        #)
-        # early_exaggeration_iter=10,
-        # n_iter=10,
+        perplexity = {6: 500, # ok
+                      16: 4, # check
+                      1: 850, # check
+                      7: 90, # check
+                      8: 80 # check
+                      }
 
-        # V3
+        # V4
         tsne = TSNE(
-            perplexity=2,
+            perplexity=perplexity[selected_atom],
             metric="euclidean",
             n_jobs=-1,
             random_state=42,
             initialization="random",
             verbose=True,
-            early_exaggeration_iter=10,
+            early_exaggeration_iter=50,
+        # early_exaggeration_iter=10,
+        # n_iter=10,
         )
 
-        selected_atom = 7
+
         qm7_reps = qm7_reps[np.where(qm7_ncharges == selected_atom)[0]]
         print("After filter:", qm7_reps.shape, qm7_reps.size)
 
-        sav_path = f"{selected_atom}_local_v2.sav"
+        sav_path = f"{selected_atom}_local_v4.sav"
+        x_sav_path = f"qm7_{selected_atom}_local_v4.sav"
         if os.path.isfile(sav_path):
             print(f"loading from {sav_path}")
             with open(sav_path, "rb") as f:
@@ -850,7 +849,6 @@ def tsne_plots(
             with open(sav_path, "wb") as f:
                 pickle.dump(e_train, f)
         print()
-        x_sav_path = f"qm7_{selected_atom}_local_v2.sav"
         if os.path.isfile(x_sav_path):
             print(f"loading from {x_sav_path}")
             with open(x_sav_path, "rb") as f:
@@ -912,7 +910,7 @@ def tsne_plots(
                     x_all,
                     y_all,
                     target_name,
-                    f"{training_name}_{selected_atom}_local_v3",
+                    f"{training_name}_{selected_atom}_local_v4",
                 )
                 print()
             print()
@@ -1458,4 +1456,4 @@ else:
     # distance_distribution_plots(targets_data, database=database)
     # tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=True)
     print('tsne')
-    tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=False)
+    tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=False, selected_atom=args.tsne_atom)
