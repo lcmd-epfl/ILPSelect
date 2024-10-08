@@ -794,15 +794,14 @@ def tsne_plots(
         return None
     else:
         qm7_reps_full = qm7_reps
-        qm7_ncharges_full = qm7_ncharges
 
-        print(qm7_reps)
+        # a bit dumb
+        qm7_ncharges_full = np.zeros_like(qm7_reps_full, dtype=int)[:,:,0]
+        for i, ncharges in enumerate(qm7_ncharges):
+            qm7_ncharges_full[i,:len(ncharges)] = ncharges
 
-        print(qm7_ncharges)
-
-
-        qm7_reps = np.concatenate(qm7_reps, axis=0)
-        qm7_ncharges = np.concatenate(qm7_ncharges, axis=0)
+        qm7_reps = np.concatenate(qm7_reps_full, axis=0)
+        qm7_ncharges = np.concatenate(qm7_ncharges_full, axis=0)
         print(qm7_reps.shape)
         print(qm7_ncharges.shape)
         exit(0)
