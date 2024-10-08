@@ -871,27 +871,10 @@ def tsne_plots(
             "h_sml_reps",
             "h_fps_reps",
         ]
-        training_set_name_ncharges = [
-            "h_algo_0_ncharges",
-            "h_algo_1_ncharges",
-            "h_random_ncharges",
-            "h_cur_ncharges",
-            "h_sml_ncharges",
-            "h_fps_ncharges",
-        ]
-        training_set_name_idxs = [
-            "h_algo_0_idxs",
-            "h_algo_1_idxs",
-            "h_random_idxs",
-            "h_cur_idxs",
-            "h_sml_idxs",
-            "h_fps_idxs",
-        ]
         for t, target_data in enumerate(targets_data):
-            for training_name, ncharges_name, idxs_name in zip(
-                training_set_names, training_set_name_ncharges, training_set_name_idxs
-            ):
+            for training_name in training_set_names:
                 print(f'{training_name=}')
+                idxs_name = training_name.replace('_reps', '_idxs')
                 target_rep = target_data["target_rep"]
                 target_ncharges = target_data["target_ncharges"]
                 print(target_rep.shape, target_rep.size, target_ncharges[0:10])
@@ -903,40 +886,19 @@ def tsne_plots(
                     target_rep.reshape(1, -1)
                 target_name = target_data["target_name"]
                 print(f'{target_name=}')
-                #xta_algo_0_d = e_train.transform(target_rep)
-
-                training_data = np.concatenate(target_data[training_name], axis=0)
-
-                training_ncharges = np.concatenate(target_data[ncharges_name], axis=0)
-                print(f'{training_data.shape=} {training_data.size=}')
-                training_data = training_data[
-                    np.where(training_ncharges == selected_atom)[0]
-                ]
-                print("After filter:", training_data.shape, training_data.size)
-
-                selected_training_set_idx = target_data[idxs_name]
-                selected_qm7_reps     = np.concatenate(qm7_reps_full[selected_training_set_idx], axis=0)
-                selected_qm7_ncharges = np.concatenate(qm7_ncharges_full[selected_training_set_idx], axis=0)
-                training_data_new = selected_qm7_reps[np.where(selected_qm7_ncharges == selected_atom)]
-                assert np.linalg.norm(training_data-training_data_new) < 1e-15
+                xta_algo_0_d = e_train.transform(target_rep)
 
                 # also dumb but i don't know how to do it beautifully
                 atom_mol_idx = np.full((qm7_ncharges_full.shape[::-1]), np.arange(len(qm7_ncharges_full))).T
                 atom_mol_idx = np.concatenate(atom_mol_idx, axis=0)[np.where(qm7_ncharges == selected_atom)]
                 selected_atom_idx = []
-                for i in selected_training_set_idx:
+                for i in target_data[idxs_name]:
                     selected_atom_idx.extend(np.where(atom_mol_idx==i)[0])
                 selected_atom_idx = np.array(selected_atom_idx)
-                training_data_new_new = qm7_reps[selected_atom_idx]
-                assert np.linalg.norm(training_data_new_new-training_data_new) < 1e-15
 
-                continue
-
-
-
-                if training_data.size == 0:
+                if selected_atom_idx.size == 0:
                     continue
-                xtr_algo_0_d = e_train.transform(training_data)
+                xtr_algo_0_d = x_qm7[selected_atom_idx]
                 x_all = np.concatenate((x_qm7, xtr_algo_0_d, xta_algo_0_d), axis=0)
                 y_all = np.concatenate(
                     (
