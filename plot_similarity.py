@@ -640,10 +640,10 @@ def get_data_for_tsne_plots(
     qm7_reps = np.concatenate(qm7_reps_full, axis=0)
     qm7_ncharges = np.concatenate(qm7_ncharges_full, axis=0)
 
-    perplexity = {6: 250,  # 500
+    perplexity = {6: 500,
                   16: 4,
-                  8: 80,  # old
-                  7: 90,  # old
+                  8: 80,
+                  7: 90,
                   }
 
     tsne = TSNE(
@@ -683,28 +683,12 @@ def get_data_for_tsne_plots(
     print()
 
 
-    training_set_names = [
-        "h_algo_0_reps",
-        "h_algo_1_reps",
-        "h_random_reps",
-        "h_cur_reps",
-        "h_sml_reps",
-        "h_fps_reps",
-    ]
-
-    alg_name = {
-        "h_algo_0_reps":'ILP(p=0)',
-        "h_algo_1_reps":'ILP(p=1)',
-        "h_random_reps":'random',
-        "h_cur_reps":'CUR',
-        "h_sml_reps":'SML',
-        "h_fps_reps":'FPS',
-            }
+    algos = ["algo_0", "algo_1", "random", "cur", "sml", "fps"]
 
     for target_data in targets_data:
-        for training_name in training_set_names:
-            print(f'{training_name=}')
-            idxs_name = training_name.replace('_reps', '_idxs')
+        for algo in algos:
+            print(f'{algo=}')
+            idxs_name = f'h_{algo}_idxs'
             target_rep = target_data["target_rep"]
             target_ncharges = target_data["target_ncharges"]
             print(target_rep.shape, target_rep.size, target_ncharges[0:10])
@@ -743,7 +727,8 @@ def get_data_for_tsne_plots(
                 ),
                 axis=0,
             )
-            np.savez(f"interpret_figs/tsne_{target_name}_{training_name}", x=x_all, y=y_all)
+            np.savez(f"interpret_figs/tsne/tsne_{target_name}_{selected_atom}_perp{perplexity[selected_atom]}_{algo}",
+                     x=x_all, y=y_all)
             print()
         print()
 
