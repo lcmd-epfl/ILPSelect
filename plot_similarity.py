@@ -22,145 +22,6 @@ pt = {"C": 6, "N": 7, "O": 8, "S": 16, "F": 9, "H": 1}
 pt1 = {6:'C', 7:"N", 8:"O", 16:"S", 9:"F", 1:"H"}
 
 
-def plot_tsne(
-    x,
-    y,
-    target_name,
-    training_name,
-    selected_atom,
-    ax=None,
-    title=None,
-    draw_legend=True,
-    draw_centers=False,
-    draw_cluster_labels=False,
-    colors=None,
-    legend_kwargs=None,
-    label_order=None,
-    **kwargs,
-):
-
-    if ax is None:
-        _, ax = matplotlib.pyplot.subplots(figsize=(7, 8))
-
-    if title is not None:
-        ax.set_title(title)
-
-    plot_params = {"alpha": kwargs.get("alpha", 0.6), "s": kwargs.get("s", 1)}
-
-    # Set up sizes and alphas via trick
-    s = np.array((y + 1) * (y + 18), dtype=int)
-    alphas = np.clip((y + 1) * 0.4, a_min=0, a_max=1)
-
-    alphas = np.zeros_like(y, dtype=float)
-    alphas[np.where(y==0)] = 1.0
-    alphas[np.where(y==1)] = {6: 0.125 / 2, 16: 20/845}[selected_atom]
-    alphas[np.where(y==2)] = 1.0
-
-    s[np.where(y==2)] = s[0]
-
-    # Create main plot
-    if label_order is not None:
-        assert all(np.isin(np.unique(y), label_order))
-        classes = [l for l in label_order if l in np.unique(y)]
-    else:
-        classes = np.unique(y)
-    if colors is None:
-        default_colors = matplotlib.rcParams["axes.prop_cycle"]
-        default_colors = [i['color'] for i,j in zip(default_colors(), range(10))]
-        #colors = {k: v["color"] for k, v in zip(classes, default_colors())}
-        colors = {0: default_colors[7], 1: default_colors[8], 2: 'red'}
-
-    point_colors = np.array(list(map(colors.get, y)))
-
-    #print(np.mean(x, axis=0))
-    #print(np.std(x, axis=0))
-    #x = (x - np.mean(x, axis=0))/np.std(x, axis=0)
-    #x = x / (((x - np.mean(x, axis=0))/np.std(x, axis=0))**2)
-    #print(np.mean(x, axis=0))
-    #print(np.std(x, axis=0))
-
-    target_mask = (y==2)
-
-    ax.scatter(
-        x[~target_mask, 0],
-        x[~target_mask, 1],
-        c=point_colors[~target_mask],
-        s=s[~target_mask],
-        alpha=alphas[~target_mask],
-        rasterized=True,
-    )  # , **plot_params)
-
-
-    ax.scatter(
-        x[target_mask, 0],
-        x[target_mask, 1],
-        c=point_colors[target_mask],
-        s=s[target_mask],
-        alpha=alphas[target_mask],
-        edgecolors='black',
-        rasterized=True,
-        marker='x',
-    )  # , **plot_params)
-
-
-
-    # Plot mediods
-    if draw_centers:
-        centers = []
-        for yi in classes:
-            mask = yi == y
-            centers.append(np.median(x[mask, :2], axis=0))
-        centers = np.array(centers)
-
-        center_colors = list(map(colors.get, classes))
-        ax.scatter(
-            centers[:, 0], centers[:, 1], c=center_colors, s=48, alpha=1, edgecolor="k"
-        )
-
-        # Draw mediod labels
-        if draw_cluster_labels:
-            for idx, label in enumerate(classes):
-                ax.text(
-                    centers[idx, 0],
-                    centers[idx, 1] + 2.2,
-                    label,
-                    fontsize=kwargs.get("fontsize", 6),
-                    horizontalalignment="center",
-                )
-
-    # Hide ticks and axis
-    ax.set_xticks([]), ax.set_yticks([]), ax.axis("off")
-
-    if draw_legend:
-        legend_handles = [
-            matplotlib.lines.Line2D(
-                [],
-                [],
-                marker="s",
-                color="w",
-                markerfacecolor=colors[yi],
-                ms=10,
-                alpha=1,
-                linewidth=0,
-                label=yi,
-                markeredgecolor="k",
-            )
-            for yi in classes[::-1]
-        ]
-        legend_kwargs_ = dict(loc="upper center",
-                              prop={'size': 12},
-                              handletextpad=0, columnspacing=1,
-                              bbox_to_anchor=(0.5, 0), frameon=False, ncol=len(classes))
-        if legend_kwargs is not None:
-            legend_kwargs_.update(legend_kwargs)
-        ax.legend(handles=legend_handles, labels=['target','selected from QM7','other in QM7'], **legend_kwargs_)
-
-    plt.tight_layout()
-    plt.savefig(f"interpret_figs/tsne_{target_name}_{training_name}.pdf")
-    # plt.show()
-    return
-
-
 def filter(ar):
     return ar[np.isfinite(ar)]
 
@@ -739,14 +600,11 @@ def distance_plot(
     return
 
 
-def tsne_plots(
+def get_data_for_tsne_plots(
     qm7_reps,
     qm7_ncharges,
     targets_data,
     selected_atom=6,
-    database="drugs",
-    option="all",
-    global_rep=True,
 ):
     """
     Plot all distances observed for a set of target molecules and their associated subsets of molecules in a single plot.
@@ -768,228 +626,128 @@ def tsne_plots(
                                  - 'h_fps_reps': The feature vectors for the FPS subset.
                                  - 'h_fps_ncharges': The atom types for the FPS subset.
                                  - 'target_name': A name or identifier for the target molecule.
-    option (str): Option for computing distances ('all' or 'min').
 
     Returns:
     None
     """
-    if global_rep:
-        # Embedding on qm7
-        # print(qm7_reps.shape, qm7_reps.size)
-        qm7_reps = qm7_reps.sum(axis=1)
-        # print(qm7_reps.shape, qm7_reps.size)
+    qm7_reps_full = qm7_reps
 
-        tsne = TSNE(
-            perplexity=100,
-            metric="euclidean",
-            n_jobs=1,
-            random_state=42,
-            verbose=True,
-            early_exaggeration_iter=50,
-        )
-        # early_exaggeration_iter=10,
-        # n_iter=10,
-        e_train = tsne.fit(qm7_reps)
-        x_qm7 = e_train.transform(qm7_reps)
-        # plot_tsne(x_qm7, np.zeros((x_qm7.shape[0])))
-        training_set_names = [
-            "h_algo_0_reps",
-            "h_algo_1_reps",
-            "h_random_reps",
-            "h_cur_reps",
-            "h_sml_reps",
-            "h_fps_reps",
-        ]
+    # a bit dumb
+    qm7_ncharges_full = np.zeros_like(qm7_reps_full, dtype=int)[:,:,0]
+    for i, ncharges in enumerate(qm7_ncharges):
+        qm7_ncharges_full[i,:len(ncharges)] = ncharges
 
-        for t, target_data in enumerate(targets_data):
-            for training_name in training_set_names:
-                target_rep = target_data["target_rep"]
-                target_ncharges = target_data["target_ncharges"]
-                target_name = target_data["target_name"]
-                # print(target_data["h_algo_0_reps"], target_data["h_algo_0_reps"].shape)
+    qm7_reps = np.concatenate(qm7_reps_full, axis=0)
+    qm7_ncharges = np.concatenate(qm7_ncharges_full, axis=0)
 
-                training_data = moleculize(target_data[training_name])
-                print(training_data.shape, training_data.size)
-                xtr_algo_0_d = e_train.transform(training_data)
-                # plot_tsne(xtr_algo_0_d, np.ones((xtr_algo_0_d.shape[0])))
+    perplexity = {6: 250,  # 500
+                  16: 4,
+                  8: 80,  # old
+                  7: 90,  # old
+                  }
 
-                print(target_rep.shape, target_rep.size)
-                xta_algo_0_d = e_train.transform(target_rep.sum(axis=0).reshape(1, -1))
-                # plot_tsne(xta_algo_0_d, np.full((xta_algo_0_d.shape[0]), fill_value=2))
-                x_all = np.concatenate((x_qm7, xtr_algo_0_d, xta_algo_0_d), axis=0)
-                y_all = np.concatenate(
-                    (
-                        np.zeros((x_qm7.shape[0])),
-                        np.ones((xtr_algo_0_d.shape[0])),
-                        np.full((xta_algo_0_d.shape[0]), fill_value=2),
-                    ),
-                    axis=0,
-                )
-                pickle.dump(e_train, open(f"{training_name}_global.sav", "wb"))
-                plot_tsne(x_all, y_all, target_name, f"{training_name}_global")
+    tsne = TSNE(
+        perplexity=perplexity[selected_atom],
+        metric="euclidean",
+        n_jobs=-1,
+        random_state=42,
+        initialization="random",
+        verbose=True,
+        early_exaggeration_iter=50,
+    )
 
-        return None
+    qm7_reps = qm7_reps[np.where(qm7_ncharges == selected_atom)[0]]
+    print("After filter:", qm7_reps.shape, qm7_reps.size)
+
+    sav_path = f"{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
+    x_sav_path = f"qm7_{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
+    if os.path.isfile(sav_path):
+        print(f"loading from {sav_path}")
+        with open(sav_path, "rb") as f:
+            e_train = pickle.load(f)
     else:
-        qm7_reps_full = qm7_reps
-
-        # a bit dumb
-        qm7_ncharges_full = np.zeros_like(qm7_reps_full, dtype=int)[:,:,0]
-        for i, ncharges in enumerate(qm7_ncharges):
-            qm7_ncharges_full[i,:len(ncharges)] = ncharges
-
-        qm7_reps = np.concatenate(qm7_reps_full, axis=0)
-        qm7_ncharges = np.concatenate(qm7_ncharges_full, axis=0)
-
-        #print(
-        #    qm7_reps.shape,
-        #    qm7_reps.size,
-        #    qm7_ncharges.shape,
-        #    qm7_ncharges.size,
-        #    qm7_ncharges[0:10],
-        #)
-
-        perplexity = {6: 500,
-                      16: 4,
-                      8: 80,  # old
-                      7: 90,  # old
-                      }
-
-        # V4
-        tsne = TSNE(
-            perplexity=perplexity[selected_atom],
-            metric="euclidean",
-            n_jobs=-1,
-            random_state=42,
-            initialization="random",
-            verbose=True,
-            early_exaggeration_iter=50,
-        # early_exaggeration_iter=10,
-        # n_iter=10,
-        )
-
-        qm7_reps = qm7_reps[np.where(qm7_ncharges == selected_atom)[0]]
-        print("After filter:", qm7_reps.shape, qm7_reps.size)
-
-        sav_path = f"{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
-        x_sav_path = f"qm7_{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
-        if os.path.isfile(sav_path):
-            print(f"loading from {sav_path}")
-            with open(sav_path, "rb") as f:
-                e_train = pickle.load(f)
-        else:
-            print(f"fitting and saving to {sav_path}")
-            e_train = tsne.fit(qm7_reps)
-            with open(sav_path, "wb") as f:
-                pickle.dump(e_train, f)
-        print()
-        if os.path.isfile(x_sav_path):
-            print(f"loading from {x_sav_path}")
-            with open(x_sav_path, "rb") as f:
-                x_qm7 = pickle.load(f)
-        else:
-            print(f"transforming and saving to {x_sav_path}")
-            x_qm7 = e_train.transform(qm7_reps)
-            with open(x_sav_path, "wb") as f:
-                pickle.dump(x_qm7, f)
-        print()
+        print(f"fitting and saving to {sav_path}")
+        e_train = tsne.fit(qm7_reps)
+        with open(sav_path, "wb") as f:
+            pickle.dump(e_train, f)
+    print()
+    if os.path.isfile(x_sav_path):
+        print(f"loading from {x_sav_path}")
+        with open(x_sav_path, "rb") as f:
+            x_qm7 = pickle.load(f)
+    else:
+        print(f"transforming and saving to {x_sav_path}")
+        x_qm7 = e_train.transform(qm7_reps)
+        with open(x_sav_path, "wb") as f:
+            pickle.dump(x_qm7, f)
+    print()
 
 
-        training_set_names = [
-            "h_algo_0_reps",
-            "h_algo_1_reps",
-            "h_random_reps",
-            "h_cur_reps",
-            "h_sml_reps",
-            "h_fps_reps",
-        ]
+    training_set_names = [
+        "h_algo_0_reps",
+        "h_algo_1_reps",
+        "h_random_reps",
+        "h_cur_reps",
+        "h_sml_reps",
+        "h_fps_reps",
+    ]
 
-        alg_name = {
-            "h_algo_0_reps":'ILP(p=0)',
-            "h_algo_1_reps":'ILP(p=1)',
-            "h_random_reps":'random',
-            "h_cur_reps":'CUR',
-            "h_sml_reps":'SML',
-            "h_fps_reps":'FPS',
-                }
+    alg_name = {
+        "h_algo_0_reps":'ILP(p=0)',
+        "h_algo_1_reps":'ILP(p=1)',
+        "h_random_reps":'random',
+        "h_cur_reps":'CUR',
+        "h_sml_reps":'SML',
+        "h_fps_reps":'FPS',
+            }
 
-        for target_data in targets_data:
-            for training_name in training_set_names:
-                print(f'{training_name=}')
-                idxs_name = training_name.replace('_reps', '_idxs')
-                target_rep = target_data["target_rep"]
-                target_ncharges = target_data["target_ncharges"]
-                print(target_rep.shape, target_rep.size, target_ncharges[0:10])
-                target_rep = target_rep[np.where(target_ncharges == selected_atom)[0]]
-                print("After filter:", target_rep.shape, target_rep.size)
-                if target_rep.size == 0:
-                    continue
-                if not isinstance(target_rep, np.ndarray):
-                    target_rep.reshape(1, -1)
-                target_name = target_data["target_name"]
-                print(f'{target_name=}')
-                xta_algo_0_d = e_train.transform(target_rep)
+    for target_data in targets_data:
+        for training_name in training_set_names:
+            print(f'{training_name=}')
+            idxs_name = training_name.replace('_reps', '_idxs')
+            target_rep = target_data["target_rep"]
+            target_ncharges = target_data["target_ncharges"]
+            print(target_rep.shape, target_rep.size, target_ncharges[0:10])
+            target_rep = target_rep[np.where(target_ncharges == selected_atom)[0]]
+            print("After filter:", target_rep.shape, target_rep.size)
+            if target_rep.size == 0:
+                continue
+            if not isinstance(target_rep, np.ndarray):
+                target_rep.reshape(1, -1)
+            target_name = target_data["target_name"]
+            if target_name != 'penicillin':
+                continue
+            print(f'{target_name=}')
+            xta_algo_0_d = e_train.transform(target_rep)
 
-                # also dumb but i don't know how to do it beautifully
-                atom_mol_idx = np.full((qm7_ncharges_full.shape[::-1]), np.arange(len(qm7_ncharges_full))).T
-                atom_mol_idx = np.concatenate(atom_mol_idx, axis=0)[np.where(qm7_ncharges == selected_atom)]
-                selected_atom_idx = []
-                for i in target_data[idxs_name]:
-                    selected_atom_idx.extend(np.where(atom_mol_idx==i)[0])
-                selected_atom_idx = np.array(selected_atom_idx)
+            # also dumb but i don't know how to do it beautifully
+            atom_mol_idx = np.full((qm7_ncharges_full.shape[::-1]), np.arange(len(qm7_ncharges_full))).T
+            atom_mol_idx = np.concatenate(atom_mol_idx, axis=0)[np.where(qm7_ncharges == selected_atom)]
+            selected_atom_idx = []
+            for i in target_data[idxs_name]:
+                selected_atom_idx.extend(np.where(atom_mol_idx==i)[0])
+            selected_atom_idx = np.array(selected_atom_idx)
 
-                if selected_atom_idx.size == 0:
-                    continue
-                xtr_algo_0_d = x_qm7[selected_atom_idx]
+            if selected_atom_idx.size == 0:
+                continue
+            xtr_algo_0_d = x_qm7[selected_atom_idx]
 
-                x_qm7_rest = x_qm7[np.setdiff1d(np.arange(len(x_qm7)), selected_atom_idx)]
+            x_qm7_rest = x_qm7[np.setdiff1d(np.arange(len(x_qm7)), selected_atom_idx)]
 
-                x_all = np.concatenate((x_qm7_rest, xtr_algo_0_d, xta_algo_0_d), axis=0)
-                y_all = np.concatenate(
-                    (
-                        np.zeros((x_qm7_rest.shape[0])),
-                        np.ones((xtr_algo_0_d.shape[0])),
-                        np.full((xta_algo_0_d.shape[0]), fill_value=2),
-                    ),
-                    axis=0,
-                )
-                plot_tsne(
-                    x_all,
-                    y_all,
-                    target_name,
-                    f"{training_name}_{selected_atom}_local_perp{perplexity[selected_atom]}",
-                    selected_atom,
-                    title = f'{alg_name[training_name]}',
-                    #title = f'{target_name} ({pt1[selected_atom]}) – {alg_name[training_name]}',
-                )
-                print()
+            x_all = np.concatenate((x_qm7_rest, xtr_algo_0_d, xta_algo_0_d), axis=0)
+            y_all = np.concatenate(
+                (
+                    np.zeros((x_qm7_rest.shape[0])),
+                    np.ones((xtr_algo_0_d.shape[0])),
+                    np.full((xta_algo_0_d.shape[0]), fill_value=2),
+                ),
+                axis=0,
+            )
+            np.savez(f"interpret_figs/tsne_{target_name}_{training_name}", x=x_all, y=y_all)
             print()
+        print()
 
-        if False:
-            for target_data in targets_data:
-                target_name = target_data["target_name"]
-                print(f'{target_name=}')
-                target_ncharges = target_data["target_ncharges"]
-                for q in [16]:
-                    print(f'{q=}')
-                    print(f'target: {len(np.where(target_ncharges == q)[0])}')
-                    for training_name in training_set_names:
-                        ncharges_name = training_name.replace('_reps', '_ncharges')
-                        training_ncharges = np.hstack(target_data[ncharges_name])
-                        print(f'{training_name}: {len(np.where(training_ncharges == q)[0])}')
-                    print(f'total: {len(np.where(qm7_ncharges == q)[0])}')
-                    print()
-                print()
-
-        return None
-
-    # Flatten the database to get the total number of atoms and their atom types
-    # flattened_Xs = [
-    #    np.array(atom_features) for sublist in mixed_Xs for atom_features in sublist
-    # ]
-    # flattened_atomtypes = [
-    #    atomtype for sublist in atomtypes_database for atomtype in sublist
-    # ]
-    # total_database_atoms = len(flattened_Xs)
+    return
 
 
 def moleculize(target_data_list):
@@ -1520,6 +1278,4 @@ else:
     # combined_distance_plot(targets_data, database=database, option="max")
     # combined_distance_plot(targets_data, database=database, option="delta")
     # distance_distribution_plots(targets_data, database=database)
-    # tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=True)
-    print('tsne')
-    tsne_plots(qm7_reps, qm7_ncharges, targets_data, global_rep=False, selected_atom=args.tsne_atom)
+    get_data_for_tsne_plots(qm7_reps, qm7_ncharges, targets_data, selected_atom=args.tsne_atom)
