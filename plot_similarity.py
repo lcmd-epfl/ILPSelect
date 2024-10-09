@@ -27,6 +27,7 @@ def plot_tsne(
     y,
     target_name,
     training_name,
+    selected_atom,
     ax=None,
     title=None,
     draw_legend=True,
@@ -39,7 +40,7 @@ def plot_tsne(
 ):
 
     if ax is None:
-        _, ax = matplotlib.pyplot.subplots(figsize=(8, 8))
+        _, ax = matplotlib.pyplot.subplots(figsize=(7, 8))
 
     if title is not None:
         ax.set_title(title)
@@ -51,9 +52,11 @@ def plot_tsne(
     alphas = np.clip((y + 1) * 0.4, a_min=0, a_max=1)
 
     alphas = np.zeros_like(y, dtype=float)
-    alphas[np.where(y==0)] = 0.5
-    alphas[np.where(y==1)] = 0.25
-    alphas[np.where(y==2)] = 0.5
+    alphas[np.where(y==0)] = 1.0
+    alphas[np.where(y==1)] = {6: 0.125 / 2, 16: 20/845}[selected_atom]
+    alphas[np.where(y==2)] = 1.0
+
+    s[np.where(y==2)] = s[0]
 
     # Create main plot
     if label_order is not None:
@@ -62,21 +65,44 @@ def plot_tsne(
     else:
         classes = np.unique(y)
     if colors is None:
-        #default_colors = matplotlib.rcParams["axes.prop_cycle"]
+        default_colors = matplotlib.rcParams["axes.prop_cycle"]
+        default_colors = [i['color'] for i,j in zip(default_colors(), range(10))]
         #colors = {k: v["color"] for k, v in zip(classes, default_colors())}
-        colors = {0: 'grey', 1: 'green', 2: 'red'}
+        colors = {0: default_colors[7], 1: default_colors[8], 2: 'red'}
 
-    point_colors = list(map(colors.get, y))
+    point_colors = np.array(list(map(colors.get, y)))
+
+    #print(np.mean(x, axis=0))
+    #print(np.std(x, axis=0))
+    #x = (x - np.mean(x, axis=0))/np.std(x, axis=0)
+    #x = x / (((x - np.mean(x, axis=0))/np.std(x, axis=0))**2)
+    #print(np.mean(x, axis=0))
+    #print(np.std(x, axis=0))
+
+    target_mask = (y==2)
 
     ax.scatter(
-        x[:, 0],
-        x[:, 1],
-        c=point_colors,
-        s=s,
-        alpha=alphas,
-        edgecolors=point_colors,
+        x[~target_mask, 0],
+        x[~target_mask, 1],
+        c=point_colors[~target_mask],
+        s=s[~target_mask],
+        alpha=alphas[~target_mask],
         rasterized=True,
     )  # , **plot_params)
+
+
+    ax.scatter(
+        x[target_mask, 0],
+        x[target_mask, 1],
+        c=point_colors[target_mask],
+        s=s[target_mask],
+        alpha=alphas[target_mask],
+        edgecolors='black',
+        rasterized=True,
+        marker='x',
+    )  # , **plot_params)
+
+
 
     # Plot mediods
     if draw_centers:
@@ -129,6 +155,7 @@ def plot_tsne(
             legend_kwargs_.update(legend_kwargs)
         ax.legend(handles=legend_handles, labels=['target','selected from QM7','other in QM7'], **legend_kwargs_)
 
+    plt.tight_layout()
     plt.savefig(f"interpret_figs/tsne_{target_name}_{training_name}.pdf")
     # plt.show()
     return
@@ -930,7 +957,9 @@ def tsne_plots(
                     y_all,
                     target_name,
                     f"{training_name}_{selected_atom}_local_perp{perplexity[selected_atom]}",
-                    title = f'{target_name} ({pt1[selected_atom]}) - {alg_name[training_name]}',
+                    selected_atom,
+                    title = f'{alg_name[training_name]}',
+                    #title = f'{target_name} ({pt1[selected_atom]}) – {alg_name[training_name]}',
                 )
                 print()
             print()
