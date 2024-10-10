@@ -3,20 +3,11 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-np.random.seed(20)
-plt.rcParams["figure.figsize"] = (7, 4.8)
-matplotlib.rcParams.update({"font.size": 20})
-
-pt1 = {6:'C', 7:"N", 8:"O", 16:"S", 9:"F", 1:"H"}
 
 
-def plot_tsne(x, y, output_path=None, selected_atom=None, title=None, rasterized=True):
-
-    _, ax = matplotlib.pyplot.subplots(figsize=(7, 8))
+def plot_tsne(fig, ax, x, y, selected_atom=None, title=None, rasterized=True):
 
     ax.set_title(title)
-
-    # Set up sizes and alphas via trick
 
     s = np.full(len(y), fill_value={8: 18, 7:18, 6:9, 16:18}[selected_atom])
 
@@ -58,7 +49,6 @@ def plot_tsne(x, y, output_path=None, selected_atom=None, title=None, rasterized
         rasterized=rasterized,
     )
 
-
     ax.scatter(
         x[target_mask, 0],
         x[target_mask, 1],
@@ -87,15 +77,15 @@ def plot_tsne(x, y, output_path=None, selected_atom=None, title=None, rasterized
         )
         for yi in classes[::-1]
     ]
-    legend_kwargs = dict(loc="upper center",
-                         prop={'size': 12},
+    legend_kwargs = dict(loc="outside lower center",
+                         prop={'size': 24},
                          handletextpad=0, columnspacing=1,
                          bbox_to_anchor=(0.5, 0), frameon=False, ncol=len(classes))
-    ax.legend(handles=legend_handles, labels=['target','selected from QM7','other in QM7'], **legend_kwargs)
 
-    plt.tight_layout()
-    plt.savefig(output_path)
+    fig.legend(handles=legend_handles, labels=['target','selected from QM7','other in QM7'], **legend_kwargs)
+
     return
+
 
 
 selected_atom = 8
@@ -103,7 +93,7 @@ selected_atom = 6
 target_name = 'penicillin'
 rasterized = True
 
-algos = ["algo_0", "algo_1", "random", "cur", "sml", "fps"]
+algos = ["algo_0", "algo_1", "fps", "cur", "sml", "random"]
 
 alg_name = {
         "algo_0":'ILP(p=0)',
@@ -116,14 +106,24 @@ alg_name = {
 
 perplexity = {6: 500, 16: 4, 8: 80, 7: 90}
 
-for algo in algos:
+np.random.seed(20)
+matplotlib.rcParams.update({"font.size": 32})
+pt1 = {6:'C', 7:"N", 8:"O", 16:"S", 9:"F", 1:"H"}
+
+fig, axs = matplotlib.pyplot.subplots(2, 3, figsize=(8*3, 8*2))
+for i, algo in enumerate(algos):
 
     data = np.load(f"interpret_figs/tsne/tsne_{target_name}_{selected_atom}_perp{perplexity[selected_atom]}_{algo}.npz")
     x, y = data['x'], data['y']
 
-    plot_tsne(x, y, selected_atom=selected_atom,
+    ax = axs[i//3,i%3]
+
+    plot_tsne(fig, ax, x, y, selected_atom=selected_atom,
         title = f'{alg_name[algo]}',
         #title = f'{target_name} ({pt1[selected_atom]}) – {alg_name[algo]}',
-        output_path=f"interpret_figs/tsne/tsne_{target_name}_{selected_atom}_perp{perplexity[selected_atom]}_{algo}.{'png' if rasterized else 'pdf'}",
         rasterized=False,
     )
+
+output_path=f"interpret_figs/tsne/tsne_{target_name}_{selected_atom}_perp{perplexity[selected_atom]}.png"
+fig.tight_layout()
+fig.savefig(output_path, dpi=600)
