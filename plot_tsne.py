@@ -7,30 +7,42 @@ np.random.seed(20)
 plt.rcParams["figure.figsize"] = (7, 4.8)
 matplotlib.rcParams.update({"font.size": 20})
 
-pt = {"C": 6, "N": 7, "O": 8, "S": 16, "F": 9, "H": 1}
 pt1 = {6:'C', 7:"N", 8:"O", 16:"S", 9:"F", 1:"H"}
 
 
-def plot_tsne(x, y, output_path=None, selected_atom=None, title=None):
+def plot_tsne(x, y, output_path=None, selected_atom=None, title=None, rasterized=True):
 
     _, ax = matplotlib.pyplot.subplots(figsize=(7, 8))
 
     ax.set_title(title)
 
     # Set up sizes and alphas via trick
-    s = np.array((y + 1) * (y + 18), dtype=int)
+
+    s = np.full(len(y), fill_value={8: 18, 7:18, 6:9, 16:18}[selected_atom])
+
     alphas = np.clip((y + 1) * 0.4, a_min=0, a_max=1)
 
     alphas = np.zeros_like(y, dtype=float)
     alphas[np.where(y==0)] = 1.0
-    alphas[np.where(y==1)] = {6: 0.125 / 2, 16: 20/845, 8: 20/80, 7:20/80}[selected_atom]
+    alphas[np.where(y==1)] = 1.0 #{6: 0.125 / 2, 16: 20/845, 8: 20/80, 7:20/80}[selected_atom]
     alphas[np.where(y==2)] = 1.0
 
-    s[np.where(y==2)] = s[0] * 3
+    s[np.where(y==2)] = 90
+    s[np.where(y==1)] = s[0]
 
     classes = np.unique(y)
-    default_colors = [i['color'] for i,j in zip(matplotlib.rcParams["axes.prop_cycle"](), range(10))]
-    colors = {0: default_colors[7], 1: default_colors[8], 2: 'red'}
+    #default_colors = [i['color'] for i,j in zip(matplotlib.rcParams["axes.prop_cycle"](), range(10))]
+    #colors = {0: default_colors[0], 1: default_colors[1], 2: default_colors[8]}
+    #colors = {0: default_colors[0], 1: default_colors[1], 2: default_colors[7]}
+    #colors = {0: default_colors[0], 1: default_colors[1], 2: default_colors[2]}
+    #colors = {0: default_colors[0], 1: default_colors[1], 2: 'white'}
+    #colors = {0: default_colors[0], 1: default_colors[1], 2: 'black'}
+    #colors = {0: default_colors[0], 1: default_colors[1], 2: default_colors[6]}
+    #colors = {0: default_colors[7], 1: default_colors[8], 2: 'red'}
+    #colors = {0: default_colors[0], 1: default_colors[1], 2: 'white'}
+    #colors = {0: default_colors[2], 1: default_colors[3], 2: default_colors[0]}
+    #colors = {0: 'cyan', 1: 'magenta', 2: 'yellow'}
+    colors = {0: '#0000FF', 1: '#00FF00', 2: '#FF0000'}
 
     point_colors = np.array(list(map(colors.get, y)))
 
@@ -43,7 +55,7 @@ def plot_tsne(x, y, output_path=None, selected_atom=None, title=None):
         c=point_colors[~target_mask],
         s=s[~target_mask],
         alpha=alphas[~target_mask],
-        rasterized=True,
+        rasterized=rasterized,
     )
 
 
@@ -53,9 +65,8 @@ def plot_tsne(x, y, output_path=None, selected_atom=None, title=None):
         c=point_colors[target_mask],
         s=s[target_mask],
         alpha=alphas[target_mask],
-        #edgecolors='black',
-        rasterized=True,
-        marker='x',
+        edgecolors='black',
+        rasterized=rasterized,
     )
 
     # Hide ticks and axis
@@ -88,9 +99,11 @@ def plot_tsne(x, y, output_path=None, selected_atom=None, title=None):
 
 
 selected_atom = 8
+selected_atom = 6
 target_name = 'penicillin'
+rasterized = True
 
-keys = ["algo_0", "algo_1", "random", "cur", "sml", "fps"]
+algos = ["algo_0", "algo_1", "random", "cur", "sml", "fps"]
 
 alg_name = {
         "algo_0":'ILP(p=0)',
@@ -101,19 +114,16 @@ alg_name = {
         "fps":'FPS',
         }
 
-perplexity = {6: 500,
-              16: 4,
-              8: 80,
-              7: 90,
-              }
+perplexity = {6: 500, 16: 4, 8: 80, 7: 90}
 
-for training_name in training_set_names:
+for algo in algos:
 
-    data = np.load(f'interpret_figs/tsne_{target_name}_{training_name}.npz')
+    data = np.load(f"interpret_figs/tsne/tsne_{target_name}_{selected_atom}_perp{perplexity[selected_atom]}_{algo}.npz")
     x, y = data['x'], data['y']
 
     plot_tsne(x, y, selected_atom=selected_atom,
-        title = f'{alg_name[training_name]}',
-        #title = f'{target_name} ({pt1[selected_atom]}) – {alg_name[training_name]}',
-        output_path=f"interpret_figs/tsne_{target_name}_{training_name}.pdf",
+        title = f'{alg_name[algo]}',
+        #title = f'{target_name} ({pt1[selected_atom]}) – {alg_name[algo]}',
+        output_path=f"interpret_figs/tsne/tsne_{target_name}_{selected_atom}_perp{perplexity[selected_atom]}_{algo}.{'png' if rasterized else 'pdf'}",
+        rasterized=False,
     )
