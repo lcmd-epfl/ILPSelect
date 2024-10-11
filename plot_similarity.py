@@ -699,8 +699,6 @@ def get_data_for_tsne_plots(
             if not isinstance(target_rep, np.ndarray):
                 target_rep.reshape(1, -1)
             target_name = target_data["target_name"]
-            if target_name != 'penicillin':
-                continue
             print(f'{target_name=}')
             xta_algo_0_d = e_train.transform(target_rep)
 
