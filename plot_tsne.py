@@ -109,10 +109,12 @@ for target in ['penicillin', 'apixaban', 'imatinib', 'oseltamivir', 'oxycodone',
 
         fig.tight_layout()
         if target=='penicillin' and selected_atom==6:
+            dpi = 600
             plt.subplots_adjust(bottom=0.05, right=1, left=0)
         else:
+            dpi = 300
             plt.subplots_adjust(bottom=0.05, right=1, top=0.88, left=0)
             fig.suptitle(f'{target} ({pt[selected_atom]})', fontsize=48)
         output_path=f"interpret_figs/tsne/tsne_{target}_{selected_atom}_perp{perplexity[selected_atom]}.pdf"
-        fig.savefig(output_path, dpi=600)
+        fig.savefig(output_path, dpi=dpi)
         plt.close()
