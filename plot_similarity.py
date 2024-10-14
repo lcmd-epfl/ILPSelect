@@ -659,8 +659,8 @@ def get_data_for_tsne_plots(
     qm7_reps = qm7_reps[np.where(qm7_ncharges == selected_atom)[0]]
     print("After filter:", qm7_reps.shape, qm7_reps.size)
 
-    sav_path = f"{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
-    x_sav_path = f"qm7_{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
+    sav_path = f"tsne_cache/{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
+    x_sav_path = f"tsne_cache/qm7_{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
     if os.path.isfile(sav_path):
         print(f"loading from {sav_path}")
         with open(sav_path, "rb") as f:
