@@ -1,11 +1,22 @@
 import os
 import pickle
-
 import numpy as np
 import pandas as pd
-import qml
-from qml.math import cho_solve
 from sklearn.model_selection import KFold, train_test_split
+try:
+    import qml
+    from qml.kernels import get_local_kernel
+    from qml.math import cho_solve
+    print('using qml @ develop')
+except:
+    try:
+        import qmllib.kernels
+        from qmllib.kernels import get_local_kernel
+        from qmllib.solvers import cho_solve
+        print('using qmllib')
+    except:
+        print('cannot use neither qml nor qmllib')
+        exit(1)
 
 
 def krr(kernel, properties, l2reg=1e-9):
@@ -14,7 +25,7 @@ def krr(kernel, properties, l2reg=1e-9):
 
 
 def get_kernel(X1, X2, charges1, charges2, sigma=1):
-    K = qml.kernels.get_local_kernel(X1, X2, charges1, charges2, sigma)
+    K = qmllib.kernels.get_local_kernel(X1, X2, charges1, charges2, sigma)
     return K
 
 
@@ -280,7 +291,7 @@ def learning_curves_random(config, add_onto_old=True):
         for i, mol_ncharges in enumerate(Q):
             for ncharge in mol_ncharges:
                 y[i] -= atom_energy_coeffs[ncharge]
-    
+
     # shuffle
     N = len(X)
     inds = np.arange(N)
@@ -336,7 +347,7 @@ def learning_curves_random(config, add_onto_old=True):
             for ncharge in Q_target:
                 y_target -= atom_energy_coeffs[ncharge]
 
-        
+
         all_maes_random = []
         ranking = []
 
@@ -351,10 +362,10 @@ def learning_curves_random(config, add_onto_old=True):
             X_train, _, Q_train, _, database_labels_train, _, y_train, _ = train_test_split(X, Q, database_labels, y, test_size=.2, random_state=config["random_state"])
             maes_random = []
             for n in learning_curve_ticks:
-                
+
                 min_sigma, min_l2reg = opt_hypers(
                     X_train[:n], Q_train[:n], y_train[:n]
-                ) 
+                )
 
                 mae, y_pred = train_predict_model(
                     X_train[:n],
