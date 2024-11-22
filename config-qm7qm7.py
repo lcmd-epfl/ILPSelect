@@ -1,6 +1,9 @@
+import os
+
 config = {
     # absolute paths
-    "repository_folder": "/home/haeberle/Documents/molekuehl/",
+    "repository_folder": os.path.dirname(__file__)+'/',
+    #"repository_folder": "/home/haeberle/Documents/molekuehl/",
     ###
     "config_name": "qm7qm7",
     "database": "qm7",
