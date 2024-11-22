@@ -1,28 +1,19 @@
-import os
+import argparse as ap
 import numpy as np
-from sklearn.metrics import pairwise_distances
+import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
 from matplotlib.colors import Normalize
-from openTSNE import TSNE
+import seaborn as sns
+from scripts.kernels import get_local_kernel
+
 
 np.random.seed(20)
 plt.rcParams["figure.figsize"] = (7, 4.8)
-import matplotlib
-import pickle
-
 matplotlib.rcParams.update({"font.size": 20})
 
-from scripts.kernels import get_local_kernel
-import seaborn as sns
-import argparse as ap
-import pandas as pd
 
-pt = {"C": 6, "N": 7, "O": 8, "S": 16, "F": 9, "H": 1}
-pt1 = {6:'C', 7:"N", 8:"O", 16:"S", 9:"F", 1:"H"}
-
-
-def filter(ar):
+def myfilter(ar):
     return ar[np.isfinite(ar)]
 
 
@@ -600,156 +591,6 @@ def distance_plot(
     return
 
 
-def get_data_for_tsne_plots(
-    qm7_reps,
-    qm7_ncharges,
-    targets_data,
-    selected_atom=6,
-):
-    """
-    Plot all distances observed for a set of target molecules and their associated subsets of molecules in a single plot.
-
-    Parameters:
-    targets_data (list of dict): List of dictionaries where each dictionary contains the following keys:
-                                 - 'target_rep': The feature vectors for the target atoms.
-                                 - 'target_ncharges': The atom types for the target atoms.
-                                 - 'h_algo_0_reps': The feature vectors for the ILP(p=0) subset.
-                                 - 'h_algo_0_ncharges': The atom types for the ILP(p=0) subset.
-                                 - 'h_algo_1_reps': The feature vectors for the ILP(p=1) subset.
-                                 - 'h_algo_1_ncharges': The atom types for the ILP(p=1) subset.
-                                 - 'h_random_reps': The feature vectors for the random subset.
-                                 - 'h_random_ncharges': The atom types for the random subset.
-                                 - 'h_cur_reps': The feature vectors for the CUR subset.
-                                 - 'h_cur_ncharges': The atom types for the CUR subset.
-                                 - 'h_sml_reps': The feature vectors for the SML subset.
-                                 - 'h_sml_ncharges': The atom types for the SML subset.
-                                 - 'h_fps_reps': The feature vectors for the FPS subset.
-                                 - 'h_fps_ncharges': The atom types for the FPS subset.
-                                 - 'target_name': A name or identifier for the target molecule.
-
-    Returns:
-    None
-    """
-    qm7_reps_full = qm7_reps
-
-    # a bit dumb
-    qm7_ncharges_full = np.zeros_like(qm7_reps_full, dtype=int)[:,:,0]
-    for i, ncharges in enumerate(qm7_ncharges):
-        qm7_ncharges_full[i,:len(ncharges)] = ncharges
-
-    qm7_reps = np.concatenate(qm7_reps_full, axis=0)
-    qm7_ncharges = np.concatenate(qm7_ncharges_full, axis=0)
-
-    perplexity = {6: 500,
-                  16: 4,
-                  8: 80,
-                  7: 90,
-                  }
-
-    tsne = TSNE(
-        perplexity=perplexity[selected_atom],
-        metric="euclidean",
-        n_jobs=-1,
-        random_state=42,
-        initialization="random",
-        verbose=True,
-        early_exaggeration_iter=50,
-    )
-
-    qm7_reps = qm7_reps[np.where(qm7_ncharges == selected_atom)[0]]
-    print("After filter:", qm7_reps.shape, qm7_reps.size)
-
-    sav_path = f"tsne_cache/{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
-    x_sav_path = f"tsne_cache/qm7_{selected_atom}_local_perp{perplexity[selected_atom]}.sav"
-    if os.path.isfile(sav_path):
-        print(f"loading from {sav_path}")
-        with open(sav_path, "rb") as f:
-            e_train = pickle.load(f)
-    else:
-        print(f"fitting and saving to {sav_path}")
-        e_train = tsne.fit(qm7_reps)
-        with open(sav_path, "wb") as f:
-            pickle.dump(e_train, f)
-    print()
-    if os.path.isfile(x_sav_path):
-        print(f"loading from {x_sav_path}")
-        with open(x_sav_path, "rb") as f:
-            x_qm7 = pickle.load(f)
-    else:
-        print(f"transforming and saving to {x_sav_path}")
-        x_qm7 = e_train.transform(qm7_reps)
-        with open(x_sav_path, "wb") as f:
-            pickle.dump(x_qm7, f)
-    print()
-
-
-    algos = ["algo_0", "algo_1", "random", "cur", "sml", "fps"]
-
-    for target_data in targets_data:
-        for algo in algos:
-            print(f'{algo=}')
-            idxs_name = f'h_{algo}_idxs'
-            target_rep = target_data["target_rep"]
-            target_ncharges = target_data["target_ncharges"]
-            print(target_rep.shape, target_rep.size, target_ncharges[0:10])
-            target_rep = target_rep[np.where(target_ncharges == selected_atom)[0]]
-            print("After filter:", target_rep.shape, target_rep.size)
-            if target_rep.size == 0:
-                continue
-            if not isinstance(target_rep, np.ndarray):
-                target_rep.reshape(1, -1)
-            target_name = target_data["target_name"]
-            print(f'{target_name=}')
-            xta_algo_0_d = e_train.transform(target_rep)
-
-            # also dumb but i don't know how to do it beautifully
-            atom_mol_idx = np.full((qm7_ncharges_full.shape[::-1]), np.arange(len(qm7_ncharges_full))).T
-            atom_mol_idx = np.concatenate(atom_mol_idx, axis=0)[np.where(qm7_ncharges == selected_atom)]
-            selected_atom_idx = []
-            for i in target_data[idxs_name]:
-                selected_atom_idx.extend(np.where(atom_mol_idx==i)[0])
-            selected_atom_idx = np.array(selected_atom_idx)
-
-            if selected_atom_idx.size == 0:
-                continue
-            xtr_algo_0_d = x_qm7[selected_atom_idx]
-
-            x_qm7_rest = x_qm7[np.setdiff1d(np.arange(len(x_qm7)), selected_atom_idx)]
-
-            x_all = np.concatenate((x_qm7_rest, xtr_algo_0_d, xta_algo_0_d), axis=0)
-            y_all = np.concatenate(
-                (
-                    np.zeros((x_qm7_rest.shape[0])),
-                    np.ones((xtr_algo_0_d.shape[0])),
-                    np.full((xta_algo_0_d.shape[0]), fill_value=2),
-                ),
-                axis=0,
-            )
-            np.savez(f"interpret_figs/tsne/tsne_{target_name}_{selected_atom}_perp{perplexity[selected_atom]}_{algo}",
-                     x=x_all, y=y_all)
-            print()
-        print()
-
-    return
-
-
-def moleculize(target_data_list):
-    # print(target_data_list[0].shape)
-    training_data = np.zeros((len(target_data_list), target_data_list[0].shape[1]))
-    for k, molecule in enumerate(target_data_list):
-        training_data[k, :] = molecule.sum(axis=0)
-    return training_data
-
-
-def atomize_training_set(target_data_list):
-    # print(target_data_list[0].shape)
-    training_data = np.zeros((len(target_data_list), target_data_list[0].shape[1]))
-    for k, molecule in enumerate(target_data_list):
-        for i, atom in enumerate(molecule):
-            training_data[k, :] = molecule.sum(axis=0)
-    return training_data
-
-
 def distance_distribution_plots(targets_data, database="drugs", option="all"):
     """
     Plot all distances observed for a set of target molecules and their associated subsets of molecules in a single plot.
@@ -825,12 +666,12 @@ def distance_distribution_plots(targets_data, database="drugs", option="all"):
         # all_fps_d.extend(fps_d)
 
         # Convert lists to numpy arrays for plotting
-        all_algo_0_d = filter(np.array(algo_0_d))
-        all_algo_1_d = filter(np.array(algo_1_d))
-        all_random_d = filter(np.array(random_d))
-        all_cur_d = filter(np.array(cur_d))
-        all_sml_d = filter(np.array(sml_d))
-        all_fps_d = filter(np.array(fps_d))
+        all_algo_0_d = myfilter(np.array(algo_0_d))
+        all_algo_1_d = myfilter(np.array(algo_1_d))
+        all_random_d = myfilter(np.array(random_d))
+        all_cur_d = myfilter(np.array(cur_d))
+        all_sml_d = myfilter(np.array(sml_d))
+        all_fps_d = myfilter(np.array(fps_d))
 
         # want to normalise by number of atoms somehow
 
@@ -964,12 +805,12 @@ def combined_distance_plot(targets_data, database="drugs", option="all"):
         all_fps_d.extend(fps_d)
 
     # Convert lists to numpy arrays for plotting
-    all_algo_0_d = filter(np.array(all_algo_0_d))
-    all_algo_1_d = filter(np.array(all_algo_1_d))
-    all_random_d = filter(np.array(all_random_d))
-    all_cur_d = filter(np.array(all_cur_d))
-    all_sml_d = filter(np.array(all_sml_d))
-    all_fps_d = filter(np.array(all_fps_d))
+    all_algo_0_d = myfilter(np.array(all_algo_0_d))
+    all_algo_1_d = myfilter(np.array(all_algo_1_d))
+    all_random_d = myfilter(np.array(all_random_d))
+    all_cur_d = myfilter(np.array(all_cur_d))
+    all_sml_d = myfilter(np.array(all_sml_d))
+    all_fps_d = myfilter(np.array(all_fps_d))
 
     # want to normalise by number of atoms somehow
 
@@ -1043,131 +884,64 @@ def similarity_plot(
     return
 
 
-# NOW ONLY PLOTTING DISTS BUT OTHER FUNCS ARE ALSO AVAILABLE (SIMILARITIES ETC)
-args = parse_args()
-target = args.target
-database = args.database
-colors = ["tab:blue", "tab:blue", "tab:purple", "tab:red", "tab:orange", "tab:green"]
+if __name__=='__main__':
 
-if database != "qm7":
-    df = pd.read_csv("targets/energies.csv")
-else:
-    df = pd.read_csv("qm7/energies.csv")
-if database == "drugs":
-    targets = [
-        "apixaban",
-        "imatinib",
-        "oseltamivir",
-        "oxycodone",
-        "pemetrexed",
-        "penicillin",
-        "pregabalin",
-        "salbutamol",
-        "sildenafil",
-        "troglitazone",
-    ]
+    # NOW ONLY PLOTTING DISTS BUT OTHER FUNCS ARE ALSO AVAILABLE (SIMILARITIES ETC)
+    args = parse_args()
+    target = args.target
+    database = args.database
+    colors = ["tab:blue", "tab:blue", "tab:purple", "tab:red", "tab:orange", "tab:green"]
 
-elif database == "qm9":
-    targets = [
-        "121259",
-        "12351",
-        "35811",
-        "85759",
-        "96295",
-        "5696",
-        "31476",
-        "55607",
-        "68076",
-        "120425",
-    ]
-
-elif database == "qm7":
-    targets = [
-        "qm7_1251",
-        "qm7_3576",
-        "qm7_6163",
-        "qm7_1513",
-        "qm7_1246",
-        "qm7_2161",
-        "qm7_6118",
-        "qm7_5245",
-        "qm7_5107",
-        "qm7_3037",
-    ]
-
-else:
-    raise NotImplementedError("only qm7, qm9 and drugs not implemented")
-
-if target != "all":
     if database != "qm7":
-        target_name = target + ".xyz"
+        df = pd.read_csv("targets/energies.csv")
     else:
-        target_name = target
-    y_target = float(df[df["file"] == target_name]["energy / Ha"])
+        df = pd.read_csv("qm7/energies.csv")
+    if database == "drugs":
+        targets = [
+            "apixaban",
+            "imatinib",
+            "oseltamivir",
+            "oxycodone",
+            "pemetrexed",
+            "penicillin",
+            "pregabalin",
+            "salbutamol",
+            "sildenafil",
+            "troglitazone",
+        ]
 
-    target_rep, target_ncharges, h_target_rep, h_target_ncharges = load_reps_target(
-        target
-    )
-    (
-        algo_1_ncharges,
-        algo_1_reps,
-        sizes_algo_1,
-        h_algo_1_ncharges,
-        h_algo_1_reps,
-        algo_0_ncharges,
-        algo_0_reps,
-        sizes_algo_0,
-        h_algo_0_ncharges,
-        h_algo_0_reps,
-        cur_ncharges,
-        cur_reps,
-        sizes_cur,
-        h_cur_ncharges,
-        h_cur_reps,
-        fps_ncharges,
-        fps_reps,
-        sizes_fps,
-        h_fps_ncharges,
-        h_fps_reps,
-        sml_ncharges,
-        sml_reps,
-        sizes_sml,
-        h_sml_ncharges,
-        h_sml_reps,
-        random_ncharges,
-        random_reps,
-        sizes_random,
-        h_random_ncharges,
-        h_random_reps,
-    ) = load_qm7(target)
+    elif database == "qm9":
+        targets = [
+            "121259",
+            "12351",
+            "35811",
+            "85759",
+            "96295",
+            "5696",
+            "31476",
+            "55607",
+            "68076",
+            "120425",
+        ]
 
-    if args.size:
-        size_plot(
-            sizes_algo_0, sizes_algo_1, sizes_random, sizes_cur, sizes_sml, sizes_fps
-        )
+    elif database == "qm7":
+        targets = [
+            "qm7_1251",
+            "qm7_3576",
+            "qm7_6163",
+            "qm7_1513",
+            "qm7_1246",
+            "qm7_2161",
+            "qm7_6118",
+            "qm7_5245",
+            "qm7_5107",
+            "qm7_3037",
+        ]
 
-    distance_plot(
-        h_algo_0_reps,
-        h_algo_0_ncharges,
-        h_algo_1_reps,
-        h_algo_1_ncharges,
-        h_random_reps,
-        h_random_ncharges,
-        h_cur_reps,
-        h_cur_ncharges,
-        h_sml_reps,
-        h_sml_ncharges,
-        h_fps_reps,
-        h_fps_ncharges,
-        h_target_rep,
-        h_target_ncharges,
-        database=database,
-    )
+    else:
+        raise NotImplementedError("only qm7, qm9 and drugs not implemented")
 
-else:
-    targets_data = []
-    sizes_targets_data = []
-    for target in targets:
+    if target != "all":
         if database != "qm7":
             target_name = target + ".xyz"
         else:
@@ -1183,82 +957,150 @@ else:
             sizes_algo_1,
             h_algo_1_ncharges,
             h_algo_1_reps,
-            algo_1_idxs,
             algo_0_ncharges,
             algo_0_reps,
             sizes_algo_0,
             h_algo_0_ncharges,
             h_algo_0_reps,
-            algo_0_idxs,
             cur_ncharges,
             cur_reps,
             sizes_cur,
             h_cur_ncharges,
             h_cur_reps,
-            cur_idxs,
             fps_ncharges,
             fps_reps,
             sizes_fps,
             h_fps_ncharges,
             h_fps_reps,
-            fps_idxs,
             sml_ncharges,
             sml_reps,
             sizes_sml,
             h_sml_ncharges,
             h_sml_reps,
-            sml_idxs,
             random_ncharges,
             random_reps,
             sizes_random,
             h_random_ncharges,
             h_random_reps,
-            random_idxs,
-        ), qm7_ncharges, qm7_reps = load_qm7(target)
+        ) = load_qm7(target)
 
         if args.size:
-            sizes_targets_data.append(
+            size_plot(
+                sizes_algo_0, sizes_algo_1, sizes_random, sizes_cur, sizes_sml, sizes_fps
+            )
+
+        distance_plot(
+            h_algo_0_reps,
+            h_algo_0_ncharges,
+            h_algo_1_reps,
+            h_algo_1_ncharges,
+            h_random_reps,
+            h_random_ncharges,
+            h_cur_reps,
+            h_cur_ncharges,
+            h_sml_reps,
+            h_sml_ncharges,
+            h_fps_reps,
+            h_fps_ncharges,
+            h_target_rep,
+            h_target_ncharges,
+            database=database,
+        )
+
+    else:
+        targets_data = []
+        sizes_targets_data = []
+        for target in targets:
+            if database != "qm7":
+                target_name = target + ".xyz"
+            else:
+                target_name = target
+            y_target = float(df[df["file"] == target_name]["energy / Ha"])
+
+            target_rep, target_ncharges, h_target_rep, h_target_ncharges = load_reps_target(
+                target
+            )
+            (
+                algo_1_ncharges,
+                algo_1_reps,
+                sizes_algo_1,
+                h_algo_1_ncharges,
+                h_algo_1_reps,
+                algo_1_idxs,
+                algo_0_ncharges,
+                algo_0_reps,
+                sizes_algo_0,
+                h_algo_0_ncharges,
+                h_algo_0_reps,
+                algo_0_idxs,
+                cur_ncharges,
+                cur_reps,
+                sizes_cur,
+                h_cur_ncharges,
+                h_cur_reps,
+                cur_idxs,
+                fps_ncharges,
+                fps_reps,
+                sizes_fps,
+                h_fps_ncharges,
+                h_fps_reps,
+                fps_idxs,
+                sml_ncharges,
+                sml_reps,
+                sizes_sml,
+                h_sml_ncharges,
+                h_sml_reps,
+                sml_idxs,
+                random_ncharges,
+                random_reps,
+                sizes_random,
+                h_random_ncharges,
+                h_random_reps,
+                random_idxs,
+            ), qm7_ncharges, qm7_reps = load_qm7(target)
+
+            if args.size:
+                sizes_targets_data.append(
+                    {
+                        "sizes_algo_0": sizes_algo_0,
+                        "sizes_algo_1": sizes_algo_1,
+                        "sizes_random": sizes_random,
+                        "sizes_cur": sizes_cur,
+                        "sizes_sml": sizes_sml,
+                        "sizes_fps": sizes_fps,
+                        "target_name": target,
+                    }
+                )
+
+            targets_data.append(
                 {
-                    "sizes_algo_0": sizes_algo_0,
-                    "sizes_algo_1": sizes_algo_1,
-                    "sizes_random": sizes_random,
-                    "sizes_cur": sizes_cur,
-                    "sizes_sml": sizes_sml,
-                    "sizes_fps": sizes_fps,
+                    "target_rep": h_target_rep,
+                    "target_ncharges": h_target_ncharges,
+                    "h_algo_0_reps": h_algo_0_reps,
+                    "h_algo_0_ncharges": h_algo_0_ncharges,
+                    "h_algo_0_idxs": algo_0_idxs,
+                    "h_algo_1_reps": h_algo_1_reps,
+                    "h_algo_1_ncharges": h_algo_1_ncharges,
+                    "h_algo_1_idxs": algo_1_idxs,
+                    "h_random_reps": h_random_reps,
+                    "h_random_ncharges": h_random_ncharges,
+                    "h_random_idxs": random_idxs,
+                    "h_cur_reps": h_cur_reps,
+                    "h_cur_ncharges": h_cur_ncharges,
+                    "h_cur_idxs": cur_idxs,
+                    "h_sml_reps": h_sml_reps,
+                    "h_sml_ncharges": h_sml_ncharges,
+                    "h_sml_idxs": sml_idxs,
+                    "h_fps_reps": h_fps_reps,
+                    "h_fps_ncharges": h_fps_ncharges,
+                    "h_fps_idxs": fps_idxs,
                     "target_name": target,
                 }
             )
-
-        targets_data.append(
-            {
-                "target_rep": h_target_rep,
-                "target_ncharges": h_target_ncharges,
-                "h_algo_0_reps": h_algo_0_reps,
-                "h_algo_0_ncharges": h_algo_0_ncharges,
-                "h_algo_0_idxs": algo_0_idxs,
-                "h_algo_1_reps": h_algo_1_reps,
-                "h_algo_1_ncharges": h_algo_1_ncharges,
-                "h_algo_1_idxs": algo_1_idxs,
-                "h_random_reps": h_random_reps,
-                "h_random_ncharges": h_random_ncharges,
-                "h_random_idxs": random_idxs,
-                "h_cur_reps": h_cur_reps,
-                "h_cur_ncharges": h_cur_ncharges,
-                "h_cur_idxs": cur_idxs,
-                "h_sml_reps": h_sml_reps,
-                "h_sml_ncharges": h_sml_ncharges,
-                "h_sml_idxs": sml_idxs,
-                "h_fps_reps": h_fps_reps,
-                "h_fps_ncharges": h_fps_ncharges,
-                "h_fps_idxs": fps_idxs,
-                "target_name": target,
-            }
-        )
-    # if args.size:
-    #    combined_size_plot_stacked(sizes_targets_data, database=database)
-    #combined_distance_plot(targets_data, database=database)
-    # combined_distance_plot(targets_data, database=database, option="min")
-    # combined_distance_plot(targets_data, database=database, option="max")
-    # combined_distance_plot(targets_data, database=database, option="delta")
-    # distance_distribution_plots(targets_data, database=database)
-    get_data_for_tsne_plots(qm7_reps, qm7_ncharges, targets_data, selected_atom=args.tsne_atom)
+        # if args.size:
+        #    combined_size_plot_stacked(sizes_targets_data, database=database)
+        combined_distance_plot(targets_data, database=database)
+        # combined_distance_plot(targets_data, database=database, option="min")
+        # combined_distance_plot(targets_data, database=database, option="max")
+        # combined_distance_plot(targets_data, database=database, option="delta")
+        # distance_distribution_plots(targets_data, database=database)
