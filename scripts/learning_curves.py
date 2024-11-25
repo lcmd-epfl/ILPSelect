@@ -25,7 +25,7 @@ def krr(kernel, properties, l2reg=1e-9):
 
 
 def get_kernel(X1, X2, charges1, charges2, sigma=1):
-    K = qmllib.kernels.get_local_kernel(X1, X2, charges1, charges2, sigma)
+    K = get_local_kernel(X1, X2, charges1, charges2, sigma)
     return K
 
 
