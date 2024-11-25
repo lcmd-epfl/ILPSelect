@@ -47,8 +47,7 @@ def train_predict_model(
 
 
 def opt_hypers(X_train, atoms_train, y_train):
-    #TODO sigma range should be larger
-    sigmas = [0.25, 0.5, 0.75, 1e0, 1.25, 1.5]
+    sigmas = [1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4]
     l2regs = [1e-7, 1e-6, 1e-4]
 
     n_folds = 5
@@ -57,8 +56,10 @@ def opt_hypers(X_train, atoms_train, y_train):
     maes = np.zeros((len(sigmas), len(l2regs)))
 
     for i, sigma in enumerate(sigmas):
+        print(f'{sigma=}')
         K_train = get_kernel(X_train, X_train, atoms_train, atoms_train, sigma=sigma)
         for j, l2reg in enumerate(l2regs):
+            print(f'{l2reg=}')
             fold_maes = []
             for train_index, val_index in kf.split(X_train):
                 y_train_fold, y_val_fold = y_train[train_index], y_train[val_index]
@@ -136,9 +137,6 @@ def learning_curves(config):
             for ncharge in mol_ncharges:
                 y[i] -= atom_energy_coeffs[ncharge]
 
-    # convert to kcal/mol
-    y *= 627.503
-
     assert (len(X) == len(y)) and (len(Q) == len(y)), "Mismatch between number of database representations, charges, and labels."
 
     for curve in curves:
@@ -169,9 +167,6 @@ def learning_curves(config):
             # y energies offset
             for ncharge in Q_target:
                 y_target -= atom_energy_coeffs[ncharge]
-
-            # convert
-            y_target *= 627.503
 
             # algo curve ranking
             if curve == "algo":
