@@ -57,26 +57,18 @@ def opt_hypers(X_train, atoms_train, y_train):
     maes = np.zeros((len(sigmas), len(l2regs)))
 
     for i, sigma in enumerate(sigmas):
+        K_train = get_kernel(X_train, X_train, atoms_train, atoms_train, sigma=sigma)
         for j, l2reg in enumerate(l2regs):
             fold_maes = []
             for train_index, val_index in kf.split(X_train):
-                X_train_fold, X_val_fold = X_train[train_index], X_train[val_index]
-                atoms_train_fold, atoms_val_fold = (
-                    atoms_train[train_index],
-                    atoms_train[val_index],
-                )
                 y_train_fold, y_val_fold = y_train[train_index], y_train[val_index]
 
-                mae, _ = train_predict_model(
-                    X_train_fold,
-                    atoms_train_fold,
-                    y_train_fold,
-                    X_val_fold,
-                    atoms_val_fold,
-                    y_val_fold,
-                    sigma=sigma,
-                    l2reg=l2reg,
-                )
+                K_train_fold = np.copy(K_train[np.ix_(train_index, train_index)])  # just in case
+                K_test_fold = K_train[np.ix_(val_index, train_index)]
+
+                alpha_train = krr(K_train_fold, y_train_fold, l2reg=l2reg)
+                y_pred = np.dot(K_test_fold, alpha_train)
+                mae = np.abs(y_pred - y_val_fold)[0]
                 fold_maes.append(mae)
 
             avg_mae = np.mean(fold_maes)
@@ -144,7 +136,7 @@ def learning_curves(config):
             for ncharge in mol_ncharges:
                 y[i] -= atom_energy_coeffs[ncharge]
 
-    # convert to Ha
+    # convert to kcal/mol
     y *= 627.503
 
     assert (len(X) == len(y)) and (len(Q) == len(y)), "Mismatch between number of database representations, charges, and labels."
@@ -204,8 +196,12 @@ def learning_curves(config):
                 opt_ranking = np.load(RANKING_PATH, allow_pickle=True)
 
             maes = []
+            y_preds = []
+            sigmas = []
+            l2regs = []
             i=0
             for n in learning_curve_ticks:
+                print(f'tick={n}')
 
                 # FPS has a special structure of array of rankings for each tick
                 # throws an error if there are more learning curve ticks than entries in the ranking
@@ -228,6 +224,9 @@ def learning_curves(config):
                     l2reg=min_l2reg,
                 )
                 maes.append(mae)
+                y_preds.append(y_pred)
+                sigmas.append(min_sigma)
+                l2regs.append(min_l2reg)
 
             maes = np.array(maes)
 
@@ -240,6 +239,9 @@ def learning_curves(config):
                 SAVE_PATH,
                 train_sizes=learning_curve_ticks,
                 mae=maes,
+                y_pred=y_preds,
+                sigma=sigmas,
+                l2reg=l2regs,
                 # ranking_xyz=database_info["labels"][opt_ranking],
             )
 
@@ -350,17 +352,26 @@ def learning_curves_random(config, add_onto_old=True):
 
         all_maes_random = []
         ranking = []
+        all_y_preds = []
+        all_sigmas = []
+        all_l2regs = []
 
         if add_onto_old and os.path.isfile(SAVE_PATH):
             old_random = np.load(SAVE_PATH, allow_pickle=True)
             all_maes_random = old_random["all_maes_random"].tolist()
             ranking = old_random["ranking_xyz"].tolist()
+            all_y_preds = old_random['all_y_preds'].tolist()
+            all_sigmas  = old_random['all_sigmas'].tolist()
+            all_l2regs  = old_random['all_l2regs'].tolist()
 
         # five fold cross validation
         for i in range(CV):
             # we don't use the test indices since we test on the target (label y_target)
             X_train, _, Q_train, _, database_labels_train, _, y_train, _ = train_test_split(X, Q, database_labels, y, test_size=.2, random_state=config["random_state"])
             maes_random = []
+            y_preds = []
+            sigmas = []
+            l2regs = []
             for n in learning_curve_ticks:
 
                 min_sigma, min_l2reg = opt_hypers(
@@ -379,11 +390,16 @@ def learning_curves_random(config, add_onto_old=True):
                 )
 
                 maes_random.append(mae)
+                y_preds.append(y_pred)
+                sigmas.append(min_sigma)
+                l2regs.append(min_l2reg)
                 print("Random", n, mae)
 
             all_maes_random.append(maes_random)
             ranking.append(database_labels_train)
-
+            all_y_preds.append(y_preds)
+            all_sigmas.append(sigmas)
+            all_l2regs.append(l2regs)
         print("All MAEs random", all_maes_random)
 
         SAVE_PATH = f"{repository_path}learning_curves/random_{representation}_{database}_{target_name}.npz"
@@ -393,6 +409,9 @@ def learning_curves_random(config, add_onto_old=True):
             train_sizes=learning_curve_ticks,
             all_maes_random=all_maes_random,
             ranking_xyz=ranking,
+            all_y_preds = all_y_preds,
+            all_sigmas = all_sigmas,
+            all_l2regs = all_l2regs,
         )
 
         print(f"Saved to file {SAVE_PATH}.")
