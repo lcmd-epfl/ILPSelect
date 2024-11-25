@@ -1,8 +1,20 @@
 ## Requirements
 
 The code was run on Python 3.10.4. The following modules are required: gurobipy, numpy, pandas, qml, sklearn, skmatter, plotly, kaleido, json, qmllib.
++ lapack and blas to install qmllib
 ```
-python3 -m pip install gurobipy==10.0.2 numpy pandas qml scikit-learn skmatter==0.2.0 plotly kaleido qmllib==1.1.5
+conda env create -f environment.yml
+conda activate ilpselect
+```
+(if it doesn't work install step by step:)
+```
+conda create -n ilpselect python=3.10.4
+conda activate ilpselect
+conda install numpy=1.26.4 pandas=2.2.3 scikit-learn=1.3.0 skmatter=0.2.0 plotly=5.24.1
+conda install blas=1.1 lapack=3.9.0
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=$LD_LIBRARY_PATH
+pip install qmllib==1.1.5 kaleido==0.2.1 gurobipy==10.0.2
 ```
 
 Gurobi is used to solve integer linear programs (FPS and ILP). A license is required. Academic licenses are available, and clusters need special licenses.
@@ -14,12 +26,6 @@ export GRB_LICENSE_FILE=/ssoft/spack/external/gurobi/gurobi.lic
 Note that different results will be obtained with different versions of Gurobi.
 
 ## First Run
-
-- to use `algo_model` and `algo_subset`, the molekuehl folder should be added to the python path.
-Add this line at the end of your .bashrc file to add it systematically:
-```
-export PYTHONPATH="${PYTHONPATH}:/home/haeberle/molekuehl/"
-```
 
 - create folder models, rankings, solutions, and learning_curves. The .mps files it contains are large and thus in the .gitignore.
 ```
