@@ -3,20 +3,9 @@ import pickle
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold, train_test_split
-try:
-    import qml
-    from qml.kernels import get_local_kernel
-    from qml.math import cho_solve
-    print('using qml @ develop')
-except:
-    try:
-        import qmllib.kernels
-        from qmllib.kernels import get_local_kernel
-        from qmllib.solvers import cho_solve
-        print('using qmllib')
-    except:
-        print('cannot use neither qml nor qmllib')
-        exit(1)
+import qmllib.kernels
+from qmllib.kernels import get_local_kernel
+from qmllib.solvers import cho_solve
 
 
 def krr(kernel, properties, l2reg=1e-9):

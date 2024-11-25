@@ -1,16 +1,13 @@
+from types import SimpleNamespace
 import numpy as np
 import pandas as pd
-import qml
-try:
-    import qml.representations.generate_fchl_acsf as generate_fchl19
-    print('using qml @ develop')
-except:
-    try:
-        from qmllib.representations import generate_fchl19
-        print('using qmllib')
-    except:
-        print('cannot use neither qml nor qmllib')
-        exit(1)
+from qmllib.representations import generate_fchl19
+from qmllib.utils.xyz_format import read_xyz
+
+
+def read_xyz_compound(xyz_file):
+    coordinates, atoms = read_xyz(xyz_file)
+    return SimpleNamespace(nuclear_charges=atoms, coordinates=coordinates)
 
 
 def get_representations(mols, max_natoms=None, elements=None, representation="FCHL"):
@@ -73,9 +70,7 @@ def generate_targets(config):
         target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
         target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
         target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
-        target_mols = np.array(
-            [qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs]
-        )
+        target_mols = [read_xyz_compound(f"{TARGETS_PATH}{x}") for x in target_xyzs]
         all_elements = np.unique(
             np.concatenate(
                 [(x) for x in database_ncharges]
@@ -96,7 +91,7 @@ def generate_targets(config):
         else:
             TARGET_PATH = f"{repository_folder}{database}/{target_name}.xyz"
 
-        target_mol = qml.Compound(TARGET_PATH)
+        target_mol = read_xyz_compound(TARGET_PATH)
 
         X_target, Q_target = get_representations(
             [target_mol],
@@ -140,7 +135,7 @@ def generate_database(config):
     fragments = pd.read_csv(f"{FRAGMENTS_PATH}energies.csv")
     file_names = fragments["file"].to_list()
     xyzs = fragments["file"].map(lambda x: x + ".xyz").to_list()
-    mols = np.array([qml.Compound(f"{FRAGMENTS_PATH}{x}") for x in xyzs])
+    mols = [read_xyz_compound(f"{FRAGMENTS_PATH}{x}") for x in xyzs]
 
     # only used to not miss some new ncharges in targets outside database
     if not in_database:
@@ -148,9 +143,7 @@ def generate_database(config):
         target_xyzs = pd.read_csv(f"{TARGETS_PATH}energies.csv")
         target_xyzs["name"] = target_xyzs["file"].map(lambda x: x.split(".")[0])
         target_xyzs = target_xyzs[target_xyzs["name"].isin(targets)]["file"].to_list()
-        target_mols = np.array(
-            [qml.Compound(f"{TARGETS_PATH}{x}") for x in target_xyzs]
-        )
+        target_mols = [read_xyz_compound(f"{TARGETS_PATH}{x}") for x in target_xyzs]
     else:
         target_mols = []
 
