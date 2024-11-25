@@ -40,7 +40,7 @@ def train_predict_model(
 ):
     alpha_train = train_model(X_train, atoms_train, y_train, sigma=sigma, l2reg=l2reg)
 
-    K_test = get_kernel(X_train, X_test, atoms_train, atoms_test)
+    K_test = get_kernel(X_train, X_test, atoms_train, atoms_test, sigma=sigma)
     y_pred = np.dot(K_test, alpha_train)
     mae = np.abs(y_pred - y_test)[0]
     return mae, y_pred
