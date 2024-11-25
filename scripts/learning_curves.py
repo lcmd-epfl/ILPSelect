@@ -4,8 +4,29 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold, train_test_split
 import qmllib.kernels
-from qmllib.kernels import get_local_kernel
+from qmllib.kernels import get_local_kernel, get_local_symmetric_kernel
 from qmllib.solvers import cho_solve
+
+
+SIGMAS = [1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4]
+L2REGS = [1e-7, 1e-6, 1e-4]
+
+KERNEL_CACHE = True
+
+
+def get_kernel_cache(X, Q, repository_path, database):
+    K_full = {}
+    for sigma in SIGMAS:
+        fname = f'{repository_path}/data/kernel_{database}_{sigma}.npy'
+        if os.path.isfile(fname):
+            K_full[sigma] = np.load(fname)
+            print(f'using cached kernel from {fname}')
+        else:
+            print(f'{sigma=}')
+            K_full[sigma] = get_local_symmetric_kernel(X, Q, SIGMA=sigma)
+            np.save(fname, K_full[sigma])
+            print(f'caching kernel to {fname}')
+    return K_full
 
 
 def krr(kernel, properties, l2reg=1e-9):
@@ -36,18 +57,16 @@ def train_predict_model(
 
 
 def opt_hypers(X_train, atoms_train, y_train):
-    sigmas = [1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4]
-    l2regs = [1e-7, 1e-6, 1e-4]
 
     n_folds = 5
     kf = KFold(n_splits=n_folds)
 
-    maes = np.zeros((len(sigmas), len(l2regs)))
+    maes = np.zeros((len(SIGMAS), len(L2REGS)))
 
-    for i, sigma in enumerate(sigmas):
+    for i, sigma in enumerate(SIGMAS):
         print(f'{sigma=}')
         K_train = get_kernel(X_train, X_train, atoms_train, atoms_train, sigma=sigma)
-        for j, l2reg in enumerate(l2regs):
+        for j, l2reg in enumerate(L2REGS):
             print(f'{l2reg=}')
             fold_maes = []
             for train_index, val_index in kf.split(X_train):
@@ -65,8 +84,8 @@ def opt_hypers(X_train, atoms_train, y_train):
             maes[i, j] = avg_mae
 
     min_j, min_k = np.unravel_index(np.argmin(maes, axis=None), maes.shape)
-    min_sigma = sigmas[min_j]
-    min_l2reg = l2regs[min_k]
+    min_sigma = SIGMAS[min_j]
+    min_l2reg = L2REGS[min_k]
     print(
         "min avg mae",
         maes[min_j, min_k],
@@ -113,6 +132,9 @@ def learning_curves(config):
     database_info = np.load(DATA_PATH, allow_pickle=True)
     X = database_info["reps"]
     Q = database_info["ncharges"]
+
+    if KERNEL_CACHE:
+        K_full = get_kernel_cache(X, Q, repository_path, database)
 
     frame = pd.read_csv(f"{repository_path}{database}/energies.csv")
 
