@@ -1,6 +1,16 @@
 import numpy as np
 import pandas as pd
 import qml
+try:
+    import qml.representations.generate_fchl_acsf as generate_fchl19
+    print('using qml @ develop')
+except:
+    try:
+        from qmllib.representations import generate_fchl19
+        print('using qmllib')
+    except:
+        print('cannot use neither qml nor qmllib')
+        exit(1)
 
 
 def get_representations(mols, max_natoms=None, elements=None, representation="FCHL"):
@@ -21,7 +31,7 @@ def get_representations(mols, max_natoms=None, elements=None, representation="FC
 
     reps = np.array(
         [
-            qml.representations.generate_fchl_acsf(
+            generate_fchl19(
                 mol.nuclear_charges,
                 mol.coordinates,
                 elements=elements,

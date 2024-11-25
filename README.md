@@ -1,8 +1,8 @@
 ## Requirements
 
-The code was run on Python 3.10.4. The following modules are required: gurobipy, numpy, pandas, qml, sklearn, skmatter, plotly, kaleido, pickle, json, os.
+The code was run on Python 3.10.4. The following modules are required: gurobipy, numpy, pandas, qml, sklearn, skmatter, plotly, kaleido, json, qmllib.
 ```
-python3 -m pip install gurobipy==10.0.2 numpy pandas qml scikit-learn skmatter==0.2.0 plotly kaleido
+python3 -m pip install gurobipy==10.0.2 numpy pandas qml scikit-learn skmatter==0.2.0 plotly kaleido qmllib==1.1.5
 ```
 
 Gurobi is used to solve integer linear programs (FPS and ILP). A license is required. Academic licenses are available, and clusters need special licenses.

@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-Ha2kcal = 627.5
+Ha2kcal = 627.51
 
 
 ###### PLOT PARAMETERS ######
@@ -15,6 +15,8 @@ MULTIPLY_BY_10 = False
 PEN_0_AND_1 = False
 # show legend switch
 SHOW_LEGEND= True
+
+dash = {0:"dot", 1:"solid"}
 
 def target_energy(config, target_name):
     repository_path = config["repository_folder"]
@@ -55,13 +57,15 @@ def plots_individual(config):
     Draw combined plots of the learning curves for each target and saves them to plots/.
 
     Parameters:
-        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty"`, `"representation"`, `"plot_average_target_names"`,
+        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty_lc"`, `"representation"`, `"plot_average_target_names"`,
             `"database"`, `"learning_curve_ticks"`, `"plots_average"`.
     """
 
     learning_curve_ticks = config["learning_curve_ticks"]
     parent_directory = config["repository_folder"]
-    pen = config["penalty"]
+    penalty = config["penalty_lc"]
+    if not isinstance(penalty, list):
+        penalty = [penalty]
     representation = config["representation"]
     targets = config["target_names"]
     database = config["database"]
@@ -85,14 +89,15 @@ def plots_individual(config):
 
         if "algo" in curves:
             if not PEN_0_AND_1:
-                ALGO_CURVE_PATH = f"{parent_directory}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
-                ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
-                ALGO_ABS = ALGO_CURVE["mae"] * Ha2kcal
-                ALGO_PRCT = ALGO_CURVE["mae"] * Ha2kcal / normalization
-                # plot learning curve ALGO
-                fig.add_trace(go.Scatter(x=N, y=ALGO_ABS, name=f"ILP (p={pen})", line=dict(color="#1f77b4", width=3.5)))
-                fig.add_trace(go.Scatter(x=N, y=ALGO_PRCT, name=f"ILP (p={pen})", line=dict(color="#1f77b4", width=3.5), yaxis="y2"))
-                
+                for pen in penalty:
+                    ALGO_CURVE_PATH = f"{parent_directory}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
+                    ALGO_CURVE = np.load(ALGO_CURVE_PATH, allow_pickle=True)
+                    ALGO_ABS = ALGO_CURVE["mae"] * Ha2kcal
+                    ALGO_PRCT = ALGO_CURVE["mae"] * Ha2kcal / normalization
+                    # plot learning curve ALGO
+                    fig.add_trace(go.Scatter(x=N, y=ALGO_ABS, name=f"ILP (p={pen})", line=dict(dash=dash[pen], color="#1f77b4", width=3.5)))
+                    fig.add_trace(go.Scatter(x=N, y=ALGO_PRCT, name=f"ILP (p={pen})", line=dict(dash=dash[pen], color="#1f77b4", width=3.5), yaxis="y2"))
+
             if PEN_0_AND_1:
                 # pen 0
                 ALGO_CURVE_PATH = f"{parent_directory}learning_curves/algo_{representation}_{database}_{target_name}_0.npz"
@@ -258,7 +263,7 @@ def plots_individual(config):
 
         if PEN_0_AND_1:
             SAVE_PATH = f"{parent_directory}plots/{representation}_{database}_{target_name}.svg"
-            
+
         fig.write_image(SAVE_PATH)
         print(f"Saved plot to {SAVE_PATH}")
 
@@ -272,12 +277,14 @@ def plots_average(config):
     Draw average plots of the learning curves and saves them to plots/.
 
     Parameters:
-        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty"`, `"representation"`, `"plot_average_target_names"`,
+        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty_lc"`, `"representation"`, `"plot_average_target_names"`,
             `"database"`, `"learning_curve_ticks"`, `"plots_average"`.
     """
     N = config["learning_curve_ticks"]
     parent_directory = config["repository_folder"]
-    pen = config["penalty"]
+    penalty = config["penalty_lc"]
+    if not isinstance(penalty, list):
+        penalty = [penalty]
     representation = config["representation"]
     database = config["database"]
     curves = config["plots_average"]
@@ -286,7 +293,8 @@ def plots_average(config):
 
     if "algo" in curves:
         if not PEN_0_AND_1:
-            ALGO_PLOT(config, fig, MULTIPLY_BY_10, pen, "solid")
+            for pen in penalty:
+                ALGO_PLOT(config, fig, MULTIPLY_BY_10, pen, dash[pen])
 
         if PEN_0_AND_1:
             ALGO_PLOT(config, fig, MULTIPLY_BY_10, 1, "solid")
@@ -545,7 +553,7 @@ def CUR_PLOT(config, fig, MULTIPLY_BY_10):
     representation = config["representation"]
     targets = config["plot_average_target_names"]
     database = config["database"]
-    
+
     CUR_ABS, CUR_PRCT = [], []
     for target_name in targets:
         # normalization constant is energy of targett
@@ -584,7 +592,7 @@ def RANDOM_PLOT(config, fig, MULTIPLY_BY_10):
     representation = config["representation"]
     targets = config["plot_average_target_names"]
     database = config["database"]
-    
+
     MEAN_RANDOM_ABS, MEAN_RANDOM_PRCT, STD_RANDOM_ABS, STD_RANDOM_PRCT = [], [], [], []
     for target_name in targets:
         # normalization constant is energy of targett

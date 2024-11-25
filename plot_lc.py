@@ -6,7 +6,7 @@ plt.rcParams["figure.figsize"] = (6.4,6.4)
 import matplotlib
 matplotlib.rcParams.update({'font.size': 18})
 
-Ha2kcal = 627.5
+Ha2kcal = 627.51
 
 def parse_args():
     parser = ap.ArgumentParser()
@@ -29,11 +29,11 @@ def get_lc(target, method, pen=0, database='drugs', property='energy'):
             return lc['train_sizes'], lc['mae']
 
     if method == 'random':
-        return lc['train_sizes'], lc['all_maes_random'] * 627.5
+        return lc['train_sizes'], lc['all_maes_random'] * Ha2kcal
 
     if database == 'qm7' or database == 'qm9':
         return lc['train_sizes'], lc['mae']
-    return lc['train_sizes'], lc['mae'] * 627.5
+    return lc['train_sizes'], lc['mae'] * Ha2kcal
 
 def average_std(stds):
     return np.sqrt(np.sum(np.array(stds) ** 2, axis=0)) / len(stds)

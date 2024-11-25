@@ -1,12 +1,15 @@
+import os
+
 config = {
     # absolute paths
-    "repository_folder": "/home/haeberle/molekuehl/",
+    "repository_folder": os.path.dirname(__file__)+'/',
+    #"repository_folder": "/home/haeberle/molekuehl/",
     ###
     "config_name": "qm7drugs",
     "database": "qm7",
     "representation": "FCHL",
     ###
-    # corresponding names must be in targets/targets.csv
+    # corresponding names must be in targets/energies.csv (targets/all_targets.csv)
     "target_names": [
         "sildenafil",
         "penicillin",
@@ -46,6 +49,7 @@ config = {
     ###
     "scope": "local_vector",
     "penalty": 0,
+    "penalty_lc": [0,1],
     "duplicates": 1,
     "timelimit": 10 * 3600,  # 10 hours
     "PoolSearchMode": 2,

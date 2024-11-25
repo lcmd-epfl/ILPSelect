@@ -1,5 +1,5 @@
 """
-This is an example config file which finished in 1h30 on the JED cluster (EPFL). 
+This is an example config file which finished in 1h30 on the JED cluster (EPFL).
 Sildenafil is the only target. The learning curves are done only for subset sizes N=16, 32, 64, with no cross-validation for the random curve.
 
 See `config-qm7drugs.py` for a full config file.
@@ -35,6 +35,7 @@ config = {
     ###
     "scope": "local_vector",
     "penalty": 1,
+    "penalty_lc": [0,1],
     "duplicates": 1,
     "timelimit": 3600,  # 1 hour
     "PoolSearchMode": 2,
