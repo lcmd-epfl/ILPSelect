@@ -27,6 +27,7 @@ config = {
     ###
     "scope": "local_vector",
     "penalty": 1,
+    "penalty_lc": [0,1],
     "duplicates": 1,
     "timelimit": 10 * 3600,  # 10 hours
     "PoolSearchMode": 2,

@@ -35,6 +35,7 @@ config = {
     ###
     "scope": "local_vector",
     "penalty": 1,
+    "penalty_lc": [0,1],
     "duplicates": 1,
     "timelimit": 3600,  # 1 hour
     "PoolSearchMode": 2,

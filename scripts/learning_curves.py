@@ -95,12 +95,14 @@ def learning_curves(config):
     Compute learning curves once for each prefix, and each target. For N-fold random learning curves, use `learning_curves_random`.
 
     Parameters:
-        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty"`, `"representation"`, `"target_names"`,
+        config: config dictionary. Must contain keys `"repository_folder"`, `"penalty_lc"`, `"representation"`, `"target_names"`,
             `"database"`, `"in_database"`, `"learning_curve_ticks"`, `"config_name"`.
     """
 
     repository_path = config["repository_folder"]
-    pen = config["penalty"]
+    penalty = config["penalty_lc"]
+    if not isinstance(penalty, list):
+        penalty = [penalty]
     representation = config["representation"]
     targets = config["target_names"]
     database = config["database"]
@@ -140,107 +142,108 @@ def learning_curves(config):
     assert (len(X) == len(y)) and (len(Q) == len(y)), "Mismatch between number of database representations, charges, and labels."
 
     for curve in curves:
-        for target_name in targets:
-            TARGET_PATH = (
-                f"{repository_path}data/{representation}_{target_name}.npz"
-            )
-
-            target_info = np.load(TARGET_PATH, allow_pickle=True)
-            X_target = target_info["rep"]
-            Q_target = target_info["ncharges"]
-
-            if in_database:
-                Y_PATH = f"{repository_path}{database}/energies.csv"
-                y_target = (
-                    pd.read_csv(Y_PATH)
-                    .query("file == @target_name")["energy / Ha"]
-                    .iloc[0]
-                )
-            else:
-                Y_PATH = f"{repository_path}targets/energies.csv"
-                y_target = (
-                    pd.read_csv(Y_PATH)
-                    .query("file == @target_name+'.xyz'")["energy / Ha"]
-                    .iloc[0]
+        for pen in (penalty if curve == "algo" else [None]):
+            for target_name in targets:
+                TARGET_PATH = (
+                    f"{repository_path}data/{representation}_{target_name}.npz"
                 )
 
-            # y energies offset
-            for ncharge in Q_target:
-                y_target -= atom_energy_coeffs[ncharge]
+                target_info = np.load(TARGET_PATH, allow_pickle=True)
+                X_target = target_info["rep"]
+                Q_target = target_info["ncharges"]
 
-            # algo curve ranking
-            if curve == "algo":
-                RANKING_PATH = f"{repository_path}rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
-            elif curve == "sml":
-                RANKING_PATH = f"{repository_path}rankings/sml_{representation}_{database}_{target_name}.npy"
-            elif curve == "cur":
                 if in_database:
-                    RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}_{target_name}.npy"
+                    Y_PATH = f"{repository_path}{database}/energies.csv"
+                    y_target = (
+                        pd.read_csv(Y_PATH)
+                        .query("file == @target_name")["energy / Ha"]
+                        .iloc[0]
+                    )
                 else:
-                    RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}.npy"
-            elif curve == "fps":
-                if in_database:
-                    RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}_{target_name}.npz"
+                    Y_PATH = f"{repository_path}targets/energies.csv"
+                    y_target = (
+                        pd.read_csv(Y_PATH)
+                        .query("file == @target_name+'.xyz'")["energy / Ha"]
+                        .iloc[0]
+                    )
+
+                # y energies offset
+                for ncharge in Q_target:
+                    y_target -= atom_energy_coeffs[ncharge]
+
+                # algo curve ranking
+                if curve == "algo":
+                    RANKING_PATH = f"{repository_path}rankings/algo_{representation}_{database}_{target_name}_{pen}.npy"
+                elif curve == "sml":
+                    RANKING_PATH = f"{repository_path}rankings/sml_{representation}_{database}_{target_name}.npy"
+                elif curve == "cur":
+                    if in_database:
+                        RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}_{target_name}.npy"
+                    else:
+                        RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}.npy"
+                elif curve == "fps":
+                    if in_database:
+                        RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}_{target_name}.npz"
+                    else:
+                        RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}.npz"
+
+                if curve == "full":
+                    opt_ranking = range(len(y))
+                    learning_curve_ticks = [len(y)]
                 else:
-                    RANKING_PATH = f"{repository_path}rankings/{curve}_{representation}_{database}.npz"
+                    opt_ranking = np.load(RANKING_PATH, allow_pickle=True)
 
-            if curve == "full":
-                opt_ranking = range(len(y))
-                learning_curve_ticks = [len(y)]
-            else:
-                opt_ranking = np.load(RANKING_PATH, allow_pickle=True)
+                maes = []
+                y_preds = []
+                sigmas = []
+                l2regs = []
+                i=0
+                for n in learning_curve_ticks:
+                    print(f'tick={n}')
 
-            maes = []
-            y_preds = []
-            sigmas = []
-            l2regs = []
-            i=0
-            for n in learning_curve_ticks:
-                print(f'tick={n}')
+                    # FPS has a special structure of array of rankings for each tick
+                    # throws an error if there are more learning curve ticks than entries in the ranking
+                    if curve == "fps":
+                        ranking = opt_ranking["arr_"+str(i)]
+                        i+=1
+                    else:
+                        ranking = opt_ranking[:n]
 
-                # FPS has a special structure of array of rankings for each tick
-                # throws an error if there are more learning curve ticks than entries in the ranking
-                if curve == "fps":
-                    ranking = opt_ranking["arr_"+str(i)]
-                    i+=1
+                    min_sigma, min_l2reg = opt_hypers(X[ranking], Q[ranking], y[ranking])
+
+                    mae, y_pred = train_predict_model(
+                        X[ranking],
+                        Q[ranking],
+                        y[ranking],
+                        np.array([X_target]),
+                        np.array([Q_target]),
+                        y_target,
+                        sigma=min_sigma,
+                        l2reg=min_l2reg,
+                    )
+                    maes.append(mae)
+                    y_preds.append(y_pred)
+                    sigmas.append(min_sigma)
+                    l2regs.append(min_l2reg)
+
+                maes = np.array(maes)
+
+                if curve == "algo":
+                    SAVE_PATH = f"{repository_path}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
                 else:
-                    ranking = opt_ranking[:n]
+                    SAVE_PATH = f"{repository_path}learning_curves/{curve}_{representation}_{database}_{target_name}.npz"
 
-                min_sigma, min_l2reg = opt_hypers(X[ranking], Q[ranking], y[ranking])
-
-                mae, y_pred = train_predict_model(
-                    X[ranking],
-                    Q[ranking],
-                    y[ranking],
-                    np.array([X_target]),
-                    np.array([Q_target]),
-                    y_target,
-                    sigma=min_sigma,
-                    l2reg=min_l2reg,
+                np.savez(
+                    SAVE_PATH,
+                    train_sizes=learning_curve_ticks,
+                    mae=maes,
+                    y_pred=y_preds,
+                    sigma=sigmas,
+                    l2reg=l2regs,
+                    # ranking_xyz=database_info["labels"][opt_ranking],
                 )
-                maes.append(mae)
-                y_preds.append(y_pred)
-                sigmas.append(min_sigma)
-                l2regs.append(min_l2reg)
 
-            maes = np.array(maes)
-
-            if curve == "algo":
-                SAVE_PATH = f"{repository_path}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
-            else:
-                SAVE_PATH = f"{repository_path}learning_curves/{curve}_{representation}_{database}_{target_name}.npz"
-
-            np.savez(
-                SAVE_PATH,
-                train_sizes=learning_curve_ticks,
-                mae=maes,
-                y_pred=y_preds,
-                sigma=sigmas,
-                l2reg=l2regs,
-                # ranking_xyz=database_info["labels"][opt_ranking],
-            )
-
-            print(f"Saved to file {SAVE_PATH}.")
+                print(f"Saved to file {SAVE_PATH}.")
 
     return 0
 
