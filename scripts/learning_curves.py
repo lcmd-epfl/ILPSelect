@@ -14,10 +14,10 @@ L2REGS = [1e-7, 1e-6, 1e-4]
 KERNEL_CACHE = True
 
 
-def get_kernel_cache(X, Q, repository_path, database):
+def get_kernel_cache(X, Q, repository_path, database, representation):
     K_full = {}
     for sigma in SIGMAS:
-        fname = f'{repository_path}/data/kernel_{database}_{sigma}.npy'
+        fname = f'{repository_path}/data/kernel_{representation}_{database}_{sigma}.npy'
         if os.path.isfile(fname):
             K_full[sigma] = np.load(fname)
             print(f'using cached kernel from {fname}')
@@ -134,7 +134,7 @@ def learning_curves(config):
     Q = database_info["ncharges"]
 
     if KERNEL_CACHE:
-        K_full = get_kernel_cache(X, Q, repository_path, database)
+        K_full = get_kernel_cache(X, Q, repository_path, database, representation)
 
     frame = pd.read_csv(f"{repository_path}{database}/energies.csv")
 
