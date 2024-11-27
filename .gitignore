@@ -18,6 +18,8 @@ scripts/__pycache__/
 run/
 solutions/
 
+data/kernel_*.npy
+
 tsne_cache
 
 *.swp
