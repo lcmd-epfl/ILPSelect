@@ -134,9 +134,9 @@ if len(no_random_curves) != 0:
 # %%
 
 if "random" in config["learning_curves"]:
-    from scripts.learning_curves import learning_curves_random
+    from scripts.learning_curves import learning_curves
     timer = time.time()
-    learning_curves_random(config, add_onto_old=False)
+    learning_curves(config, random=True)
     timer = time.time() - timer
     dump = add_onto_and_save(dump, "time_learning_curves_random", timer)
 
