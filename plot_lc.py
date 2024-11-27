@@ -12,7 +12,7 @@ def parse_args():
     parser = ap.ArgumentParser()
     parser.add_argument('-t', '--target', default='all') # can be all
     parser.add_argument('-d', '--database', default='drugs')
-    parser.add_argument('-p', '--property', default='energy') # energy, dipole, gap
+    parser.add_argument('-p', '--property', default='') # energy, dipole, gap
     args = parser.parse_args()
     return args
 
@@ -30,9 +30,6 @@ def get_lc(target, method, pen=0, database='drugs', property='energy'):
 
     if method == 'random':
         return lc['train_sizes'], lc['all_maes_random'] * Ha2kcal
-
-    if database == 'qm7' or database == 'qm9':
-        return lc['train_sizes'], lc['mae']
     return lc['train_sizes'], lc['mae'] * Ha2kcal
 
 def average_std(stds):
@@ -85,7 +82,7 @@ def plot_single_target(args):
 
     plt.tight_layout()
     plt.legend()
-    plt.savefig(f"plots/lcs_clean/{args.target}.pdf")
+    plt.savefig(f"plots/lcs_new/{args.target}.pdf")
     plt.show()
 
 def plot_avg_targets(args, database='drugs', property='energy'):
@@ -139,7 +136,7 @@ def plot_avg_targets(args, database='drugs', property='energy'):
     ax.set_yscale("log", base=2)
     ax.set_xlabel("Training set size")
 
-    if property == 'energy':
+    if property in ['energy', ''] :
         lab = "$\hat{E}$"
         unit = 'kcal/mol'
     elif property == 'gapeV':
@@ -156,15 +153,16 @@ def plot_avg_targets(args, database='drugs', property='energy'):
         else:
             linestyle = 'solid'
         if label != 'Random':
-            ax.plot(tr_sizes, np.mean(mean_maes[label], axis=0), label=label, color=colors[i], linestyle=linestyle)
+            ax.plot(tr_sizes, np.mean(mean_maes[label], axis=0), marker='*', label=label, color=colors[i], linestyle=linestyle)
         else:
-            ax.errorbar(tr_sizes, np.mean(mean_maes[label], axis=0), average_std(mean_stds), label=label, color=colors[i])
+            ax.errorbar(tr_sizes, np.mean(mean_maes[label], axis=0), average_std(mean_stds), marker='*', label=label, color=colors[i])
 
     if database == 'drugs':
-        if property == 'energy':
-            ax.set_yticks([40, 60, 90, 133.7, 200])
-            ax.set_yticklabels(['40', '60', '90', '134', '200'])
-            ax.set_ylim(40, 200)
+        if property in ['energy', '']:
+            yticks = [30, 40, 60, 90, 134, 200, 300]
+            ax.set_yticks(yticks)
+            ax.set_yticklabels([str(y) for y in yticks])
+            ax.set_ylim(min(yticks), max(yticks))
         elif property == 'gapeV':
             ax.set_yticks([1, 2, 4, 8])
             ax.set_yticklabels(['1', '2', '4', '8'])
@@ -174,9 +172,11 @@ def plot_avg_targets(args, database='drugs', property='energy'):
 
 
     elif database == 'qm7':
-        if property == 'energy':
-            ax.set_yticks([1, 2, 4, 8, 16])
-            ax.set_yticklabels(['1', '2', '4', '8', '16'])
+        if property in ['energy', '']:
+            yticks = [0.5, 1, 2, 4, 8, 16, 32]
+            ax.set_yticks(yticks)
+            ax.set_yticklabels([str(y) for y in yticks])
+            ax.set_ylim(min(yticks), max(yticks))
         elif property == 'dipole':
             ax.set_yticks([0.05, 0.12, 0.25, 0.5, 1])
             ax.set_yticklabels(['0.05', '0.12', '0.25', '0.5', '1'])
@@ -185,9 +185,11 @@ def plot_avg_targets(args, database='drugs', property='energy'):
             ax.set_yticklabels(['0.12', '0.25', '0.5', '1', '2'])
 
     elif database == 'qm9':
-        if property == 'energy':
-            ax.set_yticks([2,4,8,16,32])
-            ax.set_yticklabels(['2', '4', '6', '8','16'])
+        if property in ['energy', '']:
+            yticks = [1, 2, 4, 8, 16, 32, 64]
+            ax.set_yticks(yticks)
+            ax.set_yticklabels([str(y) for y in yticks])
+            ax.set_ylim(min(yticks), max(yticks))
         elif property == 'dipole':
             ax.set_yticks([0.25, 0.5, 1])
             ax.set_yticklabels(['0.25', '0.5', '1'])
@@ -203,7 +205,7 @@ def plot_avg_targets(args, database='drugs', property='energy'):
 
     if database == 'drugs':
         plt.legend(fontsize='small')
-    plt.savefig(f"plots/lcs_clean/average_{database}_{property}.pdf")
+    plt.savefig(f"plots/lcs_new/average_{database}_{property}.pdf")
     plt.show()
 
 args = parse_args()
