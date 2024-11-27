@@ -35,24 +35,17 @@ def krr(kernel, properties, l2reg=1e-9):
     return alpha
 
 
-def train_model(X_train, atoms_train, y_train, sigma=1, l2reg=1e-9):
-    K_train = get_local_symmetric_kernel(X_train, atoms_train, SIGMA=sigma)
+def train_predict_model(X_train, atoms_train, y_train, X_test, atoms_test, y_test, sigma=1, l2reg=1e-9, K_train=None):
+    if K_train is None:
+        K_train = get_local_symmetric_kernel(X_train, atoms_train, SIGMA=sigma)
     alpha_train = krr(K_train, y_train, l2reg=l2reg)
-    return alpha_train
-
-
-def train_predict_model(
-    X_train, atoms_train, y_train, X_test, atoms_test, y_test, sigma=1, l2reg=1e-9
-):
-    alpha_train = train_model(X_train, atoms_train, y_train, sigma=sigma, l2reg=l2reg)
-
     K_test = get_local_kernel(X_train, X_test, atoms_train, atoms_test, SIGMA=sigma)
     y_pred = np.dot(K_test, alpha_train)
     mae = np.abs(y_pred - y_test)[0]
     return mae, y_pred
 
 
-def opt_hypers(X_train, atoms_train, y_train):
+def opt_hypers(X_train, atoms_train, y_train, Ks_train=None):
 
     n_folds = 5
     kf = KFold(n_splits=n_folds)
@@ -60,10 +53,10 @@ def opt_hypers(X_train, atoms_train, y_train):
     maes = np.zeros((len(SIGMAS), len(L2REGS)))
 
     for i, sigma in enumerate(SIGMAS):
-        print(f'{sigma=}')
-        K_train = get_local_symmetric_kernel(X_train, atoms_train, SIGMA=sigma)
+        K_train = Ks_train[sigma]
+        if K_train is None:
+            K_train = get_local_symmetric_kernel(X_train, atoms_train, SIGMA=sigma)
         for j, l2reg in enumerate(L2REGS):
-            print(f'{l2reg=}')
             fold_maes = []
             for train_index, val_index in kf.split(X_train):
                 y_train_fold, y_val_fold = y_train[train_index], y_train[val_index]
@@ -82,14 +75,7 @@ def opt_hypers(X_train, atoms_train, y_train):
     min_j, min_k = np.unravel_index(np.argmin(maes, axis=None), maes.shape)
     min_sigma = SIGMAS[min_j]
     min_l2reg = L2REGS[min_k]
-    print(
-        "min avg mae",
-        maes[min_j, min_k],
-        "for sigma=",
-        min_sigma,
-        "and l2reg=",
-        min_l2reg,
-    )
+    print(f"min avg mae {maes[min_j, min_k]} for sigma= {min_sigma} and l2reg= {min_l2reg}")
 
     return min_sigma, min_l2reg
 
@@ -191,7 +177,6 @@ def learning_curves(config):
         all_l2regs_random = []
 
         for curve, i in curve_i:
-            print(curve, i, 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
 
             if curve == "algo":
                 RANKING_PATH = f"{repository_path}rankings/algo_{representation}_{database}_{target_name}_{i}.npy"
@@ -234,7 +219,8 @@ def learning_curves(config):
                 else:
                     ranking = opt_ranking[:n]
 
-                min_sigma, min_l2reg = opt_hypers(X[ranking], Q[ranking], y[ranking])
+                Ks_train = {sigma: K_full[sigma][np.ix_(ranking, ranking)] if KERNEL_CACHE else None for sigma in SIGMAS}
+                min_sigma, min_l2reg = opt_hypers(X[ranking], Q[ranking], y[ranking], Ks_train=Ks_train)
 
                 mae, y_pred = train_predict_model(
                     X[ranking],
@@ -245,11 +231,13 @@ def learning_curves(config):
                     y_target,
                     sigma=min_sigma,
                     l2reg=min_l2reg,
+                    K_train = Ks_train[min_sigma],
                 )
                 maes.append(mae)
                 y_preds.append(y_pred)
                 sigmas.append(min_sigma)
                 l2regs.append(min_l2reg)
+
 
             if curve == 'random':
                 all_maes_random.append(maes)
