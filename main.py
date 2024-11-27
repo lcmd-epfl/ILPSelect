@@ -123,22 +123,12 @@ if config["algo_subset"]:
 # %%
 # generate learning curves
 
-no_random_curves = [e for e in config["learning_curves"] if e != "random"]
-
-if len(no_random_curves) != 0:
+if len(config["learning_curves"])>0:
     from scripts.learning_curves import learning_curves
     timer = time.time()
     learning_curves(config)
     timer = time.time() - timer
     dump = add_onto_and_save(dump, "time_learning_curves", timer)
-# %%
-
-if "random" in config["learning_curves"]:
-    from scripts.learning_curves import learning_curves
-    timer = time.time()
-    learning_curves(config, random=True)
-    timer = time.time() - timer
-    dump = add_onto_and_save(dump, "time_learning_curves_random", timer)
 
 # %%
 # draw learning curves

@@ -94,14 +94,13 @@ def opt_hypers(X_train, atoms_train, y_train):
     return min_sigma, min_l2reg
 
 
-def learning_curves(config, random=False):
+def learning_curves(config):
     """
     Compute learning curves once for each prefix, and each target.
 
     Parameters:
         config: config dictionary. Must contain keys `"repository_folder"`, `"penalty_lc"`, `"representation"`, `"target_names"`,
             `"database"`, `"in_database"`, `"learning_curve_ticks"`, `"config_name"`, `"CV"`.
-        random: set true for N-fold random learning curves
     """
 
     repository_path = config["repository_folder"]
@@ -115,26 +114,21 @@ def learning_curves(config, random=False):
     config_name=config["config_name"]
     learning_curve_ticks = config["learning_curve_ticks"]
     in_database = config["in_database"]
-    if random:
-        CV = config["CV"]
-        curve_i = [('random', i) for i in range(CV)]
-    else:
-        curves = [e for e in config["learning_curves"] if e != "random"]
-        for curve in curves:
-            assert curve in [
-                "algo",
-                "sml",
-                "fps",
-                "cur",
-                "full",
-            ], "only algo, sml, fps and cur algorithms are handled"
-        curve_i = []
-        for curve in curves:
-            if curve == "algo":
-                for pen in penalty:
-                    curve_i.append((curve, pen))
-            else:
-                curve_i.append((curve, None))
+    CV = config["CV"]
+
+    curves = config["learning_curves"]
+    for curve in curves:
+        assert curve in ["random", "algo", "sml", "fps", "cur", "full"], "only random, algo, sml, fps and cur algorithms are handled"
+    curve_i = []
+    for curve in curves:
+        if curve == "algo":
+            for i in penalty:
+                curve_i.append((curve, i))
+        elif curve == "random":
+            for i in range(CV):
+                curve_i.append((curve, i))
+        else:
+            curve_i.append((curve, None))
 
     DATA_PATH = f"{repository_path}data/{representation}_{database}_{config_name}.npz"
     database_info = np.load(DATA_PATH, allow_pickle=True)
@@ -197,10 +191,11 @@ def learning_curves(config, random=False):
         all_l2regs_random = []
 
         for curve, i in curve_i:
+            print(curve, i, 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
 
             if curve == "algo":
                 RANKING_PATH = f"{repository_path}rankings/algo_{representation}_{database}_{target_name}_{i}.npy"
-                SAVE_PATH = f"{repository_path}learning_curves/algo_{representation}_{database}_{target_name}_{pen}.npz"
+                SAVE_PATH = f"{repository_path}learning_curves/algo_{representation}_{database}_{target_name}_{i}.npz"
             elif curve in ["random", "sml", "cur", "fps"]:
                 ext = 'npz' if curve=='fps' else 'npy'
                 if not in_database and curve in ["cur", "fps", "random"]:

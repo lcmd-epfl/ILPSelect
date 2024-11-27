@@ -46,6 +46,5 @@ config = {
     ###
     "learning_curve_ticks": [16, 32, 64],
     ###
-    "random_state": None,  # for multiple random subset selection, don't use a fixed state!
     "CV": 1,  # number of cross-validation for random learning curves
 }
