@@ -8,7 +8,8 @@ from qmllib.kernels import get_local_kernel, get_local_symmetric_kernel
 from qmllib.solvers import cho_solve
 
 
-SIGMAS = [1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4]
+#SIGMAS = [1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4]
+SIGMAS = 10.0**np.arange(-2,5.5,0.5)
 L2REGS = [1e-7, 1e-6, 1e-4]
 
 KERNEL_CACHE = True
