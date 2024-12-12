@@ -159,7 +159,7 @@ def plot_avg_targets(args, database='drugs', property='energy'):
 
     if database == 'drugs':
         if property in ['energy', '']:
-            yticks = [30, 40, 60, 90, 134, 200, 300]
+            yticks = [20, 40, 80, 160, 320]
             ax.set_yticks(yticks)
             ax.set_yticklabels([str(y) for y in yticks])
             ax.set_ylim(min(yticks), max(yticks))
