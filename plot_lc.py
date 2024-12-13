@@ -11,7 +11,7 @@ Ha2kcal = 627.51
 def parse_args():
     parser = ap.ArgumentParser()
     parser.add_argument('-t', '--target', default='all') # can be all
-    parser.add_argument('-d', '--database', default='drugs')
+    parser.add_argument('-d', '--database', default='drugs') #drugs, qm7, qm9, qm7qm9
     parser.add_argument('-p', '--property', default='') # energy, dipole, gap
     args = parser.parse_args()
     return args
@@ -208,10 +208,105 @@ def plot_avg_targets(args, database='drugs', property='energy'):
     plt.savefig(f"plots/lcs_new/average_{database}_{property}.pdf")
     plt.show()
 
-args = parse_args()
 
-if not args.target == 'all':
-    plot_single_target(args)
 
-else:
-    plot_avg_targets(args, database=args.database, property=args.property)
+def plot_qm7qm9():
+
+    #plt.rcParams["figure.figsize"] = (6,3)
+    targets = {'qm7': ['qm7_1251', 'qm7_3576', 'qm7_6163', 'qm7_1513', 'qm7_1246',
+                       'qm7_2161', 'qm7_6118', 'qm7_5245', 'qm7_5107', 'qm7_3037'],
+               'qm9': ["121259", "12351", "35811", "85759", "96295",
+                       "5696", "31476", "55607", "68076", "120425"]}
+
+    titles = {'qm7': 'QM7', 'qm9':'QM9*'}
+    yticks = {'qm7': [0.5, 1, 2, 4, 8, 16, 32], 'qm9': [1, 2, 4, 8, 16, 32, 64]}
+
+    methods = ['ILP(p=0)', 'ILP(p=1)', 'FPS', 'CUR', 'SML', 'Random']
+
+    keys = {
+        "ILP(p=0)" : ('algo', 0),
+        "ILP(p=1)" : ('algo', 1),
+        "FPS"      : ('fps', None),
+        "CUR"      : ('cur', None),
+        "SML"      : ('sml', None),
+        "Random"   : ('random', None),
+    }
+
+    linestyles = {
+        "ILP(p=0)" : 'dashed',
+        "ILP(p=1)" : 'solid',
+        "FPS"      : 'solid',
+        "CUR"      : 'solid',
+        "SML"      : 'solid',
+        "Random"   : 'solid',
+    }
+
+    colors = {
+          "ILP(p=0)" :  'tab:blue',
+          "ILP(p=1)" :  'tab:blue',
+          "FPS"      :  'tab:green',
+          "CUR"      :  'tab:red',
+          "SML"      :  'tab:orange',
+          "Random"   :  'tab:purple',
+    }
+
+    mean_stds = {}
+    mean_maes = {}
+    for database in targets:
+        mean_stds[database] = [] # only for random
+        mean_maes[database] = {label: [] for label in methods}
+        for target in targets[database]:
+            for method in methods:
+                if method == 'Random':
+                    tr_sizes, all_maes = get_lc(target, keys[method][0], database=database, property='')
+                    mean_maes_r, std_maes_r = np.mean(all_maes, axis=0), np.std(all_maes, axis=0)
+                    mean_maes[database][method].append(mean_maes_r)
+                    mean_stds[database].append(std_maes_r)
+                else:
+                    tr_sizes, maes = get_lc(target, keys[method][0], pen=keys[method][1], database=database, property='')
+                    mean_maes[database][method].append(maes)
+
+
+    fig, axes = plt.subplots(1, 2, figsize=(11, 6), sharey=False)
+
+    for i, database in enumerate(targets):
+        axes[i].set_title(titles[database], fontweight='bold')
+        for method in methods:
+            label=method if i==0 else None
+            if method=='Random':
+                axes[i].errorbar(
+                    tr_sizes, np.mean(mean_maes[database][method], axis=0), average_std(mean_stds[database]),
+                    label=label, marker='*', color=colors[method], linestyle=linestyles[method]
+                )
+            else:
+                axes[i].plot(
+                     tr_sizes, np.mean(mean_maes[database][method], axis=0),
+                     label=label, marker='*', color=colors[method], linestyle=linestyles[method]
+                )
+
+        axes[i].set_xscale('log', base=2)
+        axes[i].set_xticks(tr_sizes)
+        axes[i].get_xaxis().set_major_formatter(plt.ScalarFormatter())
+        axes[i].set_xlabel('Training set size')
+        axes[i].tick_params(axis='y', which='both')
+        axes[i].set_yscale("log", base=2)
+        axes[i].set_yticks(yticks[database])
+        axes[i].set_yticklabels([str(y) for y in yticks[database]])
+        axes[i].set_ylim(min(yticks[database]), max(yticks[database]))
+        if i==0:
+            axes[i].set_ylabel('Average $\hat{E}$ MAE [kcal/mol]')
+
+    fig.legend(bbox_to_anchor=(1.1, 0.88))
+    plt.savefig(f"plots/lcs_new/average_qm7qm9_energy.pdf")
+    plt.show()
+
+
+if __name__=='__main__':
+    args = parse_args()
+    if args.database=='qm7qm9':
+        plot_qm7qm9()
+    else:
+        if not args.target == 'all':
+            plot_single_target(args)
+        else:
+            plot_avg_targets(args, database=args.database, property=args.property)
