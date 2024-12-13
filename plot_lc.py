@@ -212,6 +212,7 @@ def plot_avg_targets(args, database='drugs', property='energy'):
 
 def plot_qm7qm9():
 
+    #plt.rcParams["figure.figsize"] = (8,6.4)
     #plt.rcParams["figure.figsize"] = (6,3)
     targets = {'qm7': ['qm7_1251', 'qm7_3576', 'qm7_6163', 'qm7_1513', 'qm7_1246',
                        'qm7_2161', 'qm7_6118', 'qm7_5245', 'qm7_5107', 'qm7_3037'],
@@ -267,7 +268,7 @@ def plot_qm7qm9():
                     mean_maes[database][method].append(maes)
 
 
-    fig, axes = plt.subplots(1, 2, figsize=(11, 6), sharey=False)
+    fig, axes = plt.subplots(1, 2, figsize=(13, 6), sharey=False)
 
     for i, database in enumerate(targets):
         axes[i].set_title(titles[database], fontweight='bold')
@@ -296,9 +297,11 @@ def plot_qm7qm9():
         if i==0:
             axes[i].set_ylabel('Average $\hat{E}$ MAE [kcal/mol]')
 
-    fig.legend(bbox_to_anchor=(1.1, 0.88))
+    plt.subplots_adjust(right=0.88*12/13)
+    fig.legend(bbox_to_anchor=(0.99, 0.88))
     plt.savefig(f"plots/lcs_new/average_qm7qm9_energy.pdf")
-    plt.show()
+
+    #plt.show()
 
 
 if __name__=='__main__':
