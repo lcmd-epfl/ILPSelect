@@ -1,6 +1,6 @@
 import os
 
-number_of_scan_points = 18
+number_of_scan_points = 19
 
 config = {
     # absolute paths
@@ -35,9 +35,9 @@ config = {
     "number_of_fragments": 1024,  # size of subset selected
     "verbose": True,
     ###
-    #"learning_curve_ticks": [2**k for k in range(4, 11)],
+    "learning_curve_ticks": [2**k for k in range(4, 11)],
     #"learning_curve_ticks": [4**k for k in range(2, 6)],
-    "learning_curve_ticks": [16, 1024],
+    #"learning_curve_ticks": [16, 1024],
     "FPS_timelimit": 600, # 10 mins
     ###
     "CV": 5,  # number of cross-validation for random learning curves

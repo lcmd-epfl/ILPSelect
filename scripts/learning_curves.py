@@ -10,7 +10,7 @@ from qmllib.solvers import cho_solve
 
 #SIGMAS = [1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4]
 #SIGMAS = 10.0**np.arange(-2,5.5,0.5)
-SIGMAS = [1e-1]
+#SIGMAS = [1e-1]
 SIGMAS = 10.0**np.arange(0,3.125,0.125)
 L2REGS = [1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4]
 
@@ -223,7 +223,22 @@ def learning_curves(config):
                     ranking = opt_ranking[:n]
 
                 Ks_train = {sigma: K_full[sigma][np.ix_(ranking, ranking)] if KERNEL_CACHE else None for sigma in SIGMAS}
-                min_sigma, min_l2reg = opt_hypers(X[ranking], Q[ranking], y[ranking], Ks_train=Ks_train)
+
+                if config['config_name'] == 'qm7penicillinscan':
+                    if curve == "algo":
+                        OTHER_PATH = f"{repository_path}/learning_curves/{curve}_{representation}_{database}_penicillin_{i}.npz"
+                    else:
+                        OTHER_PATH = f"{repository_path}/learning_curves/{curve}_{representation}_{database}_penicillin.npz"
+                    other_lc = np.load(OTHER_PATH)
+                    j = np.where(other_lc['train_sizes']==n)[0][0]
+                    if curve == 'random':
+                        min_sigma, min_l2reg = other_lc['all_sigmas'][i][j], other_lc['all_l2regs'][i][j]
+                    else:
+                        min_sigma, min_l2reg = other_lc['sigma'][j], other_lc['l2reg'][j]
+                    print(f'{min_sigma=} {min_l2reg=}')
+
+                else:
+                    min_sigma, min_l2reg = opt_hypers(X[ranking], Q[ranking], y[ranking], Ks_train=Ks_train)
 
                 mae, y_pred = train_predict_model(
                     X[ranking],
