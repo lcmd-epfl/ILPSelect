@@ -224,11 +224,12 @@ def learning_curves(config):
 
                 Ks_train = {sigma: K_full[sigma][np.ix_(ranking, ranking)] if KERNEL_CACHE else None for sigma in SIGMAS}
 
-                if config['config_name'] == 'qm7penicillinscan':
+                if config['config_name'] in ['qm7penicillinscan', 'qm7oseltamivirscan', 'qm7imatinibscan']:
+                    name = config['config_name'][3:-4]
                     if curve == "algo":
-                        OTHER_PATH = f"{repository_path}/learning_curves/{curve}_{representation}_{database}_penicillin_{i}.npz"
+                        OTHER_PATH = f"{repository_path}/learning_curves/{curve}_{representation}_{database}_{name}_{i}.npz"
                     else:
-                        OTHER_PATH = f"{repository_path}/learning_curves/{curve}_{representation}_{database}_penicillin.npz"
+                        OTHER_PATH = f"{repository_path}/learning_curves/{curve}_{representation}_{database}_{name}.npz"
                     other_lc = np.load(OTHER_PATH)
                     j = np.where(other_lc['train_sizes']==n)[0][0]
                     if curve == 'random':

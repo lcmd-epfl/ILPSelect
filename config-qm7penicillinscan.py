@@ -11,9 +11,9 @@ config = {
     "representation": "FCHL",
     ###
     # corresponding names must be in targets/energies.csv (targets/all_targets.csv)
-    "target_names": [f"penicillin.{i:03d}" for i in range(number_of_scan_points)],
+    "target_names": [f"penicillin_{i:03d}" for i in range(1,number_of_scan_points)],
     "in_database": False,
-    "plot_average_target_names": [f"penicillin.{i:03d}" for i in range(number_of_scan_points)],
+    "plot_average_target_names": [f"penicillin_{i:03d}" for i in range(1,number_of_scan_points)],
     ###
     "generate_database": False,
     "generate_targets": True,

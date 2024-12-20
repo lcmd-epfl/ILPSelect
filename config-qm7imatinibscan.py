@@ -6,16 +6,16 @@ config = {
     # absolute paths
     "repository_folder": os.path.dirname(__file__)+'/',
     ###
-    "config_name": "qm7oseltamivirscan",
+    "config_name": "qm7imatinibscan",
     "database": "qm7",
     "representation": "FCHL",
     ###
     # corresponding names must be in targets/energies.csv (targets/all_targets.csv)
-    "target_names": [f"oseltamivir.{i:03d}" for i in range(number_of_scan_points)],
+    "target_names": [f"imatinib_{i:03d}" for i in range(1,number_of_scan_points)],
     "in_database": False,
-    "plot_average_target_names": [f"oseltamivir.{i:03d}" for i in range(number_of_scan_points)],
+    "plot_average_target_names": [f"imatinib_{i:03d}" for i in range(1,number_of_scan_points)],
     ###
-    "generate_database": False,
+    "generate_database": True,
     "generate_targets": True,
     "cur_subset": False,
     "fps_subset": False,
