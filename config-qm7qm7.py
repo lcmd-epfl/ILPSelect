@@ -37,7 +37,6 @@ config = {
     "learning_curve_ticks": [2**k for k in range(4, 11)],
     "FPS_timelimit": 600, # 10 mins
     ###
-    "random_state": None,  # for multiple random subset selection, don't use a fixed state!
     "CV": 5,  # number of cross-validation for random learning curves
 }
 
